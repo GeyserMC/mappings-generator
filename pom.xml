@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.geysermc</groupId>
     <artifactId>geyser-resources</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>Geyser-Resources</name>
     <description>Resources for Geyser.</description>

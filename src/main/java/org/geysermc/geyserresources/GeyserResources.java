@@ -1,6 +1,7 @@
 package org.geysermc.geyserresources;
 
 import com.google.gson.stream.JsonWriter;
+import net.minecraft.server.v1_14_R1.Block;
 import net.minecraft.server.v1_14_R1.IRegistry;
 import net.minecraft.server.v1_14_R1.Item;
 import net.minecraft.server.v1_14_R1.MinecraftKey;
@@ -38,6 +39,30 @@ public class GeyserResources extends JavaPlugin {
                     jsonWriter.name(key.getNamespace() + ":" + key.getKey());
                     jsonWriter.beginObject();
                     jsonWriter.name("protocol_id").value(Item.getId(item.get()));
+                    jsonWriter.endObject();
+                }
+            }
+
+            jsonWriter.endObject();
+            jsonWriter.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        try {
+            File file = new File(getDataFolder(), "java_blocks.json");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            JsonWriter jsonWriter = new JsonWriter(new FileWriter(file));
+            jsonWriter.beginObject();
+            for (MinecraftKey key : IRegistry.BLOCK.keySet()) {
+                Optional<Block> block = IRegistry.BLOCK.getOptional(key);
+                if (block.isPresent()) {
+                    jsonWriter.name(key.getNamespace() + ":" + key.getKey());
+                    jsonWriter.beginObject();
+                    jsonWriter.name("protocol_id").value(Block.REGISTRY_ID.getId(block.get().getBlockData()));
                     jsonWriter.endObject();
                 }
             }
