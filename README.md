@@ -1,7 +1,12 @@
 # Geyser Resources
 _Generated resources for Geyser._
 
-A Bukkit plugin that generates all the necessary resources on the Java end for Geyser. Drop this in your plugin folder and inside of
-`plugins/Geyser-Resources`, all the needed files will be generated.
+A standalone program that generates all the necessary resources on the Java end for Geyser. This is a standalone
+program that requires a development environment to use.
 
-NOTE: This plugin does use NMS, and **WILL** break on new releases of Minecraft. 
+Firstly, if you would like to generate mappings, clone this repository locally.
+
+Secondly, run this program using the `Run` button in your IDE, and mappings should be generated.
+
+NOTE: This plugin does use NMS, and if you want mappings for later versions, simply update the jar in the `pom.xml`
+and update the internal code for your specific NMS version.
