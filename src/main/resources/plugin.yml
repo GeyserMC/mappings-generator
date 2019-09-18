@@ -1,5 +1,0 @@
-name: ${project.name}
-description: ${project.description}
-version: ${project.version}
-main: org.geysermc.geyserresources.GeyserResources
-author: ${project.organization.name}
