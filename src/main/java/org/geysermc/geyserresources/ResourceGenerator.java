@@ -1,13 +1,13 @@
 package org.geysermc.geyserresources;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.server.v1_14_R1.Block;
 import net.minecraft.server.v1_14_R1.IRegistry;
 import net.minecraft.server.v1_14_R1.Item;
 import net.minecraft.server.v1_14_R1.MinecraftKey;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.craftbukkit.v1_14_R1.block.data.CraftBlockData;
 import org.bukkit.craftbukkit.v1_14_R1.util.CraftMagicNumbers;
@@ -33,19 +33,16 @@ public class ResourceGenerator {
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            JsonObject object = new JsonObject();
+            JsonArray array = new JsonArray();
             for (MinecraftKey key : IRegistry.ITEM.keySet()) {
                 Optional<Item> item = IRegistry.ITEM.getOptional(key);
                 if (item.isPresent()) {
-                    JsonObject data = new JsonObject();
-                    data.addProperty("identifier", key.getNamespace() + ":" + key.getKey());
-
-                    object.add(String.valueOf(Item.getId(item.get())), data);
+                    array.add(key.getNamespace() + ":" + key.getKey());
                 }
             }
 
             FileWriter writer = new FileWriter(file);
-            builder.create().toJson(object, writer);
+            builder.create().toJson(array, writer);
             writer.close();
             System.out.println("Finished item writing process!");
         } catch (IOException ex) {
@@ -59,18 +56,13 @@ public class ResourceGenerator {
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            JsonObject object = new JsonObject();
+            JsonArray array = new JsonArray();
             for (BlockData blockData : getFullBlockDataList()) {
-                NamespacedKey key = blockData.getMaterial().getKey();
-
-                JsonObject data = new JsonObject();
-                data.addProperty("identifier", key.getNamespace() + ":" + key.getKey());
-                data.addProperty("data", blockData.getAsString());
-                object.add(String.valueOf(getID(blockData)), data);
+                array.add(blockData.getAsString());
             }
 
             FileWriter writer = new FileWriter(file);
-            builder.create().toJson(object, writer);
+            builder.create().toJson(array, writer);
             writer.close();
             System.out.println("Finished block writing process!");
         } catch (IOException ex) {
