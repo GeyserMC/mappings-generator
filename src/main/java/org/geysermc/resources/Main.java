@@ -1,9 +1,10 @@
-package org.geysermc.geyserresources;
+package org.geysermc.resources;
 
 public class Main {
 
     public static void main(String[] args) {
         ResourceGenerator resourceGenerator = new ResourceGenerator();
-        resourceGenerator.createJSONData();
+        resourceGenerator.generateItems();
+        resourceGenerator.generateBlocks();
     }
 }

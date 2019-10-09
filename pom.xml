@@ -49,6 +49,12 @@
             <version>2.8.5</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.4</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>GeyserResources</finalName>
@@ -69,7 +75,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.geysermc.geyserresources.Main</mainClass>
+                            <mainClass>org.geysermc.resources.Main</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
