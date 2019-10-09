@@ -5436,99 +5436,99 @@
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=north,short=true,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=north,short=true,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=north,short=false,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=north,short=false,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=east,short=true,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=east,short=true,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=east,short=false,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=east,short=false,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=south,short=true,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=south,short=true,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=south,short=false,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=south,short=false,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=west,short=true,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=west,short=true,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=west,short=false,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=west,short=false,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=up,short=true,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=up,short=true,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=up,short=false,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=up,short=false,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=down,short=true,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=down,short=true,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=down,short=false,type=normal]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:piston_head[facing=down,short=false,type=sticky]": {
-    "bedrock_identifier": "minecraft:pistonarmcollision",
+    "bedrock_identifier": "minecraft:pistonArmCollision",
     "bedrock_data": 0
   },
   "minecraft:white_wool": {
@@ -5596,51 +5596,51 @@
     "bedrock_data": 15
   },
   "minecraft:moving_piston[facing=north,type=normal]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=north,type=sticky]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=east,type=normal]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=east,type=sticky]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=south,type=normal]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=south,type=sticky]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=west,type=normal]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=west,type=sticky]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=up,type=normal]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=up,type=sticky]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=down,type=normal]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:moving_piston[facing=down,type=sticky]": {
-    "bedrock_identifier": "minecraft:movingblock",
+    "bedrock_identifier": "minecraft:movingBlock",
     "bedrock_data": 0
   },
   "minecraft:dandelion": {
@@ -21036,515 +21036,515 @@
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=true,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=true,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=true,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=true,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=true,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=true,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=true,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=true,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=false,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=false,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=false,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=false,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=false,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=false,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=false,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=true,north=false,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=true,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=true,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=true,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=true,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=true,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=true,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=true,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=true,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=false,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=false,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=false,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=false,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 15
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=false,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=false,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=false,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=true,east=false,north=false,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 14
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=true,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=true,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=true,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=true,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=true,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=true,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=true,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=true,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=false,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=false,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=false,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=false,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=false,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=false,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=false,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=true,north=false,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=true,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=true,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=true,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=true,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=true,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=true,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=true,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=true,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=false,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=false,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=false,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=false,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 7
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=false,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=false,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=false,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=true,disarmed=false,east=false,north=false,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 6
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=true,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=true,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=true,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=true,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=true,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=true,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=true,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=true,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=false,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=false,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=false,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=false,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=false,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=false,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=false,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=true,north=false,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=true,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=true,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=true,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=true,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=true,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=true,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=true,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=true,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=false,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=false,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=false,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=false,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 11
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=false,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=false,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=false,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=true,east=false,north=false,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 10
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=true,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=true,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=true,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=true,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=true,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=true,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=true,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=true,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=false,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=false,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=false,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=false,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=false,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=false,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=false,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=true,north=false,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=true,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=true,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=true,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=true,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=true,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=true,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=true,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=true,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=false,powered=true,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=false,powered=true,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=false,powered=true,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=false,powered=true,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 3
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=false,powered=false,south=true,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=false,powered=false,south=true,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=false,powered=false,south=false,west=true]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:tripwire[attached=false,disarmed=false,east=false,north=false,powered=false,south=false,west=false]": {
-    "bedrock_identifier": "minecraft:tripwire",
+    "bedrock_identifier": "minecraft:tripWire",
     "bedrock_data": 2
   },
   "minecraft:emerald_block": {
@@ -35672,67 +35672,67 @@
     "bedrock_data": 15
   },
   "minecraft:white_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 0
   },
   "minecraft:orange_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 1
   },
   "minecraft:magenta_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 2
   },
   "minecraft:light_blue_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 3
   },
   "minecraft:yellow_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 4
   },
   "minecraft:lime_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 5
   },
   "minecraft:pink_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 6
   },
   "minecraft:gray_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 7
   },
   "minecraft:light_gray_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 8
   },
   "minecraft:cyan_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 9
   },
   "minecraft:purple_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 10
   },
   "minecraft:blue_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 11
   },
   "minecraft:brown_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 12
   },
   "minecraft:green_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 13
   },
   "minecraft:red_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 14
   },
   "minecraft:black_concrete_powder": {
-    "bedrock_identifier": "minecraft:concretepowder",
+    "bedrock_identifier": "minecraft:concretePowder",
     "bedrock_data": 15
   },
   "minecraft:kelp[age=0]": {
