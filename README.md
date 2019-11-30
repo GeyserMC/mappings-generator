@@ -1,5 +1,4 @@
-# Geyser Resources
-_Generated resources for Geyser._
+# Geyser Mapping Generator
 
 A standalone program that generates all the necessary resources on the Java end for Geyser. This is a standalone
 program that requires a development environment to use.
