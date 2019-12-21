@@ -4,34 +4,28 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import net.minecraft.server.v1_14_R1.Block;
-import net.minecraft.server.v1_14_R1.IRegistry;
-import net.minecraft.server.v1_14_R1.Item;
-import net.minecraft.server.v1_14_R1.MinecraftKey;
-import org.bukkit.Material;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_14_R1.block.data.CraftBlockData;
-import org.bukkit.craftbukkit.v1_14_R1.util.CraftMagicNumbers;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.item.Item;
+import net.minecraft.state.property.Property;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
+
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ResourceGenerator {
 
-    public static final String VERSION = "1.14";
+    public static final String VERSION = "1.15";
     public static final Map<String, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
 
@@ -63,8 +57,8 @@ public class ResourceGenerator {
             FileWriter writer = new FileWriter(file);
             JsonObject rootObject = new JsonObject();
 
-            for (BlockData blockData : getFullBlockDataList()) {
-                rootObject.add(blockData.getAsString(), getRemapBlock(blockData.getAsString()));
+            for (BlockState blockData : getFullBlockDataList()) {
+                rootObject.add(blockStateToString(blockData), getRemapBlock(blockStateToString(blockData)));
             }
 
             builder.create().toJson(rootObject, writer);
@@ -103,10 +97,10 @@ public class ResourceGenerator {
             FileWriter writer = new FileWriter(file);
             JsonObject rootObject = new JsonObject();
 
-            for (MinecraftKey key : IRegistry.ITEM.keySet()) {
-                Optional<Item> item = IRegistry.ITEM.getOptional(key);
+            for (Identifier key : Registry.ITEM.getIds()) {
+                Optional<Item> item = Registry.ITEM.getOrEmpty(key);
                 if (item.isPresent()) {
-                    rootObject.add(key.getNamespace() + ":" + key.getKey(), getRemapItem(key.getNamespace() + ":" + key.getKey()));
+                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath()));
                 }
             }
 
@@ -146,26 +140,44 @@ public class ResourceGenerator {
         return object;
     }
 
-    public List<Material> getBlocks() {
-        return Stream.of(Material.values()).filter(mat -> !mat.isLegacy()).filter(Material::isBlock).collect(Collectors.toList());
-    }
-
-    public List<BlockData> getFullBlockDataList() {
-        List<BlockData> blockData = new ArrayList<>();
-        getBlocks().forEach(material -> blockData.addAll(getBlockDataList(material)));
+    public List<BlockState> getFullBlockDataList() {
+        List<BlockState> blockData = new ArrayList<>();
+        Registry.BLOCK.forEach(material -> blockData.addAll(getBlockDataList(material)));
         return blockData.stream().sorted(Comparator.comparingInt(this::getID)).collect(Collectors.toList());
     }
 
-    public List<BlockData> getBlockDataList(Material material) {
-        if (!material.isBlock()) {
-            throw new IllegalArgumentException(MessageFormat.format("Material {0} is not a block", material));
-        }
-        return CraftMagicNumbers.getBlock(material).getStates().a().stream()
-                .map(CraftBlockData::fromData)
-                .sorted(Comparator.comparingInt(this::getID)).collect(Collectors.toList());
+    public List<BlockState> getBlockDataList(Block block) {
+        return block.getStateManager().getStates();
     }
 
-    public int getID(BlockData blockData) {
-        return Block.getCombinedId(((CraftBlockData) blockData).getState());
+    public int getID(BlockState blockData) {
+        return Block.getRawIdFromState(blockData);
     }
+
+    private String blockStateToString(BlockState blockState) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(Registry.BLOCK.getId(blockState.getBlock()).toString());
+        if (!blockState.getEntries().isEmpty()) {
+            stringBuilder.append('[');
+            stringBuilder.append(blockState.getEntries().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
+            stringBuilder.append(']');
+        }
+        return stringBuilder.toString();
+    }
+
+    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_MAP_PRINTER = new Function<Map.Entry<Property<?>, Comparable<?>>, String>() {
+
+        public String apply(Map.Entry<Property<?>, Comparable<?>> entry) {
+            if (entry == null) {
+                return "<NULL>";
+            } else {
+                Property<?> lv = entry.getKey();
+                return lv.getName() + "=" + this.nameValue(lv, entry.getValue());
+            }
+        }
+
+        private <T extends Comparable<T>> String nameValue(Property<T> arg, Comparable<?> comparable) {
+            return arg.name((T) comparable);
+        }
+    };
 }
