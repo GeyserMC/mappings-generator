@@ -12,7 +12,6 @@ import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -25,33 +24,21 @@ import java.util.stream.Collectors;
 
 public class ResourceGenerator {
 
-    public static final String VERSION = "1.15";
     public static final Map<String, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
 
     public void generateBlocks() {
-        File blocksFile = new File("blocks.json"); // old file
-        if (!blocksFile.exists()) {
-            System.err.println("Could not find blocks.json!");
-            System.exit(0);
-            return;
-        }
-
         try {
+            File file = new File("mappings/blocks.json");
+            if (!file.exists()) {
+                System.out.println("Could not find mappings submodule! Did you clone them?");
+                return;
+            }
+
             Gson gson = new Gson();
             Type mapType = new TypeToken<Map<String, BlockEntry>>() {}.getType();
-            Map<String, BlockEntry> map = gson.fromJson(new FileReader(blocksFile), mapType);
+            Map<String, BlockEntry> map = gson.fromJson(new FileReader(file), mapType);
             BLOCK_ENTRIES.putAll(map);
-        } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
-        }
-
-        try {
-            File file = new File("mappings/" + VERSION + "/blocks.json");
-            if (!file.exists()) {
-                file.mkdir();
-                file.createNewFile();
-            }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             FileWriter writer = new FileWriter(file);
@@ -70,27 +57,20 @@ public class ResourceGenerator {
     }
 
     public void generateItems() {
-        File itemsFile = new File("items.json"); // old file
-        if (!itemsFile.exists()) {
-            System.err.println("Could not find items.json!");
-            System.exit(0);
-            return;
-        }
-
         try {
-            Gson gson = new Gson();
-            Type mapType = new TypeToken<Map<String, ItemEntry>>() {}.getType();
-            Map<String, ItemEntry> map = gson.fromJson(new FileReader(itemsFile), mapType);
-            ITEM_ENTRIES.putAll(map);
-        } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
-        }
-
-        try {
-            File file = new File("mappings/" + VERSION + "/items.json");
+            File file = new File("mappings/items.json");
             if (!file.exists()) {
-                file.mkdir();
-                file.createNewFile();
+                System.out.println("Could not find mappings submodule! Did you clone them?");
+                return;
+            }
+
+            try {
+                Gson gson = new Gson();
+                Type mapType = new TypeToken<Map<String, ItemEntry>>() {}.getType();
+                Map<String, ItemEntry> map = gson.fromJson(new FileReader(file), mapType);
+                ITEM_ENTRIES.putAll(map);
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
@@ -117,10 +97,10 @@ public class ResourceGenerator {
         if (BLOCK_ENTRIES.containsKey(identifier)) {
             BlockEntry blockEntry = BLOCK_ENTRIES.get(identifier);
             object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
-            object.addProperty("bedrock_data", blockEntry.getBedrockData());
+            if (blockEntry.getBedrockStates() != null)
+                object.add("bedrock_states", blockEntry.getBedrockStates());
         } else {
             object.addProperty("bedrock_identifier", identifier.split("\\[")[0]);
-            object.addProperty("bedrock_data", 0);
         }
 
         return object;

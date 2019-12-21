@@ -1,0 +1,3 @@
+[submodule "mappings"]
+	path = mappings
+	url = https://github.com/GeyserMC/mappings.git
