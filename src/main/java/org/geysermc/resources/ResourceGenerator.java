@@ -8,6 +8,9 @@ import com.google.gson.reflect.TypeToken;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
+import net.minecraft.item.MiningToolItem;
+import net.minecraft.item.PickaxeItem;
+import net.minecraft.item.ToolItem;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -26,6 +29,7 @@ public class ResourceGenerator {
 
     public static final Map<String, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
+    private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
 
     public void generateBlocks() {
         try {
@@ -44,8 +48,8 @@ public class ResourceGenerator {
             FileWriter writer = new FileWriter(file);
             JsonObject rootObject = new JsonObject();
 
-            for (BlockState blockData : getFullBlockDataList()) {
-                rootObject.add(blockStateToString(blockData), getRemapBlock(blockStateToString(blockData)));
+            for (BlockState blockState : getFullBlockDataList()) {
+                rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState)));
             }
 
             builder.create().toJson(rootObject, writer);
@@ -80,6 +84,10 @@ public class ResourceGenerator {
             for (Identifier key : Registry.ITEM.getIds()) {
                 Optional<Item> item = Registry.ITEM.getOrEmpty(key);
                 if (item.isPresent()) {
+                    if (item.get() instanceof MiningToolItem) {
+                        MiningToolItem miningToolItem = (MiningToolItem) item.get();
+                        MINING_TOOL_ITEMS.add(miningToolItem);
+                    }
                     rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath()));
                 }
             }
@@ -92,11 +100,31 @@ public class ResourceGenerator {
         }
     }
 
-    public JsonObject getRemapBlock(String identifier) {
+    public JsonObject getRemapBlock(BlockState state, String identifier) {
         JsonObject object = new JsonObject();
         if (BLOCK_ENTRIES.containsKey(identifier)) {
             BlockEntry blockEntry = BLOCK_ENTRIES.get(identifier);
             object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
+            object.addProperty("block_hardness", state.getHardness(null, null));
+            object.addProperty("can_break_with_hand", state.getMaterial().canBreakByHand());
+            MINING_TOOL_ITEMS.forEach(item -> {
+                if (item.getMiningSpeed(null, state) != 1.0f) {
+                    String itemClassName = item.getClass().getName();
+                    String toolType = itemClassName.substring(19, itemClassName.length() -4);
+                    object.addProperty("tool_type", toolType.toLowerCase());
+                }
+            });
+            // Removes nbt tags from identifier
+            String trimmedIdentifier = identifier.split("\\[")[0];
+            // Add tool type for blocks that use shears or sword
+            if (trimmedIdentifier.contains("wool")) {
+                object.addProperty("tool_type", "shears");
+            } else if (trimmedIdentifier.contains("leaves")) {
+                object.addProperty("tool_type", "shears");
+            } else if (trimmedIdentifier.contains("cobweb")) {
+                object.addProperty("tool_type", "sword");
+            }
+
             if (blockEntry.getBedrockStates() != null)
                 object.add("bedrock_states", blockEntry.getBedrockStates());
         } else {
@@ -115,6 +143,18 @@ public class ResourceGenerator {
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
             object.addProperty("bedrock_data", 0);
+        }
+        String[] toolTypes = {"sword", "shovel", "pickaxe", "axe", "shears", "hoe"};
+        String[] identifierSplit = identifier.split(":")[1].split("_");
+        if (identifierSplit.length > 1) {
+            Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[1]::equals).findAny();
+            if (optToolType.isPresent()) {
+                object.addProperty("tool_type", optToolType.get());
+                object.addProperty("tool_tier", identifierSplit[0]);
+            }
+        } else {
+            Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[0]::equals).findAny();
+            optToolType.ifPresent(s -> object.addProperty("tool_type", s));
         }
 
         return object;
