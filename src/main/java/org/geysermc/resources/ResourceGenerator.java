@@ -12,6 +12,7 @@ import net.minecraft.item.MiningToolItem;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.DyeColor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -121,41 +122,10 @@ public class ResourceGenerator {
                 object.addProperty("tool_type", "shears");
             } else if (trimmedIdentifier.contains("cobweb")) {
                 object.addProperty("tool_type", "sword");
-            } else if (trimmedIdentifier.contains("bed")) {
-                byte bedcolor = -1;
-                if (trimmedIdentifier.contains("minecraft:white")) {
-                    bedcolor = 0;
-                } else if (trimmedIdentifier.contains("minecraft:orange")) {
-                    bedcolor = 1;
-                } else if (trimmedIdentifier.contains("minecraft:magenta")) {
-                    bedcolor = 2;
-                } else if (trimmedIdentifier.contains("minecraft:light_blue")) {
-                    bedcolor = 3;
-                } else if (trimmedIdentifier.contains("minecraft:yellow")) {
-                    bedcolor = 4;
-                } else if (trimmedIdentifier.contains("minecraft:lime")) {
-                    bedcolor = 5;
-                } else if (trimmedIdentifier.contains("minecraft:pink")) {
-                    bedcolor = 6;
-                } else if (trimmedIdentifier.contains("minecraft:gray")) {
-                    bedcolor = 7;
-                } else if (trimmedIdentifier.contains("minecraft:light_gray")) {
-                    bedcolor = 8;
-                } else if (trimmedIdentifier.contains("minecraft:cyan")) {
-                    bedcolor = 9;
-                } else if (trimmedIdentifier.contains("minecraft:purple")) {
-                    bedcolor = 10;
-                } else if (trimmedIdentifier.contains("minecraft:blue")) {
-                    bedcolor = 11;
-                } else if (trimmedIdentifier.contains("minecraft:brown")) {
-                    bedcolor = 12;
-                } else if (trimmedIdentifier.contains("minecraft:green")) {
-                    bedcolor = 13;
-                } else if (trimmedIdentifier.contains("minecraft:red")) {
-                    bedcolor = 14;
-                } else if (trimmedIdentifier.contains("minecraft:black")) {
-                    bedcolor = 15;
-                } object.addProperty("bed_color", bedcolor);
+            } else if (trimmedIdentifier.contains("_bed")) {
+                String woolid = trimmedIdentifier.replace("minecraft:", "");
+                woolid = woolid.split("_bed")[0].toUpperCase();
+                object.addProperty("bed_color", DyeColor.valueOf(woolid).getId());
             }
 
             if (blockEntry.getBedrockStates() != null)
