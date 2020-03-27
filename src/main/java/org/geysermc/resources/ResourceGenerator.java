@@ -12,6 +12,7 @@ import net.minecraft.item.MiningToolItem;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.DyeColor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -121,6 +122,10 @@ public class ResourceGenerator {
                 object.addProperty("tool_type", "shears");
             } else if (trimmedIdentifier.contains("cobweb")) {
                 object.addProperty("tool_type", "sword");
+            } else if (trimmedIdentifier.contains("_bed")) {
+                String woolid = trimmedIdentifier.replace("minecraft:", "");
+                woolid = woolid.split("_bed")[0].toUpperCase();
+                object.addProperty("bed_color", DyeColor.valueOf(woolid).getId());
             }
 
             if (blockEntry.getBedrockStates() != null)
