@@ -146,7 +146,7 @@ public class ResourceGenerator {
                 }
             }
 
-                if (blockEntry.getBedrockStates() != null)
+            if (blockEntry.getBedrockStates() != null)
                 object.add("bedrock_states", blockEntry.getBedrockStates());
         } else {
             object.addProperty("bedrock_identifier", identifier.split("\\[")[0]);
