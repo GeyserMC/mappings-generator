@@ -126,6 +126,24 @@ public class ResourceGenerator {
                 String woolid = trimmedIdentifier.replace("minecraft:", "");
                 woolid = woolid.split("_bed")[0].toUpperCase();
                 object.addProperty("bed_color", DyeColor.valueOf(woolid).getId());
+            } else if (trimmedIdentifier.contains("head") && !trimmedIdentifier.contains("piston") || trimmedIdentifier.contains("skull")) {
+                if (!trimmedIdentifier.contains("wall")) {
+                    int rotationId = Integer.parseInt(identifier.substring(identifier.indexOf("rotation=") + 9, identifier.indexOf("]")));
+                    object.addProperty("skull_rotation", rotationId);
+                }
+                if (trimmedIdentifier.contains("wither_skeleton")) {
+                    object.addProperty("variation", 1);
+                } else if (trimmedIdentifier.contains("skeleton")) {
+                    object.addProperty("variation", 0);
+                } else if (trimmedIdentifier.contains("zombie")) {
+                    object.addProperty("variation", 2);
+                } else if (trimmedIdentifier.contains("player")) {
+                    object.addProperty("variation", 3);
+                } else if (trimmedIdentifier.contains("creeper")) {
+                    object.addProperty("variation", 4);
+                } else if (trimmedIdentifier.contains("dragon")) {
+                    object.addProperty("variation", 5);
+                }
             }
 
             if (blockEntry.getBedrockStates() != null)
