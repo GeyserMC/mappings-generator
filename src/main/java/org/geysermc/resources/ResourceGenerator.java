@@ -144,6 +144,10 @@ public class ResourceGenerator {
                 } else if (trimmedIdentifier.contains("dragon")) {
                     object.addProperty("variation", 5);
                 }
+            } else if (trimmedIdentifier.contains("_banner")) {
+                String woolid = trimmedIdentifier.replace("minecraft:", "");
+                woolid = woolid.split("_banner")[0].split("_wall")[0].toUpperCase();
+                object.addProperty("banner_color", DyeColor.valueOf(woolid).getId());
             }
 
             if (blockEntry.getBedrockStates() != null)
