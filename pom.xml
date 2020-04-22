@@ -37,18 +37,18 @@
         </repository>
     </repositories>
     <dependencies>
-        <!-- has to be added manually -->
+        <!-- Fabric named jar - has to be added manually -->
         <dependency>
             <groupId>net.fabricmc</groupId>
-            <artifactId>1.15-named</artifactId>
-            <version>1.15-SNAPSHOT</version>
+            <artifactId>1.15.2-named</artifactId>
+            <version>1.15.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <!-- vanilla 1.15 server jar -->
+        <!-- vanilla 1.15.2 server jar -->
         <dependency>
             <groupId>net.minecraft</groupId>
             <artifactId>server</artifactId>
-            <version>1.15-SNAPSHOT</version>
+            <version>1.15.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
