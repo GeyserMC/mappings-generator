@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.MiningToolItem;
 import net.minecraft.state.property.Property;
@@ -87,7 +88,7 @@ public class ResourceGenerator {
                         MiningToolItem miningToolItem = (MiningToolItem) item.get();
                         MINING_TOOL_ITEMS.add(miningToolItem);
                     }
-                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath()));
+                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(item.get()) != Blocks.AIR));
                 }
             }
 
@@ -159,12 +160,13 @@ public class ResourceGenerator {
         return object;
     }
 
-    public JsonObject getRemapItem(String identifier) {
+    public JsonObject getRemapItem(String identifier, boolean isBlock) {
         JsonObject object = new JsonObject();
         if (ITEM_ENTRIES.containsKey(identifier)) {
             ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
             object.addProperty("bedrock_id", itemEntry.getBedrockId());
             object.addProperty("bedrock_data", itemEntry.getBedrockData());
+            object.addProperty("is_block", isBlock);
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
             object.addProperty("bedrock_data", 0);

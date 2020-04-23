@@ -14,4 +14,7 @@ public class ItemEntry {
 
     @SerializedName("bedrock_data")
     private int bedrockData;
+
+    @SerializedName("is_block")
+    private boolean isBlock;
 }
