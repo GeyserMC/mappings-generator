@@ -150,7 +150,7 @@ public class ResourceGenerator {
                 woolid = woolid.split("_banner")[0].split("_wall")[0].toUpperCase();
                 object.addProperty("banner_color", DyeColor.valueOf(woolid).getId());
             } else if (trimmedIdentifier.contains("shulker_box")) {
-                object.addProperty("shulker_direction", identifier.substring(identifier.indexOf("facing=") + 7, identifier.indexOf("]")));
+                object.addProperty("shulker_direction", getDirectionInt(identifier.substring(identifier.indexOf("facing=") + 7, identifier.indexOf("]"))));
             }
 
             if (blockEntry.getBedrockStates() != null)
@@ -229,4 +229,35 @@ public class ResourceGenerator {
             return arg.name((T) comparable);
         }
     };
+
+    /**
+     * Converts a Java edition direction string to an byte for Bedrock edition
+     * Designed for Shulker boxes, may work for other things
+     *
+     * @param direction The direction string
+     * @return Converted direction byte
+     */
+    private static byte getDirectionInt(String direction) {
+        switch (direction) {
+            case "down":
+                return 0;
+
+            case "up":
+                return 1;
+
+            case "north":
+                return 2;
+
+            case "south":
+                return 3;
+
+            case "west":
+                return 4;
+
+            case "east":
+                return 5;
+        }
+
+        return 1;
+    }
 }
