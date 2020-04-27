@@ -149,6 +149,8 @@ public class ResourceGenerator {
                 String woolid = trimmedIdentifier.replace("minecraft:", "");
                 woolid = woolid.split("_banner")[0].split("_wall")[0].toUpperCase();
                 object.addProperty("banner_color", DyeColor.valueOf(woolid).getId());
+            } else if (trimmedIdentifier.contains("shulker_box")) {
+                object.addProperty("shulker_direction", identifier.substring(identifier.indexOf("facing=") + 7, identifier.indexOf("]")));
             }
 
             if (blockEntry.getBedrockStates() != null)
