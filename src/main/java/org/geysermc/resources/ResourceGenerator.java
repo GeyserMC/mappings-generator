@@ -148,6 +148,9 @@ public class ResourceGenerator {
                 String woolid = trimmedIdentifier.replace("minecraft:", "");
                 woolid = woolid.split("_banner")[0].split("_wall")[0].toUpperCase();
                 object.addProperty("banner_color", DyeColor.valueOf(woolid).getId());
+            } else if (trimmedIdentifier.contains("note_block")) {
+                int notepitch = Integer.parseInt(identifier.substring(identifier.indexOf("note=") + 5, identifier.indexOf(",powered")));
+                object.addProperty("note_pitch", notepitch);
             }
 
             if (blockEntry.getBedrockStates() != null)
