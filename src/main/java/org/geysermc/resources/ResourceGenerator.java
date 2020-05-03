@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.MiningToolItem;
 import net.minecraft.state.property.Property;
@@ -87,7 +88,7 @@ public class ResourceGenerator {
                         MiningToolItem miningToolItem = (MiningToolItem) item.get();
                         MINING_TOOL_ITEMS.add(miningToolItem);
                     }
-                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath()));
+                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(item.get()) != Blocks.AIR));
                 }
             }
 
@@ -151,6 +152,8 @@ public class ResourceGenerator {
             } else if (trimmedIdentifier.contains("note_block")) {
                 int notepitch = Integer.parseInt(identifier.substring(identifier.indexOf("note=") + 5, identifier.indexOf(",powered")));
                 object.addProperty("note_pitch", notepitch);
+            } else if (trimmedIdentifier.contains("shulker_box")) {
+                object.addProperty("shulker_direction", getDirectionInt(identifier.substring(identifier.indexOf("facing=") + 7, identifier.indexOf("]"))));
             }
 
             if (blockEntry.getBedrockStates() != null)
@@ -162,12 +165,13 @@ public class ResourceGenerator {
         return object;
     }
 
-    public JsonObject getRemapItem(String identifier) {
+    public JsonObject getRemapItem(String identifier, boolean isBlock) {
         JsonObject object = new JsonObject();
         if (ITEM_ENTRIES.containsKey(identifier)) {
             ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
             object.addProperty("bedrock_id", itemEntry.getBedrockId());
             object.addProperty("bedrock_data", itemEntry.getBedrockData());
+            object.addProperty("is_block", isBlock);
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
             object.addProperty("bedrock_data", 0);
@@ -228,4 +232,35 @@ public class ResourceGenerator {
             return arg.name((T) comparable);
         }
     };
+
+    /**
+     * Converts a Java edition direction string to an byte for Bedrock edition
+     * Designed for Shulker boxes, may work for other things
+     *
+     * @param direction The direction string
+     * @return Converted direction byte
+     */
+    private static byte getDirectionInt(String direction) {
+        switch (direction) {
+            case "down":
+                return 0;
+
+            case "up":
+                return 1;
+
+            case "north":
+                return 2;
+
+            case "south":
+                return 3;
+
+            case "west":
+                return 4;
+
+            case "east":
+                return 5;
+        }
+
+        return 1;
+    }
 }
