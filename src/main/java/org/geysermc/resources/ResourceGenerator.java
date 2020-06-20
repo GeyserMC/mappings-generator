@@ -106,9 +106,9 @@ public class ResourceGenerator {
             BlockEntry blockEntry = BLOCK_ENTRIES.get(identifier);
             object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             object.addProperty("block_hardness", state.getHardness(null, null));
-            object.addProperty("can_break_with_hand", state.getMaterial().canBreakByHand());
+            object.addProperty("can_break_with_hand", !state.isToolRequired());
             MINING_TOOL_ITEMS.forEach(item -> {
-                if (item.getMiningSpeed(null, state) != 1.0f) {
+                if (item.getMiningSpeedMultiplier(null, state) != 1.0f) {
                     String itemClassName = item.getClass().getName();
                     String toolType = itemClassName.substring(19, itemClassName.length() -4);
                     object.addProperty("tool_type", toolType.toLowerCase());
@@ -154,6 +154,21 @@ public class ResourceGenerator {
                 object.addProperty("note_pitch", notepitch);
             } else if (trimmedIdentifier.contains("shulker_box")) {
                 object.addProperty("shulker_direction", getDirectionInt(identifier.substring(identifier.indexOf("facing=") + 7, identifier.indexOf("]"))));
+            } if (trimmedIdentifier.contains("chest") && (identifier.contains("type="))) {
+                if (identifier.contains("type=left")) {
+                    object.addProperty("double_chest_position", "left");
+                } else if (identifier.contains("type=right")) {
+                    object.addProperty("double_chest_position", "right");
+                }
+                if (identifier.contains("north")) {
+                    object.addProperty("z", false);
+                } else if (identifier.contains("south")) {
+                    object.addProperty("z", true);
+                } else if (identifier.contains("east")) {
+                    object.addProperty("x", true);
+                } else if (identifier.contains("west")) {
+                    object.addProperty("x", false);
+                }
             }
 
             if (blockEntry.getBedrockStates() != null)
