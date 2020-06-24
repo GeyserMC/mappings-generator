@@ -2,6 +2,7 @@ package org.geysermc.resources;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
@@ -14,6 +15,9 @@ import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.DyeColor;
+import org.geysermc.resources.state.StateMapper;
+import org.geysermc.resources.state.StateRemapper;
+import org.reflections.Reflections;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,7 +35,18 @@ public class ResourceGenerator {
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
 
+    private Map<String, StateMapper<?>> stateMappers = new HashMap<>();
+
     public void generateBlocks() {
+        Reflections ref = new Reflections("org.geysermc.resources.state.type");
+        for (Class<?> clazz : ref.getTypesAnnotatedWith(StateRemapper.class)) {
+            try {
+                StateMapper<?> stateMapper = (StateMapper<?>) clazz.newInstance();
+                this.stateMappers.put(clazz.getAnnotation(StateRemapper.class).value(), stateMapper);
+            } catch (InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
         try {
             File file = new File("mappings/blocks.json");
             if (!file.exists()) {
@@ -102,8 +117,10 @@ public class ResourceGenerator {
 
     public JsonObject getRemapBlock(BlockState state, String identifier) {
         JsonObject object = new JsonObject();
+        BlockEntry blockEntry = null;
+        String trimmedIdentifier = identifier.split("\\[")[0];
         if (BLOCK_ENTRIES.containsKey(identifier)) {
-            BlockEntry blockEntry = BLOCK_ENTRIES.get(identifier);
+            blockEntry = BLOCK_ENTRIES.get(identifier);
             object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             object.addProperty("block_hardness", state.getHardness(null, null));
             object.addProperty("can_break_with_hand", !state.isToolRequired());
@@ -115,7 +132,6 @@ public class ResourceGenerator {
                 }
             });
             // Removes nbt tags from identifier
-            String trimmedIdentifier = identifier.split("\\[")[0];
             // Add tool type for blocks that use shears or sword
             if (trimmedIdentifier.contains("wool")) {
                 object.addProperty("tool_type", "shears");
@@ -170,11 +186,46 @@ public class ResourceGenerator {
                     object.addProperty("x", false);
                 }
             }
-
-            if (blockEntry.getBedrockStates() != null)
-                object.add("bedrock_states", blockEntry.getBedrockStates());
         } else {
             object.addProperty("bedrock_identifier", identifier.split("\\[")[0]);
+        }
+
+        JsonElement bedrockStates = blockEntry != null ? blockEntry.getBedrockStates() : null;
+        if (bedrockStates == null) {
+            bedrockStates = new JsonObject();
+        }
+
+        JsonObject statesObject = bedrockStates.getAsJsonObject();
+        String[] states = identifier.substring(identifier.lastIndexOf("[") + 1).replace("]", "").split(",");
+        for (String javaState : states) {
+            String key = javaState.split("=")[0];
+            if (!this.stateMappers.containsKey(key)) {
+                continue;
+            }
+            StateMapper<?> stateMapper = this.stateMappers.get(key);
+            String blockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).blockRegex();
+            if (!blockRegex.isEmpty()) {
+                if (!trimmedIdentifier.matches(blockRegex)) {
+                    continue;
+                }
+            }
+            String value = javaState.split("=")[1];
+            Pair<String, ?> bedrockState = stateMapper.translateState(identifier, value);
+            if (statesObject.has(bedrockState.getKey())) {
+                continue;
+            }
+            if (bedrockState.getValue() instanceof Number) {
+                statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Number.class));
+            }
+            if (bedrockState.getValue() instanceof Boolean) {
+                statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Boolean.class));
+            }
+            if (bedrockState.getValue() instanceof String) {
+                statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, String.class));
+            }
+        }
+        if (statesObject.entrySet().size() != 0) {
+            object.add("bedrock_states", statesObject);
         }
 
         return object;
