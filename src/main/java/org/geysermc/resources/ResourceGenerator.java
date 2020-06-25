@@ -2,14 +2,9 @@ package org.geysermc.resources;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -21,6 +16,8 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.DyeColor;
 import org.geysermc.resources.state.StateMapper;
 import org.geysermc.resources.state.StateRemapper;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.reflections.Reflections;
 
 import java.io.File;
@@ -29,6 +26,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,6 +39,7 @@ public class ResourceGenerator {
     public static final Map<String, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
     public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
+    public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
 
     private final Multimap<String, StateMapper<?>> stateMappers = HashMultimap.create();
@@ -53,19 +55,43 @@ public class ResourceGenerator {
             }
         }
         try {
-            File file = new File("mappings/blocks.json");
-            if (!file.exists()) {
+            File mappings = new File("mappings/blocks.json");
+            File blockPalette = new File("palettes/runtime_block_states.json");
+            if (!mappings.exists()) {
                 System.out.println("Could not find mappings submodule! Did you clone them?");
                 return;
             }
+            if (!blockPalette.exists()) {
+                System.out.println("Could not find item palette (runtime_block_states.json), please refer to the README in the palettes directory.");
+                return;
+            }
 
-            Gson gson = new Gson();
-            Type mapType = new TypeToken<Map<String, BlockEntry>>() {}.getType();
-            Map<String, BlockEntry> map = gson.fromJson(new FileReader(file), mapType);
-            BLOCK_ENTRIES.putAll(map);
+            try {
+                Gson gson = new Gson();
+                Type mapType = new TypeToken<Map<String, BlockEntry>>() {}.getType();
+                Map<String, BlockEntry> map = gson.fromJson(new FileReader(mappings), mapType);
+                BLOCK_ENTRIES.putAll(map);
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+
+            try {
+                JSONArray stateArray = new JSONArray(readFile("palettes/runtime_block_states.json", StandardCharsets.UTF_8));
+                stateArray.forEach(e -> {
+                    JSONObject object = (JSONObject) e;
+                    String identifier = object.getString("name");
+                    if (!STATES.containsKey(identifier)) {
+                        JSONObject states = object.getJSONObject("states");
+                        List<String> stateKeys = new ArrayList<>(states.keySet());
+                        STATES.put(identifier, stateKeys);
+                    }
+                });
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            FileWriter writer = new FileWriter(file);
+            FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
             for (BlockState blockState : getFullBlockDataList()) {
@@ -74,6 +100,7 @@ public class ResourceGenerator {
 
             builder.create().toJson(rootObject, writer);
             writer.close();
+            System.out.println("Some block states need to be manually mapped, please search for MANUALMAP in blocks.json, if there are no occurrences you do not need to do anything.");
             System.out.println("Finished block writing process!");
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -93,8 +120,9 @@ public class ResourceGenerator {
                 return;
             }
 
+            Gson gson = new Gson();
+
             try {
-                Gson gson = new Gson();
                 Type mapType = new TypeToken<Map<String, ItemEntry>>() {}.getType();
                 Map<String, ItemEntry> map = gson.fromJson(new FileReader(mappings), mapType);
                 ITEM_ENTRIES.putAll(map);
@@ -103,7 +131,6 @@ public class ResourceGenerator {
             }
 
             try {
-                Gson gson = new Gson();
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = gson.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
@@ -249,6 +276,16 @@ public class ResourceGenerator {
                 }
             }
         }
+
+        List<String> stateKeys = STATES.get(trimmedIdentifier);
+        if (stateKeys != null) {
+            stateKeys.forEach(key -> {
+                if (!statesObject.has(key)) {
+                    statesObject.addProperty(key, "MANUALMAP");
+                }
+            });
+        }
+
         if (statesObject.entrySet().size() != 0) {
             object.add("bedrock_states", statesObject);
         }
@@ -357,5 +394,10 @@ public class ResourceGenerator {
         }
 
         return 1;
+    }
+
+    private static String readFile(String path, Charset encoding) throws IOException {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
     }
 }
