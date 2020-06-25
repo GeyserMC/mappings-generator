@@ -8,6 +8,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -35,9 +37,10 @@ public class ResourceGenerator {
 
     public static final Map<String, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
+    public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
 
-    private Multimap<String, StateMapper<?>> stateMappers = HashMultimap.create();
+    private final Multimap<String, StateMapper<?>> stateMappers = HashMultimap.create();
 
     public void generateBlocks() {
         Reflections ref = new Reflections("org.geysermc.resources.state.type");
@@ -79,23 +82,37 @@ public class ResourceGenerator {
 
     public void generateItems() {
         try {
-            File file = new File("mappings/items.json");
-            if (!file.exists()) {
+            File mappings = new File("mappings/items.json");
+            File itemPalette = new File("palettes/runtime_item_states.json");
+            if (!mappings.exists()) {
                 System.out.println("Could not find mappings submodule! Did you clone them?");
+                return;
+            }
+            if (!itemPalette.exists()) {
+                System.out.println("Could not find item palette (runtime_item_states.json), please refer to the README in the palettes directory.");
                 return;
             }
 
             try {
                 Gson gson = new Gson();
                 Type mapType = new TypeToken<Map<String, ItemEntry>>() {}.getType();
-                Map<String, ItemEntry> map = gson.fromJson(new FileReader(file), mapType);
+                Map<String, ItemEntry> map = gson.fromJson(new FileReader(mappings), mapType);
                 ITEM_ENTRIES.putAll(map);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
 
+            try {
+                Gson gson = new Gson();
+                Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
+                List<PaletteItemEntry> entries = gson.fromJson(new FileReader(itemPalette), listType);
+                entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            FileWriter writer = new FileWriter(file);
+            FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
             for (Identifier key : Registry.ITEM.getIds()) {
@@ -243,7 +260,11 @@ public class ResourceGenerator {
         JsonObject object = new JsonObject();
         if (ITEM_ENTRIES.containsKey(identifier)) {
             ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
-            object.addProperty("bedrock_id", itemEntry.getBedrockId());
+            if (RUNTIME_ITEM_IDS.containsKey(identifier)) {
+                object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get(identifier));
+            } else {
+                object.addProperty("bedrock_id", itemEntry.getBedrockId());
+            }
             object.addProperty("bedrock_data", itemEntry.getBedrockData());
             object.addProperty("is_block", isBlock);
         } else {

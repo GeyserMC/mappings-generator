@@ -219,4 +219,6 @@ dist/
 nbdist/
 .nb-gradle/
 
+palettes/*.json
+
 # End of https://www.gitignore.io/api/git,java,maven,eclipse,netbeans,jetbrains+all
