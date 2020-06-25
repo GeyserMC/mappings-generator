@@ -12,7 +12,7 @@ public @interface StateRemapper {
      *
      * @return regex string to check against when remapping states for blocks
      */
-    String blockRegex() default "";
+    String[] blockRegex() default "";
 
     /**
      * The name of the Minecraft: Java Edition blockstate data.

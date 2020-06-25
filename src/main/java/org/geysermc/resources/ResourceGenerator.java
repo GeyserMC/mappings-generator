@@ -1,5 +1,7 @@
 package org.geysermc.resources;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -35,7 +37,7 @@ public class ResourceGenerator {
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
 
-    private Map<String, StateMapper<?>> stateMappers = new HashMap<>();
+    private Multimap<String, StateMapper<?>> stateMappers = HashMultimap.create();
 
     public void generateBlocks() {
         Reflections ref = new Reflections("org.geysermc.resources.state.type");
@@ -202,26 +204,32 @@ public class ResourceGenerator {
             if (!this.stateMappers.containsKey(key)) {
                 continue;
             }
-            StateMapper<?> stateMapper = this.stateMappers.get(key);
-            String blockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).blockRegex();
-            if (!blockRegex.isEmpty()) {
-                if (!trimmedIdentifier.matches(blockRegex)) {
+            Collection<StateMapper<?>> stateMappers = this.stateMappers.get(key);
+
+            stateLoop:
+            for (StateMapper<?> stateMapper : stateMappers) {
+                String[] blockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).blockRegex();
+                if (blockRegex.length != 0) {
+                    for (String regex : blockRegex) {
+                        if (!trimmedIdentifier.matches(regex)) {
+                            continue stateLoop;
+                        }
+                    }
+                }
+                String value = javaState.split("=")[1];
+                Pair<String, ?> bedrockState = stateMapper.translateState(identifier, value);
+                if (statesObject.has(bedrockState.getKey())) {
                     continue;
                 }
-            }
-            String value = javaState.split("=")[1];
-            Pair<String, ?> bedrockState = stateMapper.translateState(identifier, value);
-            if (statesObject.has(bedrockState.getKey())) {
-                continue;
-            }
-            if (bedrockState.getValue() instanceof Number) {
-                statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Number.class));
-            }
-            if (bedrockState.getValue() instanceof Boolean) {
-                statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Boolean.class));
-            }
-            if (bedrockState.getValue() instanceof String) {
-                statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, String.class));
+                if (bedrockState.getValue() instanceof Number) {
+                    statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Number.class));
+                }
+                if (bedrockState.getValue() instanceof Boolean) {
+                    statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Boolean.class));
+                }
+                if (bedrockState.getValue() instanceof String) {
+                    statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, String.class));
+                }
             }
         }
         if (statesObject.entrySet().size() != 0) {
