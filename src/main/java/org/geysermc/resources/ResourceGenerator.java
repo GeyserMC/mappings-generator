@@ -86,7 +86,6 @@ public class ResourceGenerator {
                         // ignore some useless keys
                         stateKeys.remove("deprecated");
                         stateKeys.remove("stone_slab_type");
-                        stateKeys.remove("wall_block_type");
                         STATES.put(identifier, stateKeys);
                     }
                 });
@@ -177,7 +176,12 @@ public class ResourceGenerator {
         String trimmedIdentifier = identifier.split("\\[")[0];
         if (BLOCK_ENTRIES.containsKey(identifier)) {
             blockEntry = BLOCK_ENTRIES.get(identifier);
-            object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
+            // All walls before 1.16 use the same identifier (cobblestone_wall)
+            if (trimmedIdentifier.endsWith("_wall") && !trimmedIdentifier.contains("blackstone")) {
+                object.addProperty("bedrock_identifier", "minecraft:cobblestone_wall");
+            } else {
+                object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
+            }
             object.addProperty("block_hardness", state.getHardness(null, null));
             object.addProperty("can_break_with_hand", !state.isToolRequired());
             MINING_TOOL_ITEMS.forEach(item -> {
@@ -243,7 +247,12 @@ public class ResourceGenerator {
                 }
             }
         } else {
-            object.addProperty("bedrock_identifier", identifier.split("\\[")[0]);
+            // All walls before 1.16 use the same identifier (cobblestone_wall)
+            if (trimmedIdentifier.endsWith("_wall") && !trimmedIdentifier.contains("blackstone")) {
+                object.addProperty("bedrock_identifier", "minecraft:cobblestone_wall");
+            } else {
+                object.addProperty("bedrock_identifier", trimmedIdentifier);
+            }
         }
 
         JsonElement bedrockStates = blockEntry != null ? blockEntry.getBedrockStates() : null;
@@ -289,7 +298,12 @@ public class ResourceGenerator {
             }
         }
 
-        List<String> stateKeys = STATES.get(trimmedIdentifier);
+        String stateIdentifier = trimmedIdentifier;
+        if (trimmedIdentifier.endsWith("_wall") && !trimmedIdentifier.contains("blackstone")) {
+            stateIdentifier = "minecraft:cobblestone_wall";
+        }
+
+        List<String> stateKeys = STATES.get(stateIdentifier);
         if (stateKeys != null) {
             stateKeys.forEach(key -> {
                 if (!statesObject.has(key)) {
@@ -299,6 +313,9 @@ public class ResourceGenerator {
         }
 
         if (statesObject.entrySet().size() != 0) {
+            if (statesObject.has("wall_block_type") && trimmedIdentifier.contains("blackstone")) {
+                statesObject.getAsJsonObject().remove("wall_block_type");
+            }
             object.add("bedrock_states", statesObject);
         }
 

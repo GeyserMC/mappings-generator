@@ -9,6 +9,7 @@ public class ConnectionSouthMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {
+        if (value.equals("low")) value = "short";
         return new Pair<>("wall_connection_type_south", value);
     }
 }
