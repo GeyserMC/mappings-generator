@@ -83,9 +83,19 @@ public class ResourceGenerator {
                     if (!STATES.containsKey(identifier)) {
                         JSONObject states = object.getJSONObject("states");
                         List<String> stateKeys = new ArrayList<>(states.keySet());
+                        // ignore some useless keys
+                        stateKeys.remove("deprecated");
+                        stateKeys.remove("stone_slab_type");
+                        stateKeys.remove("wall_block_type");
                         STATES.put(identifier, stateKeys);
                     }
                 });
+                // Some State Corrections
+                STATES.put("minecraft:attached_pumpkin_stem", Arrays.asList("growth", "facing_direction"));
+                STATES.put("minecraft:attached_melon_stem", Arrays.asList("growth", "facing_direction"));
+                STATES.put("minecraft:pumpkin_stem", Collections.singletonList("growth"));
+                STATES.put("minecraft:melon_stem", Collections.singletonList("growth"));
+                STATES.put("minecraft:soul_torch", Collections.EMPTY_LIST);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -263,7 +273,9 @@ public class ResourceGenerator {
                 String value = javaState.split("=")[1];
                 Pair<String, ?> bedrockState = stateMapper.translateState(identifier, value);
                 if (statesObject.has(bedrockState.getKey())) {
-                    continue;
+                    if (!statesObject.get(bedrockState.getKey()).toString().equals("\"MANUALMAP\"")) {
+                        continue;
+                    }
                 }
                 if (bedrockState.getValue() instanceof Number) {
                     statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Number.class));
