@@ -4,12 +4,12 @@ import org.geysermc.resources.Pair;
 import org.geysermc.resources.state.StateMapper;
 import org.geysermc.resources.state.StateRemapper;
 
-@StateRemapper(value = "north", blockRegex = ".*_wall.?$")
-public class ConnectionNorthMapper extends StateMapper<String> {
+@StateRemapper(value = "west", blockRegex = ".*_wall.?$")
+public class WallWestMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {
         if (value.equals("low")) value = "short";
-        return new Pair<>("wall_connection_type_north", value);
+        return new Pair<>("wall_connection_type_west", value);
     }
 }

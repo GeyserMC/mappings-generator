@@ -5,7 +5,7 @@ import org.geysermc.resources.state.StateMapper;
 import org.geysermc.resources.state.StateRemapper;
 
 @StateRemapper(value = "up", blockRegex = ".*_wall.?$")
-public class PostBitMapper extends StateMapper<Boolean> {
+public class WallUpMapper extends StateMapper<Boolean> {
 
     @Override
     public Pair<String, Boolean> translateState(String fullIdentifier, String value) {

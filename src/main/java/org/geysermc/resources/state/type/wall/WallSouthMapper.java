@@ -5,7 +5,7 @@ import org.geysermc.resources.state.StateMapper;
 import org.geysermc.resources.state.StateRemapper;
 
 @StateRemapper(value = "south", blockRegex = ".*_wall.?$")
-public class ConnectionSouthMapper extends StateMapper<String> {
+public class WallSouthMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {

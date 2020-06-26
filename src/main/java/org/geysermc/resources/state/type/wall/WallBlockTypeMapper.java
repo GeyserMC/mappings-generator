@@ -6,7 +6,7 @@ import org.geysermc.resources.state.StateRemapper;
 
 // Used north value as all walls have it
 @StateRemapper(value = "north", blockRegex = ".*_wall.?$")
-public class BlockTypeMapper extends StateMapper<String> {
+public class WallBlockTypeMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {

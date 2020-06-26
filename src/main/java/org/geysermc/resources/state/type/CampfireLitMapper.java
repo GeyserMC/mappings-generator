@@ -5,7 +5,7 @@ import org.geysermc.resources.state.StateMapper;
 import org.geysermc.resources.state.StateRemapper;
 
 @StateRemapper(value = "lit", blockRegex = ".*campfire.?$")
-public class CampfireExtinguishedMapper extends StateMapper<Boolean> {
+public class CampfireLitMapper extends StateMapper<Boolean> {
 
     @Override
     public Pair<String, Boolean> translateState(String fullIdentifier, String value) {

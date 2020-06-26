@@ -5,7 +5,7 @@ import org.geysermc.resources.state.StateMapper;
 import org.geysermc.resources.state.StateRemapper;
 
 @StateRemapper(value = "powered", blockRegex = ".*_pressure_plate.?$")
-public class PressurePlateSignalMapper extends StateMapper<Integer> {
+public class PressurePlatePoweredMapper extends StateMapper<Integer> {
     // This property doesn't matter since signal is handled server side.
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
