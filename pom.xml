@@ -40,15 +40,15 @@
         <!-- Fabric named jar - has to be added manually -->
         <dependency>
             <groupId>net.fabricmc</groupId>
-            <artifactId>1.16-rc1-named</artifactId>
-            <version>1.16-rc1-SNAPSHOT</version>
+            <artifactId>1.16.1-named</artifactId>
+            <version>1.16.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <!-- vanilla 1.16 server jar -->
         <dependency>
             <groupId>net.minecraft</groupId>
             <artifactId>server</artifactId>
-            <version>1.16-rc1-SNAPSHOT</version>
+            <version>1.16.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
