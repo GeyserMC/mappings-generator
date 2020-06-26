@@ -9,18 +9,6 @@ public class HyphaeAxisMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {
-        String axis = "";
-        switch (value) {
-            case "x":
-                axis = "x";
-                break;
-            case "y":
-                axis = "y";
-                break;
-            case "z":
-                axis = "z";
-                break;
-        }
-        return new Pair<>("pillar_axis", axis);
+        return new Pair<>("pillar_axis", value);
     }
 }

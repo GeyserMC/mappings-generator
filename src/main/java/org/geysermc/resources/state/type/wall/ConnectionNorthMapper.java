@@ -9,18 +9,6 @@ public class ConnectionNorthMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {
-        String northType;
-        switch (value) {
-            case "tall":
-                northType = "tall";
-                break;
-            case "low":
-                northType = "low";
-                break;
-            default:
-                northType = "none";
-                break;
-        }
-        return new Pair<>("wall_connection_type_north", northType);
+        return new Pair<>("wall_connection_type_north", value);
     }
 }

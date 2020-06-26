@@ -9,8 +9,6 @@ public class PostBitMapper extends StateMapper<Boolean> {
 
     @Override
     public Pair<String, Boolean> translateState(String fullIdentifier, String value) {
-        boolean wallPostBit;
-        wallPostBit = "true".equals(value);
-        return new Pair<>("wall_post_bit", wallPostBit);
+        return new Pair<>("wall_post_bit", Boolean.parseBoolean(value));
     }
 }
