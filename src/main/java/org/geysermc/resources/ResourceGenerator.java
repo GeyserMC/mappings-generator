@@ -16,8 +16,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.DyeColor;
 import org.geysermc.resources.state.StateMapper;
 import org.geysermc.resources.state.StateRemapper;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.reflections.Reflections;
 
 import java.io.File;
@@ -41,6 +39,8 @@ public class ResourceGenerator {
     public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
+
+    private static final Gson GSON = new Gson();
 
     private final Multimap<String, StateMapper<?>> stateMappers = HashMultimap.create();
 
@@ -67,22 +67,21 @@ public class ResourceGenerator {
             }
 
             try {
-                Gson gson = new Gson();
                 Type mapType = new TypeToken<Map<String, BlockEntry>>() {}.getType();
-                Map<String, BlockEntry> map = gson.fromJson(new FileReader(mappings), mapType);
+                Map<String, BlockEntry> map = GSON.fromJson(new FileReader(mappings), mapType);
                 BLOCK_ENTRIES.putAll(map);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
 
             try {
-                JSONArray stateArray = new JSONArray(readFile("palettes/runtime_block_states.json", StandardCharsets.UTF_8));
+                JsonArray stateArray = (JsonArray) new JsonParser().parse(readFile("palettes/runtime_block_states.json", StandardCharsets.UTF_8));
                 stateArray.forEach(e -> {
-                    JSONObject object = (JSONObject) e;
-                    String identifier = object.getString("name");
+                    JsonObject object = (JsonObject) e;
+                    String identifier = object.get("name").getAsString();
                     if (!STATES.containsKey(identifier)) {
-                        JSONObject states = object.getJSONObject("states");
-                        List<String> stateKeys = new ArrayList<>(states.keySet());
+                        JsonObject states = object.getAsJsonObject("states");
+                        List<String> stateKeys = states.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
                         // ignore some useless keys
                         stateKeys.remove("deprecated");
                         stateKeys.remove("stone_slab_type");
@@ -129,11 +128,9 @@ public class ResourceGenerator {
                 return;
             }
 
-            Gson gson = new Gson();
-
             try {
                 Type mapType = new TypeToken<Map<String, ItemEntry>>() {}.getType();
-                Map<String, ItemEntry> map = gson.fromJson(new FileReader(mappings), mapType);
+                Map<String, ItemEntry> map = GSON.fromJson(new FileReader(mappings), mapType);
                 ITEM_ENTRIES.putAll(map);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
@@ -141,7 +138,7 @@ public class ResourceGenerator {
 
             try {
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
-                List<PaletteItemEntry> entries = gson.fromJson(new FileReader(itemPalette), listType);
+                List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
