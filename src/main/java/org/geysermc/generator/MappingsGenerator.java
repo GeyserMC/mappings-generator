@@ -10,6 +10,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.MiningToolItem;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -36,6 +37,7 @@ public class MappingsGenerator {
 
     public static final Map<String, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
+    public static final Map<String, SoundEntry> SOUND_ENTRIES = new HashMap<>();
     public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
@@ -45,7 +47,7 @@ public class MappingsGenerator {
     private final Multimap<String, StateMapper<?>> stateMappers = HashMultimap.create();
 
     public void generateBlocks() {
-        Reflections ref = new Reflections("org.geysermc.resources.state.type");
+        Reflections ref = new Reflections("org.geysermc.generator.state.type");
         for (Class<?> clazz : ref.getTypesAnnotatedWith(StateRemapper.class)) {
             try {
                 StateMapper<?> stateMapper = (StateMapper<?>) clazz.newInstance();
@@ -162,6 +164,55 @@ public class MappingsGenerator {
             builder.create().toJson(rootObject, writer);
             writer.close();
             System.out.println("Finished item writing process!");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void generateSounds() {
+        try {
+            File mappings = new File("mappings/sounds.json");
+            if (!mappings.exists()) {
+                System.out.println("Could not find mappings submodule! Did you clone them?");
+                return;
+            }
+
+            try {
+                Type mapType = new TypeToken<Map<String, SoundEntry>>() {}.getType();
+                Map<String, SoundEntry> map = GSON.fromJson(new FileReader(mappings), mapType);
+                SOUND_ENTRIES.putAll(map);
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            FileWriter writer = new FileWriter(mappings);
+            JsonObject rootObject = new JsonObject();
+
+            for (Identifier key : Registry.SOUND_EVENT.getIds()) {
+                Optional<SoundEvent> sound = Registry.SOUND_EVENT.getOrEmpty(key);
+                sound.ifPresent(soundEvent -> {
+                    SoundEntry soundEntry = SOUND_ENTRIES.get(soundEvent.getId().getPath());
+                    if (soundEntry == null) {
+                        soundEntry = new SoundEntry(soundEvent.getId().getPath(), "", -1, null, false);
+                    }
+                    JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
+                    if (soundEntry.getExtraData() <= 0 && !soundEvent.getId().getPath().equals("block.note_block.harp")) {
+                        object.remove("extra_data");
+                    }
+                    if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
+                        object.remove("identifier");
+                    }
+                    if (!soundEntry.isLevelEvent()) {
+                        object.remove("level_event");
+                    }
+                    rootObject.add(key.getPath(), object);
+                });
+            }
+
+            builder.create().toJson(rootObject, writer);
+            writer.close();
+            System.out.println("Finished sound writing process!");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
