@@ -41,6 +41,7 @@ public class MappingsGenerator {
     public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
+    private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling", "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern", "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus", "minecraft:crimson_roots", "minecraft:warped_roots");
 
     private static final Gson GSON = new Gson();
 
@@ -138,6 +139,9 @@ public class MappingsGenerator {
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
+                // Fix some discrepancies
+                RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
+                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -357,6 +361,11 @@ public class MappingsGenerator {
             });
         }
 
+        // No more manual pottable because I'm angry I don't care how bad the list looks
+        if (POTTABLE_BLOCK_IDENTIFIERS.contains(trimmedIdentifier)) {
+            object.addProperty("pottable", true);
+        }
+
         if (statesObject.entrySet().size() != 0) {
             if (statesObject.has("wall_block_type") && trimmedIdentifier.contains("blackstone")) {
                 statesObject.getAsJsonObject().remove("wall_block_type");
@@ -372,11 +381,7 @@ public class MappingsGenerator {
         if (ITEM_ENTRIES.containsKey(identifier)) {
             ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
             if (RUNTIME_ITEM_IDS.containsKey(identifier)) {
-                if (identifier.equals("minecraft:shulker_box")) {
-                    object.addProperty("bedrock_id", 205);
-                } else {
-                    object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get(identifier));
-                }
+                object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get(identifier));
             } else {
                 object.addProperty("bedrock_id", itemEntry.getBedrockId());
             }
