@@ -12,16 +12,16 @@ public class FenceGateFacingMapper extends StateMapper<Integer> {
         int direction = 0;
         switch (value) {
             case "north":
-                direction = 3;
+                direction = 0;
                 break;
             case "west":
-                direction = 2;
+                direction = 3;
                 break;
             case "south":
-                direction = 1;
+                direction = 2;
                 break;
             case "east":
-                direction = 0;
+                direction = 1;
                 break;
         }
         return new Pair<>("direction", direction);

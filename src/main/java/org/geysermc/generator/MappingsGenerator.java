@@ -85,7 +85,6 @@ public class MappingsGenerator {
                         JsonObject states = object.getAsJsonObject("states");
                         List<String> stateKeys = states.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
                         // ignore some useless keys
-                        stateKeys.remove("deprecated");
                         stateKeys.remove("stone_slab_type");
                         STATES.put(identifier, stateKeys);
                     }
@@ -93,9 +92,6 @@ public class MappingsGenerator {
                 // Some State Corrections
                 STATES.put("minecraft:attached_pumpkin_stem", Arrays.asList("growth", "facing_direction"));
                 STATES.put("minecraft:attached_melon_stem", Arrays.asList("growth", "facing_direction"));
-                STATES.put("minecraft:pumpkin_stem", Collections.singletonList("growth"));
-                STATES.put("minecraft:melon_stem", Collections.singletonList("growth"));
-                STATES.put("minecraft:soul_torch", Collections.EMPTY_LIST);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -354,6 +350,7 @@ public class MappingsGenerator {
         List<String> stateKeys = STATES.get(stateIdentifier);
         if (stateKeys != null) {
             stateKeys.forEach(key -> {
+                if (trimmedIdentifier.contains("minecraft:shulker_box")) return;
                 if (!statesObject.has(key)) {
                     statesObject.addProperty(key, "MANUALMAP");
                 }
@@ -375,7 +372,11 @@ public class MappingsGenerator {
         if (ITEM_ENTRIES.containsKey(identifier)) {
             ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
             if (RUNTIME_ITEM_IDS.containsKey(identifier)) {
-                object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get(identifier));
+                if (identifier.equals("minecraft:shulker_box")) {
+                    object.addProperty("bedrock_id", 205);
+                } else {
+                    object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get(identifier));
+                }
             } else {
                 object.addProperty("bedrock_id", itemEntry.getBedrockId());
             }
