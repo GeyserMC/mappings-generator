@@ -41,6 +41,7 @@ public class MappingsGenerator {
     public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
+    private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling", "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern", "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus", "minecraft:crimson_roots", "minecraft:warped_roots");
 
     private static final Gson GSON = new Gson();
 
@@ -85,7 +86,6 @@ public class MappingsGenerator {
                         JsonObject states = object.getAsJsonObject("states");
                         List<String> stateKeys = states.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
                         // ignore some useless keys
-                        stateKeys.remove("deprecated");
                         stateKeys.remove("stone_slab_type");
                         STATES.put(identifier, stateKeys);
                     }
@@ -93,9 +93,6 @@ public class MappingsGenerator {
                 // Some State Corrections
                 STATES.put("minecraft:attached_pumpkin_stem", Arrays.asList("growth", "facing_direction"));
                 STATES.put("minecraft:attached_melon_stem", Arrays.asList("growth", "facing_direction"));
-                STATES.put("minecraft:pumpkin_stem", Collections.singletonList("growth"));
-                STATES.put("minecraft:melon_stem", Collections.singletonList("growth"));
-                STATES.put("minecraft:soul_torch", Collections.EMPTY_LIST);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -142,6 +139,9 @@ public class MappingsGenerator {
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
+                // Fix some discrepancies
+                RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
+                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -354,10 +354,16 @@ public class MappingsGenerator {
         List<String> stateKeys = STATES.get(stateIdentifier);
         if (stateKeys != null) {
             stateKeys.forEach(key -> {
+                if (trimmedIdentifier.contains("minecraft:shulker_box")) return;
                 if (!statesObject.has(key)) {
                     statesObject.addProperty(key, "MANUALMAP");
                 }
             });
+        }
+
+        // No more manual pottable because I'm angry I don't care how bad the list looks
+        if (POTTABLE_BLOCK_IDENTIFIERS.contains(trimmedIdentifier)) {
+            object.addProperty("pottable", true);
         }
 
         if (statesObject.entrySet().size() != 0) {
