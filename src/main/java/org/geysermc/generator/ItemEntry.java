@@ -1,4 +1,4 @@
-package org.geysermc.resources;
+package org.geysermc.generator;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;

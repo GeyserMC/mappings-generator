@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.geysermc</groupId>
-    <artifactId>geyser-resources</artifactId>
+    <artifactId>mappings-generator</artifactId>
     <version>1.0.1</version>
     <packaging>jar</packaging>
-    <name>Geyser-Resources</name>
-    <description>Resources for Geyser.</description>
+    <name>mappings-generator</name>
+    <description>Geyser mapping generator to assist with the creation of mappings for converting various pieces of data from one game to the other.</description>
     <url>https://geysermc.org</url>
     <properties>
         <outputName>GeyserMC-Resources</outputName>
@@ -19,12 +19,12 @@
     </properties>
     <organization>
         <name>GeyserMC</name>
-        <url>https://github.com/GeyserMC/Geyser-Resources/blob/master/pom.xml</url>
+        <url>https://github.com/GeyserMC/mappings-generator/blob/master/pom.xml</url>
     </organization>
     <scm>
-        <connection>scm:git:https://github.com/GeyserMC/Geyser-Resources.git</connection>
-        <developerConnection>scm:git:git@github.com:GeyserMC/Geyser-Resources.git</developerConnection>
-        <url>https://github.com/GeyserMC/Geyser-Resources</url>
+        <connection>scm:git:https://github.com/GeyserMC/mappings-generator.git</connection>
+        <developerConnection>scm:git:git@github.com:GeyserMC/mappings-generator.git</developerConnection>
+        <url>https://github.com/GeyserMC/mappings-generator</url>
     </scm>
     <repositories>
         <repository>
@@ -40,15 +40,15 @@
         <!-- Fabric named jar - has to be added manually -->
         <dependency>
             <groupId>net.fabricmc</groupId>
-            <artifactId>1.15.2-named</artifactId>
-            <version>1.15.2-SNAPSHOT</version>
+            <artifactId>1.16.1-named</artifactId>
+            <version>1.16.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <!-- vanilla 1.15.2 server jar -->
+        <!-- vanilla 1.16 server jar -->
         <dependency>
             <groupId>net.minecraft</groupId>
             <artifactId>server</artifactId>
-            <version>1.15.2-SNAPSHOT</version>
+            <version>1.16.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -64,6 +64,12 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.12</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.4</version>
@@ -71,7 +77,7 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>GeyserResources</finalName>
+        <finalName>mappings-generator</finalName>
         <resources>
             <resource>
                 <targetPath>.</targetPath>
@@ -89,7 +95,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.geysermc.resources.Main</mainClass>
+                            <mainClass>org.geysermc.generator.Main</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
