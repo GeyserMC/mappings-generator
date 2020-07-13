@@ -7,5 +7,6 @@ public class Main {
         generator.generateItems();
         generator.generateBlocks();
         generator.generateSounds();
+        generator.generateMapColors();
     }
 }

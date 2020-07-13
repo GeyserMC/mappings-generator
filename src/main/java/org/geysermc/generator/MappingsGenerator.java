@@ -19,17 +19,15 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.awt.*;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -482,5 +480,38 @@ public class MappingsGenerator {
     private static String readFile(String path, Charset encoding) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         return new String(encoded, encoding);
+    }
+
+    public void generateMapColors() {
+        Color[] mapColors = new Color[MapColors.BASE_COLORS.length * 4];
+        for (int i = 0; i < MapColors.BASE_COLORS.length; ++i) {
+            Color bc = MapColors.BASE_COLORS[i];
+            mapColors[i * 4 + 0] = new Color((int) (bc.getRed() * 180.0 / 255.0 + 0.5), (int) (bc.getGreen() * 180.0 / 255.0 + 0.5), (int) (bc.getBlue() * 180.0 / 255.0 + 0.5), bc.getAlpha());
+            mapColors[i * 4 + 1] = new Color((int) (bc.getRed() * 220.0 / 255.0 + 0.5), (int) (bc.getGreen() * 220.0 / 255.0 + 0.5), (int) (bc.getBlue() * 220.0 / 255.0 + 0.5), bc.getAlpha());
+            mapColors[i * 4 + 2] = bc;
+            mapColors[i * 4 + 3] = new Color((int) (bc.getRed() * 135.0 / 255.0 + 0.5), (int) (bc.getGreen() * 135.0 / 255.0 + 0.5), (int) (bc.getBlue() * 135.0 / 255.0 + 0.5), bc.getAlpha());
+        }
+
+        String finalOutput = "";
+        for (int i = 0; i < mapColors.length; i++) {
+            Color color = mapColors[i];
+            finalOutput += "COLOR_" + i + "(" + color.getRed() + ", " + color.getGreen() + ", " + color.getBlue() + "),\n";
+        }
+
+        // Remap the empty colors
+        finalOutput = finalOutput.replaceAll("\\(0, 0, 0\\)", "(-1, -1, -1)");
+
+        // Fix the end
+        finalOutput = finalOutput.substring(0, finalOutput.length() - 2) + ";";
+
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("./map_colors.txt"));
+            writer.write(finalOutput);
+            writer.close();
+            System.out.println("Finished map color writing process!");
+        } catch (IOException e) {
+            System.out.println("Failed to write map_colors.txt!");
+            e.printStackTrace();
+        }
     }
 }
