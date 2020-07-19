@@ -142,6 +142,7 @@ public class MappingsGenerator {
                 // Fix some discrepancies
                 RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
                 RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
+                RUNTIME_ITEM_IDS.put("minecraft:nether_brick", 405);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
