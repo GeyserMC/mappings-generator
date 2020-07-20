@@ -2,7 +2,33 @@
 
 A standalone program that generates (most of) the [mappings](https://github.com/GeyserMC/mappings) used throughout Geyser.
 
-If you would like to use this to generate mappings, clone this repository locally and use the `Run` button in your IDE.
+## Setup
+
+- Clone this repository locally: `git clone https://github.com/GeyserMC/mappings-generator`
+- Navigate to the `mappings-generator` directory.
+- Download the specified Minecraft server from the Minecraft website.
+- Run the following:
+
+```bash
+mvn org.apache.maven.plugins:maven-install-plugin:install-file -Dfile=server.jar -DgroupId="net.minecraft" -DartifactId="server" -Dversion="(version)-SNAPSHOT" -Dpackaging="jar"
+```
+Replace `(version)` with the Minecraft server version. If `server.jar` isn't in the current directory, set `-DFile` to point to the correct location.
+
+- Clone the [Yarn](https://github.com/FabricMC/yarn) repository using the same process above.
+- Ensure the current Yarn git branch is set to the desired Minecraft version.
+- In the directory run `./gradlew mapNamedJar` (Linux, Git console and PowerShell) / `gradlew mapNamedJar` (Windows CMD)
+- Copy the `VERSION-named.jar` to the `mappings-generator` folder.
+- Replacing `(version)` with your desired Minecraft version, run:
+
+```bash
+mvn org.apache.maven.plugins:maven-install-plugin:install-file -Dfile=(version)-named.jar -DgroupId="net.fabricmc" -DartifactId="(version)-named" -Dversion="(version)-SNAPSHOT" -Dpackaging="jar"
+``` 
+
+## Running
+
+Use the `Run` button in your IDE.
 Once the program is done running, files will be created containing mappings needed for the version you are using. Please keep in mind that while this generator will map most of the needed information manually, in many instances (such as with game updates with completely new values), you will have to do some manual mapping of some kind or create mappers within this project.
 
-NOTE: This program uses the Fabric mappings, and if you want mappings for later versions, simply update the jar(s) in the `pom.xml`. In most scenarios, this should remain the same across versions, but some updating may need to be done when it comes to larger releases.
+## Updating for future versions
+
+If you want mappings for later versions, change the versions for the Fabric mappings and Minecraft server in the `pom.xml` and update the jar files with the process above.
