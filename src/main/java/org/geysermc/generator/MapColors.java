@@ -1,6 +1,6 @@
 package org.geysermc.generator;
 
-import java.awt.*;
+import java.awt.Color;
 
 public class MapColors {
     public static final Color[] BASE_COLORS = new Color[]{

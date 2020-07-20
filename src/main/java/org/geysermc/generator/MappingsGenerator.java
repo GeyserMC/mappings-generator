@@ -19,7 +19,7 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
