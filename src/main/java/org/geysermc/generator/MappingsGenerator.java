@@ -139,7 +139,9 @@ public class MappingsGenerator {
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
-                // Fix some discrepancies
+                // Fix some discrepancies - identifier is the Java string and ID is the Bedrock number ID
+                RUNTIME_ITEM_IDS.put("minecraft:snow", 78);
+                RUNTIME_ITEM_IDS.put("minecraft:snow_block", 80);
                 RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
                 RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
                 RUNTIME_ITEM_IDS.put("minecraft:nether_brick", 405);
