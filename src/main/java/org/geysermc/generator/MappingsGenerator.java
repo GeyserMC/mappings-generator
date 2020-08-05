@@ -145,6 +145,7 @@ public class MappingsGenerator {
                 RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
                 RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
                 RUNTIME_ITEM_IDS.put("minecraft:nether_brick", 405);
+                RUNTIME_ITEM_IDS.put("minecraft:stonecutter", -197);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -281,7 +282,7 @@ public class MappingsGenerator {
                 object.addProperty("note_pitch", notepitch);
             } else if (trimmedIdentifier.contains("shulker_box")) {
                 object.addProperty("shulker_direction", getDirectionInt(identifier.substring(identifier.indexOf("facing=") + 7, identifier.indexOf("]"))));
-            } if (trimmedIdentifier.contains("chest") && (identifier.contains("type="))) {
+            } else if (trimmedIdentifier.contains("chest") && (identifier.contains("type="))) {
                 if (identifier.contains("type=left")) {
                     object.addProperty("double_chest_position", "left");
                 } else if (identifier.contains("type=right")) {
@@ -296,6 +297,9 @@ public class MappingsGenerator {
                 } else if (identifier.contains("west")) {
                     object.addProperty("x", false);
                 }
+            } else if (trimmedIdentifier.contains("blackstone") && trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double")) {
+                // Fixes 1.16 blackstone double slabs
+                object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier().replace("_slab", "_double_slab"));
             }
         } else {
             // All walls before 1.16 use the same identifier (cobblestone_wall)
