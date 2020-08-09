@@ -140,12 +140,12 @@ public class MappingsGenerator {
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
                 // Fix some discrepancies - identifier is the Java string and ID is the Bedrock number ID
-                RUNTIME_ITEM_IDS.put("minecraft:snow", 78);
-                RUNTIME_ITEM_IDS.put("minecraft:snow_block", 80);
+                RUNTIME_ITEM_IDS.put("minecraft:grass", 31); // Conflicts with grass block
+                RUNTIME_ITEM_IDS.put("minecraft:snow", 78); // Conflicts with snow block
                 RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
                 RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
-                RUNTIME_ITEM_IDS.put("minecraft:nether_brick", 405);
-                RUNTIME_ITEM_IDS.put("minecraft:stonecutter", -197);
+                RUNTIME_ITEM_IDS.put("minecraft:nether_brick", 405); // Conflicts with nether brick block
+                RUNTIME_ITEM_IDS.put("minecraft:stonecutter", -197); // Conflicts with, surprisingly, the OLD MCPE stonecutter
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
