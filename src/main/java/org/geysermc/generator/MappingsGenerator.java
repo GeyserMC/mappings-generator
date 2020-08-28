@@ -8,6 +8,8 @@ import com.google.gson.reflect.TypeToken;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.MiningToolItem;
 import net.minecraft.sound.SoundEvent;
@@ -145,6 +147,7 @@ public class MappingsGenerator {
                 RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
                 RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
                 RUNTIME_ITEM_IDS.put("minecraft:nether_brick", 405); // Conflicts with nether brick block
+                RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", -180); // Conflicts with cobblestone stairs
                 RUNTIME_ITEM_IDS.put("minecraft:stonecutter", -197); // Conflicts with, surprisingly, the OLD MCPE stonecutter
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
@@ -168,6 +171,14 @@ public class MappingsGenerator {
             builder.create().toJson(rootObject, writer);
             writer.close();
             System.out.println("Finished item writing process!");
+
+            // Check for duplicate mappings
+            Set<JsonElement> itemDuplicateCheck = new HashSet<>();
+            for (Map.Entry<String, JsonElement> object : rootObject.entrySet()) {
+                if (!itemDuplicateCheck.add(object.getValue())) {
+                    System.out.println("Possible duplicate item (" + object.getKey() + ") in mappings: " + object.getValue());
+                }
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
