@@ -308,8 +308,8 @@ public class MappingsGenerator {
                 } else if (identifier.contains("west")) {
                     object.addProperty("x", false);
                 }
-            } else if (trimmedIdentifier.contains("blackstone") && trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double") && !blockEntry.getBedrockIdentifier().contains("_double_slab")) {
-                // Fixes 1.16 blackstone double slabs
+            } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double") && !blockEntry.getBedrockIdentifier().contains("double")) {
+                // Fixes 1.16 double slabs
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier().replace("_slab", "_double_slab"));
             }
         } else {
