@@ -23,7 +23,6 @@ import org.reflections.Reflections;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -337,6 +336,18 @@ public class MappingsGenerator {
         }
 
         JsonObject statesObject = bedrockStates.getAsJsonObject();
+        // Prevent ConcurrentModificationException
+        List<String> toRemove = new ArrayList<>();
+        // Since we now rely on block states being exact after 1.16.100, we need to remove any old states
+        for (Map.Entry<String, JsonElement> entry : statesObject.entrySet()) {
+            if (!STATES.get(blockEntry.getBedrockIdentifier()).contains(entry.getKey()) &&
+                    !entry.getKey().contains("stone_slab_type")) { // Ignore the stone slab types since we ignore them above
+                toRemove.add(entry.getKey());
+            }
+        }
+        for (String key : toRemove) {
+            statesObject.remove(key);
+        }
         String[] states = identifier.substring(identifier.lastIndexOf("[") + 1).replace("]", "").split(",");
         for (String javaState : states) {
             String key = javaState.split("=")[0];
@@ -357,11 +368,6 @@ public class MappingsGenerator {
                 }
                 String value = javaState.split("=")[1];
                 Pair<String, ?> bedrockState = stateMapper.translateState(identifier, value);
-                if (statesObject.has(bedrockState.getKey())) {
-                    if (!statesObject.get(bedrockState.getKey()).toString().equals("\"MANUALMAP\"")) {
-                        continue;
-                    }
-                }
                 if (bedrockState.getValue() instanceof Number) {
                     statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Number.class));
                 }
