@@ -1,6 +1,7 @@
 package org.geysermc.generator;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
@@ -15,8 +16,10 @@ import net.minecraft.item.MiningToolItem;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.DyeColor;
+import net.minecraft.world.EmptyBlockView;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
@@ -246,6 +249,26 @@ public class MappingsGenerator {
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             }
             object.addProperty("block_hardness", state.getHardness(null, null));
+            try {
+                List<List<Double>> collisionBoxes = Lists.newArrayList();
+                state.getCollisionShape(null, null).getBoundingBoxes().forEach(item -> {
+                    List<Double> coordinateList = Lists.newArrayList();
+                    // Convert Box class to an array of coordinates
+                    coordinateList.add(item.minX);
+                    coordinateList.add(item.minY);
+                    coordinateList.add(item.minZ);
+
+                    coordinateList.add(item.maxX);
+                    coordinateList.add(item.maxY);
+                    coordinateList.add(item.maxZ);
+
+                    collisionBoxes.add(coordinateList);
+                });
+                object.add("collision_boxes", GSON.toJsonTree(collisionBoxes));
+            } catch (NullPointerException e) {
+                // Fallback to empty collision when the position is needed to calculate it
+                object.add("collision_boxes", GSON.toJsonTree(Lists.newArrayList()));
+            }
             object.addProperty("can_break_with_hand", !state.isToolRequired());
             MINING_TOOL_ITEMS.forEach(item -> {
                 if (item.getMiningSpeedMultiplier(null, state) != 1.0f) {
