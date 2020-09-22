@@ -47,6 +47,10 @@ public class MappingsGenerator {
     public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
     private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling", "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern", "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus", "minecraft:crimson_roots", "minecraft:warped_roots");
+    // This ends up in collision.json
+    // collision_index in blocks.json refers to this to prevent duplication
+    // This helps to reduce file size
+    public static final List<List<List<Double>>> COLLISION_LIST = Lists.newArrayList();
 
     private static final Gson GSON = new Gson();
 
@@ -107,13 +111,8 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
-            // This ends up in collision.json
-            // collision_index in blocks.json refers to this to prevent duplicatation
-            // This helps to reduce file size
-            List<List<List<Double>>> collisionList = Lists.newArrayList();
-
             for (BlockState blockState : getFullBlockDataList()) {
-                rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState), collisionList));
+                rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState)));
             }
 
             builder.create().toJson(rootObject, writer);
@@ -121,7 +120,7 @@ public class MappingsGenerator {
 
             // Write collision types
             writer = new FileWriter(collision);
-            builder.create().toJson(collisionList, writer);
+            builder.create().toJson(COLLISION_LIST, writer);
             writer.close();
 
             System.out.println("Some block states need to be manually mapped, please search for MANUALMAP in blocks.json, if there are no occurrences you do not need to do anything.");
@@ -248,7 +247,7 @@ public class MappingsGenerator {
         }
     }
 
-    public JsonObject getRemapBlock(BlockState state, String identifier, List<List<List<Double>>> collisionList) {
+    public JsonObject getRemapBlock(BlockState state, String identifier) {
         JsonObject object = new JsonObject();
         BlockEntry blockEntry = null;
         String trimmedIdentifier = identifier.split("\\[")[0];
@@ -280,11 +279,11 @@ public class MappingsGenerator {
                 // Fallback to empty collision when the position is needed to calculate it
             }
 
-            if (!collisionList.contains(collisionBoxes)) {
-                collisionList.add(collisionBoxes);
+            if (!COLLISION_LIST.contains(collisionBoxes)) {
+                COLLISION_LIST.add(collisionBoxes);
             }
             // This points to the index of the collision in collision.json
-            object.addProperty("collision_index", collisionList.lastIndexOf(collisionBoxes));
+            object.addProperty("collision_index", COLLISION_LIST.lastIndexOf(collisionBoxes));
 
             object.addProperty("can_break_with_hand", !state.isToolRequired());
             MINING_TOOL_ITEMS.forEach(item -> {
