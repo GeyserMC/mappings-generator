@@ -64,6 +64,7 @@ public class MappingsGenerator {
         }
         try {
             File mappings = new File("mappings/blocks.json");
+            File collision = new File("mappings/collision.json");
             File blockPalette = new File("palettes/runtime_block_states.json");
             if (!mappings.exists()) {
                 System.out.println("Could not find mappings submodule! Did you clone them?");
@@ -106,12 +107,23 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
+            // This ends up in collision.json
+            // collision_index in blocks.json refers to this to prevent duplicatation
+            // This helps to reduce file size
+            List<List<List<Double>>> collisionList = Lists.newArrayList();
+
             for (BlockState blockState : getFullBlockDataList()) {
-                rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState)));
+                rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState), collisionList));
             }
 
             builder.create().toJson(rootObject, writer);
             writer.close();
+
+            // Write collision types
+            writer = new FileWriter(collision);
+            builder.create().toJson(collisionList, writer);
+            writer.close();
+
             System.out.println("Some block states need to be manually mapped, please search for MANUALMAP in blocks.json, if there are no occurrences you do not need to do anything.");
             System.out.println("Finished block writing process!");
         } catch (IOException ex) {
@@ -236,7 +248,7 @@ public class MappingsGenerator {
         }
     }
 
-    public JsonObject getRemapBlock(BlockState state, String identifier) {
+    public JsonObject getRemapBlock(BlockState state, String identifier, List<List<List<Double>>> collisionList) {
         JsonObject object = new JsonObject();
         BlockEntry blockEntry = null;
         String trimmedIdentifier = identifier.split("\\[")[0];
@@ -249,8 +261,8 @@ public class MappingsGenerator {
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             }
             object.addProperty("block_hardness", state.getHardness(null, null));
+            List<List<Double>> collisionBoxes = Lists.newArrayList();
             try {
-                List<List<Double>> collisionBoxes = Lists.newArrayList();
                 state.getCollisionShape(null, null).getBoundingBoxes().forEach(item -> {
                     List<Double> coordinateList = Lists.newArrayList();
                     // Convert Box class to an array of coordinates
@@ -264,11 +276,16 @@ public class MappingsGenerator {
 
                     collisionBoxes.add(coordinateList);
                 });
-                object.add("collision_boxes", GSON.toJsonTree(collisionBoxes));
             } catch (NullPointerException e) {
                 // Fallback to empty collision when the position is needed to calculate it
-                object.add("collision_boxes", GSON.toJsonTree(Lists.newArrayList()));
             }
+
+            if (!collisionList.contains(collisionBoxes)) {
+                collisionList.add(collisionBoxes);
+            }
+            // This points to the index of the collision in collision.json
+            object.addProperty("collision_index", collisionList.lastIndexOf(collisionBoxes));
+
             object.addProperty("can_break_with_hand", !state.isToolRequired());
             MINING_TOOL_ITEMS.forEach(item -> {
                 if (item.getMiningSpeedMultiplier(null, state) != 1.0f) {
