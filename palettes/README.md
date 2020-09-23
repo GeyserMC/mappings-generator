@@ -1,9 +1,16 @@
-# Bedrock Block and Item Palettes
+# Bedrock Block Palettes
 
-mappings-generator uses the block and item palettes dumped from Minecraft Bedrock using [ProxyPass](https://github.com/NukkitX/ProxyPass).
+Starting with v411, the block palette is no longer sent as a parameter in the StartGamePacket. You must dump the
+NBT file separately - the best way to do this is using [McReverse](https://github.com/bundabrg/McReverse).
 
-The required palettes are included in this repository, however if you would like to dump your own, follow these steps:
+After running that program, place the block palette here.
+
+# Bedrock Item Palettes
+
+mappings-generator uses the item palette dumped from Minecraft Bedrock using [ProxyPass](https://github.com/NukkitX/ProxyPass).
+
+The required palette is included in this repository, however if you would like to dump your own, follow these steps:
 
 After running ProxyPass and connecting to it from Minecraft Bedrock the palettes should be dumped to the data folder. 
 
-Currently, mappings-generator only uses `runtime_item_states.json` and `runtime_block_states.json`, copy those file to this directory.
+Currently, mappings-generator only uses `runtime_item_states.json`; copy that file to this directory.

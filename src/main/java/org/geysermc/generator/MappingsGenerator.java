@@ -149,13 +149,21 @@ public class MappingsGenerator {
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
                 // Fix some discrepancies - identifier is the Java string and ID is the Bedrock number ID
-                RUNTIME_ITEM_IDS.put("minecraft:grass", 31); // Conflicts with grass block
-                RUNTIME_ITEM_IDS.put("minecraft:snow", 78); // Conflicts with snow block
-                RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
-                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
-                RUNTIME_ITEM_IDS.put("minecraft:nether_brick", 405); // Conflicts with nether brick block
-                RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", -180); // Conflicts with cobblestone stairs
-                RUNTIME_ITEM_IDS.put("minecraft:stonecutter", -197); // Conflicts with, surprisingly, the OLD MCPE stonecutter
+                RUNTIME_ITEM_IDS.put("minecraft:grass", RUNTIME_ITEM_IDS.get("minecraft:tallgrass")); // Conflicts with grass block
+                RUNTIME_ITEM_IDS.put("minecraft:snow", RUNTIME_ITEM_IDS.get("minecraft:snow_layer")); // Conflicts with snow block
+                RUNTIME_ITEM_IDS.put("minecraft:melon", RUNTIME_ITEM_IDS.get("minecraft:melon_block")); // Conflicts with melon slice
+                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", RUNTIME_ITEM_IDS.get("minecraft:undyed_shulker_box"));
+                RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", RUNTIME_ITEM_IDS.get("minecraft:normal_stone_stairs")); // Conflicts with cobblestone stairs
+                RUNTIME_ITEM_IDS.put("minecraft:stonecutter", RUNTIME_ITEM_IDS.get("minecraft:stonecutter_block")); // Conflicts with, surprisingly, the OLD MCPE stonecutter
+                RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
+                RUNTIME_ITEM_IDS.put("minecraft:item_frame", RUNTIME_ITEM_IDS.get("minecraft:frame"));
+                RUNTIME_ITEM_IDS.put("minecraft:globe_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
+                RUNTIME_ITEM_IDS.put("minecraft:piglin_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
+                RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
+                RUNTIME_ITEM_IDS.put("minecraft:zombified_piglin_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:zombie_pigman_spawn_egg"));
+                // THESE TWO ARE PROBABLY IN ERROR
+                RUNTIME_ITEM_IDS.put("minecraft:wandering_trader_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:villager_spawn_egg"));
+                RUNTIME_ITEM_IDS.put("minecraft:bee_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:spawn_egg"));
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -417,9 +425,35 @@ public class MappingsGenerator {
             if (RUNTIME_ITEM_IDS.containsKey(identifier)) {
                 object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get(identifier));
             } else {
-                object.addProperty("bedrock_id", itemEntry.getBedrockId());
+                // Deal with items that we replace
+                String replacementIdentifier = null;
+                switch (identifier.replace("minecraft:", "")) {
+                    case "knowledge_book":
+                        replacementIdentifier = "book";
+                        break;
+                    case "tipped_arrow":
+                    case "spectral_arrow":
+                        replacementIdentifier = "arrow";
+                        break;
+                    case "debug_stick":
+                        replacementIdentifier = "stick";
+                        break;
+                    case "furnace_minecart":
+                        replacementIdentifier = "hopper_minecart";
+                        break;
+                    default:
+                        break;
+                }
+                if (identifier.endsWith("banner")) { // Don't include banner patterns
+                    replacementIdentifier = "banner";
+                }
+                if (replacementIdentifier != null) {
+                    object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get("minecraft:" + replacementIdentifier));
+                } else {
+                    object.addProperty("bedrock_id", itemEntry.getBedrockId());
+                }
             }
-            object.addProperty("bedrock_data", itemEntry.getBedrockData());
+            object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
             object.addProperty("is_block", isBlock);
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
