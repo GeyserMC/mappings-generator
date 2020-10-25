@@ -265,13 +265,14 @@ public class MappingsGenerator {
                 state.getCollisionShape(null, null).getBoundingBoxes().forEach(item -> {
                     List<Double> coordinateList = Lists.newArrayList();
                     // Convert Box class to an array of coordinates
-                    coordinateList.add(item.minX);
-                    coordinateList.add(item.minY);
-                    coordinateList.add(item.minZ);
+                    // They need to be converted from min/max coordinates to centres and sizes
+                    coordinateList.add(item.minX + ((item.maxX - item.minX) / 2));
+                    coordinateList.add(item.minY + ((item.maxY - item.minY) / 2));
+                    coordinateList.add(item.minZ + ((item.maxZ - item.minZ) / 2));
 
-                    coordinateList.add(item.maxX);
-                    coordinateList.add(item.maxY);
-                    coordinateList.add(item.maxZ);
+                    coordinateList.add(item.maxX - item.minX);
+                    coordinateList.add(item.maxY - item.minY);
+                    coordinateList.add(item.maxZ - item.minY);
 
                     collisionBoxes.add(coordinateList);
                 });
