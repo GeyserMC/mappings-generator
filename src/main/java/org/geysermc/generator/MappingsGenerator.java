@@ -272,7 +272,7 @@ public class MappingsGenerator {
 
                     coordinateList.add(item.maxX - item.minX);
                     coordinateList.add(item.maxY - item.minY);
-                    coordinateList.add(item.maxZ - item.minY);
+                    coordinateList.add(item.maxZ - item.minZ);
 
                     collisionBoxes.add(coordinateList);
                 });
