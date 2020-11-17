@@ -5,11 +5,10 @@ import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
+import com.nukkitx.nbt.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.MiningToolItem;
 import net.minecraft.sound.SoundEvent;
@@ -21,14 +20,9 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -60,14 +54,32 @@ public class MappingsGenerator {
             }
         }
         try {
-            File mappings = new File("mappings/blocks.json");
-            File blockPalette = new File("palettes/runtime_block_states.json");
-            if (!mappings.exists()) {
-                System.out.println("Could not find mappings submodule! Did you clone them?");
+            // The stream could be either a list of blocks written with varints (breaks nbt parsing) or an nbt tag containing a blocks child with the list of blocks
+            // in NBT format
+            NbtList<NbtMap> palette;
+            File blockPalette = new File("palettes/blockpalette.nbt");
+            if (!blockPalette.exists()) {
+                System.out.println("Could not find block palette (blockpalette.nbt), please refer to the README in the palettes directory.");
                 return;
             }
-            if (!blockPalette.exists()) {
-                System.out.println("Could not find item palette (runtime_block_states.json), please refer to the README in the palettes directory.");
+
+            try {
+                InputStream stream = new FileInputStream(blockPalette);
+                PushbackInputStream pbStream = new PushbackInputStream(stream);
+                int paletteType = pbStream.read();
+                pbStream.unread(paletteType);
+
+                try (NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(pbStream))) {
+                    NbtMap ret = (NbtMap) nbtInputStream.readTag();
+                    palette = (NbtList<NbtMap>) ret.getList("blocks", NbtType.COMPOUND);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Unable to get blocks from block palette", e);
+            }
+
+            File mappings = new File("mappings/blocks.json");
+            if (!mappings.exists()) {
+                System.out.println("Could not find mappings submodule! Did you clone them?");
                 return;
             }
 
@@ -79,25 +91,20 @@ public class MappingsGenerator {
                 ex.printStackTrace();
             }
 
-            try {
-                JsonArray stateArray = (JsonArray) new JsonParser().parse(readFile("palettes/runtime_block_states.json", StandardCharsets.UTF_8));
-                stateArray.forEach(e -> {
-                    JsonObject object = (JsonObject) e;
-                    String identifier = object.get("name").getAsString();
-                    if (!STATES.containsKey(identifier)) {
-                        JsonObject states = object.getAsJsonObject("states");
-                        List<String> stateKeys = states.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
-                        // ignore some useless keys
-                        stateKeys.remove("stone_slab_type");
-                        STATES.put(identifier, stateKeys);
-                    }
-                });
-                // Some State Corrections
-                STATES.put("minecraft:attached_pumpkin_stem", Arrays.asList("growth", "facing_direction"));
-                STATES.put("minecraft:attached_melon_stem", Arrays.asList("growth", "facing_direction"));
-            } catch (IOException ex) {
-                ex.printStackTrace();
+            for (NbtMap entry : palette) {
+                NbtMap block = entry.getCompound("block");
+                String identifier = block.getString("name");
+                if (!STATES.containsKey(identifier)) {
+                    NbtMap states = block.getCompound("states");
+                    List<String> stateKeys = new ArrayList<>(states.keySet());
+                    // ignore some useless keys
+                    stateKeys.remove("stone_slab_type");
+                    STATES.put(identifier, stateKeys);
+                }
             }
+            // Some State Corrections
+            STATES.put("minecraft:attached_pumpkin_stem", Arrays.asList("growth", "facing_direction"));
+            STATES.put("minecraft:attached_melon_stem", Arrays.asList("growth", "facing_direction"));
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             FileWriter writer = new FileWriter(mappings);
@@ -142,13 +149,17 @@ public class MappingsGenerator {
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
                 // Fix some discrepancies - identifier is the Java string and ID is the Bedrock number ID
-                RUNTIME_ITEM_IDS.put("minecraft:grass", 31); // Conflicts with grass block
-                RUNTIME_ITEM_IDS.put("minecraft:snow", 78); // Conflicts with snow block
-                RUNTIME_ITEM_IDS.put("minecraft:melon", 103);
-                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", 205);
-                RUNTIME_ITEM_IDS.put("minecraft:nether_brick", 405); // Conflicts with nether brick block
-                RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", -180); // Conflicts with cobblestone stairs
-                RUNTIME_ITEM_IDS.put("minecraft:stonecutter", -197); // Conflicts with, surprisingly, the OLD MCPE stonecutter
+                RUNTIME_ITEM_IDS.put("minecraft:grass", RUNTIME_ITEM_IDS.get("minecraft:tallgrass")); // Conflicts with grass block
+                RUNTIME_ITEM_IDS.put("minecraft:snow", RUNTIME_ITEM_IDS.get("minecraft:snow_layer")); // Conflicts with snow block
+                RUNTIME_ITEM_IDS.put("minecraft:melon", RUNTIME_ITEM_IDS.get("minecraft:melon_block")); // Conflicts with melon slice
+                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", RUNTIME_ITEM_IDS.get("minecraft:undyed_shulker_box"));
+                RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", RUNTIME_ITEM_IDS.get("minecraft:normal_stone_stairs")); // Conflicts with cobblestone stairs
+                RUNTIME_ITEM_IDS.put("minecraft:stonecutter", RUNTIME_ITEM_IDS.get("minecraft:stonecutter_block")); // Conflicts with, surprisingly, the OLD MCPE stonecutter
+                RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
+                RUNTIME_ITEM_IDS.put("minecraft:item_frame", RUNTIME_ITEM_IDS.get("minecraft:frame"));
+                RUNTIME_ITEM_IDS.put("minecraft:globe_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
+                RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
+                RUNTIME_ITEM_IDS.put("minecraft:zombified_piglin_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:zombie_pigman_spawn_egg"));
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -173,10 +184,12 @@ public class MappingsGenerator {
             System.out.println("Finished item writing process!");
 
             // Check for duplicate mappings
-            Set<JsonElement> itemDuplicateCheck = new HashSet<>();
+            Map<JsonElement, String> itemDuplicateCheck = new HashMap<>();
             for (Map.Entry<String, JsonElement> object : rootObject.entrySet()) {
-                if (!itemDuplicateCheck.add(object.getValue())) {
-                    System.out.println("Possible duplicate item (" + object.getKey() + ") in mappings: " + object.getValue());
+                if (itemDuplicateCheck.containsKey(object.getValue())) {
+                    System.out.println("Possible duplicate items (" + object.getKey() + " and " + itemDuplicateCheck.get(object.getValue()) + ") in mappings: " + object.getValue());
+                } else {
+                    itemDuplicateCheck.put(object.getValue(), object.getKey());
                 }
             }
         } catch (IOException ex) {
@@ -327,6 +340,18 @@ public class MappingsGenerator {
         }
 
         JsonObject statesObject = bedrockStates.getAsJsonObject();
+        // Prevent ConcurrentModificationException
+        List<String> toRemove = new ArrayList<>();
+        // Since we now rely on block states being exact after 1.16.100, we need to remove any old states
+        for (Map.Entry<String, JsonElement> entry : statesObject.entrySet()) {
+            if (!STATES.get(blockEntry.getBedrockIdentifier()).contains(entry.getKey()) &&
+                    !entry.getKey().contains("stone_slab_type")) { // Ignore the stone slab types since we ignore them above
+                toRemove.add(entry.getKey());
+            }
+        }
+        for (String key : toRemove) {
+            statesObject.remove(key);
+        }
         String[] states = identifier.substring(identifier.lastIndexOf("[") + 1).replace("]", "").split(",");
         for (String javaState : states) {
             String key = javaState.split("=")[0];
@@ -347,11 +372,6 @@ public class MappingsGenerator {
                 }
                 String value = javaState.split("=")[1];
                 Pair<String, ?> bedrockState = stateMapper.translateState(identifier, value);
-                if (statesObject.has(bedrockState.getKey())) {
-                    if (!statesObject.get(bedrockState.getKey()).toString().equals("\"MANUALMAP\"")) {
-                        continue;
-                    }
-                }
                 if (bedrockState.getValue() instanceof Number) {
                     statesObject.addProperty(bedrockState.getKey(), StateMapper.asType(bedrockState, Number.class));
                 }
@@ -401,9 +421,35 @@ public class MappingsGenerator {
             if (RUNTIME_ITEM_IDS.containsKey(identifier)) {
                 object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get(identifier));
             } else {
-                object.addProperty("bedrock_id", itemEntry.getBedrockId());
+                // Deal with items that we replace
+                String replacementIdentifier = null;
+                switch (identifier.replace("minecraft:", "")) {
+                    case "knowledge_book":
+                        replacementIdentifier = "book";
+                        break;
+                    case "tipped_arrow":
+                    case "spectral_arrow":
+                        replacementIdentifier = "arrow";
+                        break;
+                    case "debug_stick":
+                        replacementIdentifier = "stick";
+                        break;
+                    case "furnace_minecart":
+                        replacementIdentifier = "hopper_minecart";
+                        break;
+                    default:
+                        break;
+                }
+                if (identifier.endsWith("banner")) { // Don't include banner patterns
+                    replacementIdentifier = "banner";
+                }
+                if (replacementIdentifier != null) {
+                    object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get("minecraft:" + replacementIdentifier));
+                } else {
+                    object.addProperty("bedrock_id", itemEntry.getBedrockId());
+                }
             }
-            object.addProperty("bedrock_data", itemEntry.getBedrockData());
+            object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
             object.addProperty("is_block", isBlock);
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)

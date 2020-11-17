@@ -35,21 +35,30 @@
             <id>gson-repo</id>
             <url>https://mvnrepository.com/artifact/com.google.code.gson/gson</url>
         </repository>
+        <repository>
+            <id>nukkitx-release-repo</id>
+            <url>https://repo.nukkitx.com/maven-releases/</url>
+        </repository>
     </repositories>
     <dependencies>
         <!-- Fabric named jar - has to be added manually -->
         <dependency>
             <groupId>net.fabricmc</groupId>
-            <artifactId>1.16.2-named</artifactId>
-            <version>1.16.2-SNAPSHOT</version>
+            <artifactId>1.16.3-named</artifactId>
+            <version>1.16.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <!-- vanilla 1.16.2 server jar -->
         <dependency>
             <groupId>net.minecraft</groupId>
             <artifactId>server</artifactId>
-            <version>1.16.2-SNAPSHOT</version>
+            <version>1.16.3-SNAPSHOT</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.nukkitx</groupId>
+            <artifactId>nbt</artifactId>
+            <version>2.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
