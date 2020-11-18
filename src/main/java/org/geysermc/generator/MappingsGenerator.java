@@ -160,6 +160,8 @@ public class MappingsGenerator {
                 RUNTIME_ITEM_IDS.put("minecraft:globe_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
                 RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
                 RUNTIME_ITEM_IDS.put("minecraft:zombified_piglin_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:zombie_pigman_spawn_egg"));
+                RUNTIME_ITEM_IDS.put("minecraft:oak_door", RUNTIME_ITEM_IDS.get("minecraft:wooden_door"));
+
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -442,6 +444,10 @@ public class MappingsGenerator {
                 }
                 if (identifier.endsWith("banner")) { // Don't include banner patterns
                     replacementIdentifier = "banner";
+                } else if (identifier.endsWith("bed")) {
+                    replacementIdentifier = "bed";
+                } else if (identifier.endsWith("_skull") || (identifier.endsWith("_head"))) {
+                    replacementIdentifier = "skull";
                 }
                 if (replacementIdentifier != null) {
                     object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get("minecraft:" + replacementIdentifier));
