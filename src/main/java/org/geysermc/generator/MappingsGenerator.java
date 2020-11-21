@@ -1,6 +1,7 @@
 package org.geysermc.generator;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
@@ -14,8 +15,10 @@ import net.minecraft.item.MiningToolItem;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.DyeColor;
+import net.minecraft.world.EmptyBlockView;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
@@ -38,6 +41,10 @@ public class MappingsGenerator {
     public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
     private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling", "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern", "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus", "minecraft:crimson_roots", "minecraft:warped_roots");
+    // This ends up in collision.json
+    // collision_index in blocks.json refers to this to prevent duplication
+    // This helps to reduce file size
+    public static final List<List<List<Double>>> COLLISION_LIST = Lists.newArrayList();
 
     private static final Gson GSON = new Gson();
 
@@ -78,6 +85,7 @@ public class MappingsGenerator {
             }
 
             File mappings = new File("mappings/blocks.json");
+            File collision = new File("mappings/collision.json");
             if (!mappings.exists()) {
                 System.out.println("Could not find mappings submodule! Did you clone them?");
                 return;
@@ -116,6 +124,12 @@ public class MappingsGenerator {
 
             builder.create().toJson(rootObject, writer);
             writer.close();
+
+            // Write collision types
+            writer = new FileWriter(collision);
+            builder.create().toJson(COLLISION_LIST, writer);
+            writer.close();
+
             System.out.println("Some block states need to be manually mapped, please search for MANUALMAP in blocks.json, if there are no occurrences you do not need to do anything.");
             System.out.println("Finished block writing process!");
         } catch (IOException ex) {
@@ -261,6 +275,32 @@ public class MappingsGenerator {
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             }
             object.addProperty("block_hardness", state.getHardness(null, null));
+            List<List<Double>> collisionBoxes = Lists.newArrayList();
+            try {
+                state.getCollisionShape(null, null).getBoundingBoxes().forEach(item -> {
+                    List<Double> coordinateList = Lists.newArrayList();
+                    // Convert Box class to an array of coordinates
+                    // They need to be converted from min/max coordinates to centres and sizes
+                    coordinateList.add(item.minX + ((item.maxX - item.minX) / 2));
+                    coordinateList.add(item.minY + ((item.maxY - item.minY) / 2));
+                    coordinateList.add(item.minZ + ((item.maxZ - item.minZ) / 2));
+
+                    coordinateList.add(item.maxX - item.minX);
+                    coordinateList.add(item.maxY - item.minY);
+                    coordinateList.add(item.maxZ - item.minZ);
+
+                    collisionBoxes.add(coordinateList);
+                });
+            } catch (NullPointerException e) {
+                // Fallback to empty collision when the position is needed to calculate it
+            }
+
+            if (!COLLISION_LIST.contains(collisionBoxes)) {
+                COLLISION_LIST.add(collisionBoxes);
+            }
+            // This points to the index of the collision in collision.json
+            object.addProperty("collision_index", COLLISION_LIST.lastIndexOf(collisionBoxes));
+
             object.addProperty("can_break_with_hand", !state.isToolRequired());
             MINING_TOOL_ITEMS.forEach(item -> {
                 if (item.getMiningSpeedMultiplier(null, state) != 1.0f) {
