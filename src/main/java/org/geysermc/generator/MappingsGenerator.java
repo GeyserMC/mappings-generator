@@ -3,22 +3,26 @@ package org.geysermc.generator;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-
-import com.nukkitx.nbt.*;
+import com.nukkitx.nbt.NBTInputStream;
+import com.nukkitx.nbt.NbtList;
+import com.nukkitx.nbt.NbtMap;
+import com.nukkitx.nbt.NbtType;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.MiningToolItem;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.util.DyeColor;
-import net.minecraft.world.EmptyBlockView;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
@@ -301,6 +305,19 @@ public class MappingsGenerator {
             // This points to the index of the collision in collision.json
             object.addProperty("collision_index", COLLISION_LIST.lastIndexOf(collisionBoxes));
 
+            try {
+                Block block = state.getBlock();
+                ItemStack pickStack = block.getPickStack(null, null, state);
+                String pickStackIdentifier = Registry.ITEM.getId(pickStack.getItem()).toString();
+                if (!pickStackIdentifier.equals(trimmedIdentifier)) {
+                    if (ITEM_ENTRIES.containsKey(pickStackIdentifier)) {
+                        object.addProperty("pick_item", pickStackIdentifier);
+                    }
+                }
+            } catch (NullPointerException e) {
+                // The block's pick item depends on a block entity.
+                // Banners and Shulker Boxes both depend on the block entity.
+            }
             object.addProperty("can_break_with_hand", !state.isToolRequired());
             MINING_TOOL_ITEMS.forEach(item -> {
                 if (item.getMiningSpeedMultiplier(null, state) != 1.0f) {
