@@ -306,11 +306,12 @@ public class MappingsGenerator {
             object.addProperty("collision_index", COLLISION_LIST.lastIndexOf(collisionBoxes));
 
             try {
-                Block block = state.getBlock();
-                ItemStack pickStack = block.getPickStack(null, null, state);
-                String pickStackIdentifier = Registry.ITEM.getId(pickStack.getItem()).toString();
-                if (!pickStackIdentifier.equals(trimmedIdentifier)) {
-                    if (ITEM_ENTRIES.containsKey(pickStackIdentifier)) {
+                // Ignore water, lava, and fire because players can't pick them
+                if (!trimmedIdentifier.equals("minecraft:water") && !trimmedIdentifier.equals("minecraft:lava") && !trimmedIdentifier.equals("minecraft:fire")) {
+                    Block block = state.getBlock();
+                    ItemStack pickStack = block.getPickStack(null, null, state);
+                    String pickStackIdentifier = Registry.ITEM.getId(pickStack.getItem()).toString();
+                    if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                         object.addProperty("pick_item", pickStackIdentifier);
                     }
                 }
