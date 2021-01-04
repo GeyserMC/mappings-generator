@@ -195,7 +195,7 @@ public class MappingsGenerator {
                         MiningToolItem miningToolItem = (MiningToolItem) item.get();
                         MINING_TOOL_ITEMS.add(miningToolItem);
                     }
-                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(item.get()) != Blocks.AIR));
+                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(item.get()) != Blocks.AIR, item.get().getMaxCount()));
                 }
             }
 
@@ -474,7 +474,7 @@ public class MappingsGenerator {
         return object;
     }
 
-    public JsonObject getRemapItem(String identifier, boolean isBlock) {
+    public JsonObject getRemapItem(String identifier, boolean isBlock, int stackSize) {
         JsonObject object = new JsonObject();
         if (ITEM_ENTRIES.containsKey(identifier)) {
             ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
@@ -518,6 +518,9 @@ public class MappingsGenerator {
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
             object.addProperty("bedrock_data", 0);
+        }
+        if (stackSize != 64) {
+            object.addProperty("stack_size", stackSize);
         }
         String[] toolTypes = {"sword", "shovel", "pickaxe", "axe", "shears", "hoe"};
         String[] identifierSplit = identifier.split(":")[1].split("_");
