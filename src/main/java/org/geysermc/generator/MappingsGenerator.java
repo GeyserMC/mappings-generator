@@ -515,10 +515,12 @@ public class MappingsGenerator {
             }
             object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
             object.addProperty("is_block", isBlock);
-            object.addProperty("stack_size", stackSize);
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
             object.addProperty("bedrock_data", 0);
+        }
+        if (stackSize != 64) {
+            object.addProperty("stack_size", stackSize);
         }
         String[] toolTypes = {"sword", "shovel", "pickaxe", "axe", "shears", "hoe"};
         String[] identifierSplit = identifier.split(":")[1].split("_");

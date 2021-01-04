@@ -17,7 +17,4 @@ public class ItemEntry {
 
     @SerializedName("is_block")
     private boolean isBlock;
-
-    @SerializedName("stack_size")
-    private int stackSize;
 }
