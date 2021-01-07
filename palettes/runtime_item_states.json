@@ -1984,10 +1984,6 @@
         "id" : -138
     },
     {
-        "name" : "minecraft:item.nether_brick",
-        "id" : 112
-    },
-    {
         "name" : "minecraft:item.nether_sprouts",
         "id" : -238
     },
@@ -2389,7 +2385,7 @@
     },
     {
         "name" : "minecraft:nether_brick",
-        "id" : 513
+        "id" : 112
     },
     {
         "name" : "minecraft:nether_brick_fence",
@@ -2418,6 +2414,10 @@
     {
         "name" : "minecraft:nether_wart_block",
         "id" : 214
+    },
+    {
+        "name" : "minecraft:netherbrick",
+        "id" : 513
     },
     {
         "name" : "minecraft:netherite_axe",
