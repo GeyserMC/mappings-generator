@@ -48,7 +48,7 @@
             <version>1.16.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <!-- vanilla 1.16.2 server jar -->
+        <!-- vanilla server jar -->
         <dependency>
             <groupId>net.minecraft</groupId>
             <artifactId>server</artifactId>

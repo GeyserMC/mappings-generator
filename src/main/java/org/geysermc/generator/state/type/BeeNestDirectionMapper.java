@@ -11,17 +11,17 @@ public class BeeNestDirectionMapper extends StateMapper<Integer> {
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
         int direction = 0;
         switch (value) {
-            case "north":
+            case "south":
                 direction = 0;
                 break;
             case "west":
-                direction = 3;
+                direction = 1;
                 break;
-            case "south":
+            case "north":
                 direction = 2;
                 break;
             case "east":
-                direction = 1;
+                direction = 3;
                 break;
         }
         return new Pair<>("direction", direction);
