@@ -43,6 +43,7 @@ public class MappingsGenerator {
     public static final Map<String, SoundEntry> SOUND_ENTRIES = new HashMap<>();
     public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
+    public static final Map<Integer, String> BEDROCK_ITEM_ENTRIES = new HashMap<>();
     private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
     private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling", "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern", "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus", "minecraft:crimson_roots", "minecraft:warped_roots");
     // This ends up in collision.json
@@ -165,7 +166,10 @@ public class MappingsGenerator {
             try {
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
-                entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
+                entries.forEach(item -> {
+                    RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id());
+                    BEDROCK_ITEM_ENTRIES.put(item.getLegacy_id(), item.getIdentifier());
+                });
                 // Fix some discrepancies - identifier is the Java string and ID is the Bedrock number ID
                 RUNTIME_ITEM_IDS.put("minecraft:grass", RUNTIME_ITEM_IDS.get("minecraft:tallgrass")); // Conflicts with grass block
                 RUNTIME_ITEM_IDS.put("minecraft:snow", RUNTIME_ITEM_IDS.get("minecraft:snow_layer")); // Conflicts with snow block
@@ -478,8 +482,9 @@ public class MappingsGenerator {
         JsonObject object = new JsonObject();
         if (ITEM_ENTRIES.containsKey(identifier)) {
             ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
+            int bedrockId;
             if (RUNTIME_ITEM_IDS.containsKey(identifier)) {
-                object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get(identifier));
+                bedrockId = RUNTIME_ITEM_IDS.get(identifier);
             } else {
                 // Deal with items that we replace
                 String replacementIdentifier = null;
@@ -508,15 +513,16 @@ public class MappingsGenerator {
                     replacementIdentifier = "skull";
                 }
                 if (replacementIdentifier != null) {
-                    object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get("minecraft:" + replacementIdentifier));
+                    bedrockId = RUNTIME_ITEM_IDS.get("minecraft:" + replacementIdentifier);
                 } else {
-                    object.addProperty("bedrock_id", itemEntry.getBedrockId());
+                    bedrockId = itemEntry.getBedrockId();
                 }
             }
+            object.addProperty("bedrock_identifier", BEDROCK_ITEM_ENTRIES.get(bedrockId));
             object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
             object.addProperty("is_block", isBlock);
         } else {
-            object.addProperty("bedrock_id", 248); // update block (missing mapping)
+            object.addProperty("bedrock_identifier", "minecraft:update_block");
             object.addProperty("bedrock_data", 0);
         }
         if (stackSize != 64) {
