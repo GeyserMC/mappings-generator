@@ -12,9 +12,7 @@ import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtType;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.*;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.MiningToolItem;
@@ -22,6 +20,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
@@ -192,7 +191,7 @@ public class MappingsGenerator {
                         MiningToolItem miningToolItem = (MiningToolItem) item.get();
                         MINING_TOOL_ITEMS.add(miningToolItem);
                     }
-                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(item.get()) != Blocks.AIR, item.get().getMaxCount()));
+                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(item.get()), item.get().getMaxCount()));
                 }
             }
 
@@ -270,7 +269,7 @@ public class MappingsGenerator {
         if (BLOCK_ENTRIES.containsKey(identifier)) {
             blockEntry = BLOCK_ENTRIES.get(identifier);
             // All walls before 1.16 use the same identifier (cobblestone_wall)
-            if (trimmedIdentifier.endsWith("_wall") && !trimmedIdentifier.contains("blackstone")) {
+            if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
                 object.addProperty("bedrock_identifier", "minecraft:cobblestone_wall");
             } else {
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
@@ -384,7 +383,7 @@ public class MappingsGenerator {
             }
         } else {
             // All walls before 1.16 use the same identifier (cobblestone_wall)
-            if (trimmedIdentifier.endsWith("_wall") && !trimmedIdentifier.contains("blackstone")) {
+            if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
                 object.addProperty("bedrock_identifier", "minecraft:cobblestone_wall");
             } else {
                 object.addProperty("bedrock_identifier", trimmedIdentifier);
@@ -442,7 +441,7 @@ public class MappingsGenerator {
         }
 
         String stateIdentifier = trimmedIdentifier;
-        if (trimmedIdentifier.endsWith("_wall") && !trimmedIdentifier.contains("blackstone")) {
+        if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
             stateIdentifier = "minecraft:cobblestone_wall";
         }
 
@@ -471,7 +470,7 @@ public class MappingsGenerator {
         return object;
     }
 
-    public JsonObject getRemapItem(String identifier, boolean isBlock, int stackSize) {
+    public JsonObject getRemapItem(String identifier, Block block, int stackSize) {
         JsonObject object = new JsonObject();
         if (ITEM_ENTRIES.containsKey(identifier)) {
             ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
@@ -510,8 +509,20 @@ public class MappingsGenerator {
                     object.addProperty("bedrock_id", itemEntry.getBedrockId());
                 }
             }
+            boolean isBlock = block != Blocks.AIR;
             object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
-            object.addProperty("is_block", isBlock);
+            if (isBlock) {
+                BlockState state = block.getDefaultState();
+                // Fix some render issues - :microjang:
+                if (block instanceof WallBlock) {
+                    String blockIdentifier = Registry.BLOCK.getId(block).toString();
+                    if (!isSensibleWall(blockIdentifier)) { // Blackstone renders fine
+                        // Required for the item to render with the correct type (sandstone, stone brick, etc)
+                        state = state.with(WallBlock.UP, false);
+                    }
+                }
+                object.addProperty("blockRuntimeId", Block.getRawIdFromState(state));
+            }
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
             object.addProperty("bedrock_data", 0);
@@ -607,8 +618,10 @@ public class MappingsGenerator {
         return 1;
     }
 
-    private static String readFile(String path, Charset encoding) throws IOException {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, encoding);
+    /**
+     * @return true if this wall can be treated normally and not stupidly
+     */
+    private static boolean isSensibleWall(String identifier) {
+        return identifier.contains("blackstone");
     }
 }
