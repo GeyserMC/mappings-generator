@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 public class MappingsGenerator {
 
@@ -76,11 +77,8 @@ public class MappingsGenerator {
 
             try {
                 InputStream stream = new FileInputStream(blockPalette);
-                PushbackInputStream pbStream = new PushbackInputStream(stream);
-                int paletteType = pbStream.read();
-                pbStream.unread(paletteType);
 
-                try (NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(pbStream))) {
+                try (NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(new GZIPInputStream(stream)))) {
                     NbtMap ret = (NbtMap) nbtInputStream.readTag();
                     palette = (NbtList<NbtMap>) ret.getList("blocks", NbtType.COMPOUND);
                 }
@@ -104,10 +102,9 @@ public class MappingsGenerator {
             }
 
             for (NbtMap entry : palette) {
-                NbtMap block = entry.getCompound("block");
-                String identifier = block.getString("name");
+                String identifier = entry.getString("name");
                 if (!STATES.containsKey(identifier)) {
-                    NbtMap states = block.getCompound("states");
+                    NbtMap states = entry.getCompound("states");
                     List<String> stateKeys = new ArrayList<>(states.keySet());
                     // ignore some useless keys
                     stateKeys.remove("stone_slab_type");
