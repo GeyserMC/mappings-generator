@@ -183,8 +183,7 @@ public class MappingsGenerator {
                         rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(
                                 key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(value), value.getMaxCount())));
             }
-
-            net.minecraft.entity.passive.FoxEntity
+            
             builder.create().toJson(rootObject, writer);
             writer.close();
             System.out.println("Finished item writing process!");
