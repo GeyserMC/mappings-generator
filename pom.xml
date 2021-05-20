@@ -16,6 +16,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <minecraft.target-version>21w20a</minecraft.target-version>
     </properties>
     <organization>
         <name>GeyserMC</name>
@@ -44,15 +45,21 @@
         <!-- Fabric named jar - has to be added manually -->
         <dependency>
             <groupId>net.fabricmc</groupId>
-            <artifactId>1.16.3-named</artifactId>
-            <version>1.16.3-SNAPSHOT</version>
+            <artifactId>${minecraft.target-version}-named</artifactId>
+            <version>${minecraft.target-version}-SNAPSHOT</version>
             <scope>compile</scope>
+        </dependency>
+        <!-- Yarn -->
+        <dependency>
+            <groupId>net.fabricmc</groupId>
+            <artifactId>yarn</artifactId>
+            <version>${minecraft.target-version}+build.local-constants</version>
         </dependency>
         <!-- vanilla server jar -->
         <dependency>
             <groupId>net.minecraft</groupId>
             <artifactId>server</artifactId>
-            <version>1.16.3-SNAPSHOT</version>
+            <version>${minecraft.target-version}-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

@@ -24,6 +24,14 @@ Replace `(version)` with the Minecraft server version. If `server.jar` isn't in 
 mvn org.apache.maven.plugins:maven-install-plugin:install-file -Dfile=(version)-named.jar -DgroupId="net.fabricmc" -DartifactId="(version)-named" -Dversion="(version)-SNAPSHOT" -Dpackaging="jar"
 ``` 
 
+- Run `./gradlew build` / `gradlew build` to generate some required Yarn constants
+- Copy the `build/libs/yarn-VERSION+build.local-constants.jar` file to the `mappings-generator` folder.
+- Replacing `(version)` with your desired Minecraft version, run:
+
+```bash
+mvn org.apache.maven.plugins:maven-install-plugin:install-file -Dfile=yarn-(version)+build.local-constants.jar -DgroupId="net.fabricmc" -DartifactId="yarn" -Dversion="(version)+build.local-constants" -Dpackaging="jar"
+```
+
 ## Running
 
 Use the `Run` button in your IDE.
