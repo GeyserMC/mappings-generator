@@ -12,25 +12,24 @@ import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtType;
-import net.minecraft.block.*;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.MiningToolItem;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -43,7 +42,7 @@ public class MappingsGenerator {
     public static final Map<String, SoundEntry> SOUND_ENTRIES = new HashMap<>();
     public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
-    private static final List<MiningToolItem> MINING_TOOL_ITEMS = new ArrayList<>();
+    private static final List<DiggerItem> DIGGER_ITEMS = new ArrayList<>();
     private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling", "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern", "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus", "minecraft:crimson_roots", "minecraft:warped_roots");
     // This ends up in collision.json
     // collision_index in blocks.json refers to this to prevent duplication
@@ -118,7 +117,7 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
-            for (BlockState blockState : getFullBlockDataList()) {
+            for (BlockState blockState : getAllStates()) {
                 rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState)));
             }
 
@@ -184,14 +183,14 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
-            for (Identifier key : Registry.ITEM.getIds()) {
-                Optional<Item> item = Registry.ITEM.getOrEmpty(key);
+            for (ResourceLocation key : Registry.ITEM.keySet()) {
+                Optional<Item> item = Registry.ITEM.getOptional(key);
                 if (item.isPresent()) {
-                    if (item.get() instanceof MiningToolItem) {
-                        MiningToolItem miningToolItem = (MiningToolItem) item.get();
-                        MINING_TOOL_ITEMS.add(miningToolItem);
+                    if (item.get() instanceof DiggerItem) {
+                        DiggerItem diggerItem = (DiggerItem) item.get();
+                        DIGGER_ITEMS.add(diggerItem);
                     }
-                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(item.get()), item.get().getMaxCount()));
+                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.byItem(item.get()), item.get().getMaxStackSize()));
                 }
             }
 
@@ -233,15 +232,15 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
-            for (Identifier key : Registry.SOUND_EVENT.getIds()) {
-                Optional<SoundEvent> sound = Registry.SOUND_EVENT.getOrEmpty(key);
+            for (ResourceLocation key : Registry.SOUND_EVENT.keySet()) {
+                Optional<SoundEvent> sound = Registry.SOUND_EVENT.getOptional(key);
                 sound.ifPresent(soundEvent -> {
-                    SoundEntry soundEntry = SOUND_ENTRIES.get(soundEvent.getId().getPath());
+                    SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
                     if (soundEntry == null) {
-                        soundEntry = new SoundEntry(soundEvent.getId().getPath(), "", -1, null, false);
+                        soundEntry = new SoundEntry(key.getPath(), "", -1, null, false);
                     }
                     JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
-                    if (soundEntry.getExtraData() <= 0 && !soundEvent.getId().getPath().equals("block.note_block.harp")) {
+                    if (soundEntry.getExtraData() <= 0 && !key.getPath().equals("block.note_block.harp")) {
                         object.remove("extra_data");
                     }
                     if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
@@ -274,10 +273,10 @@ public class MappingsGenerator {
             } else {
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             }
-            object.addProperty("block_hardness", state.getHardness(null, null));
+            object.addProperty("block_hardness", state.getDestroySpeed(null, null));
             List<List<Double>> collisionBoxes = Lists.newArrayList();
             try {
-                state.getCollisionShape(null, null).getBoundingBoxes().forEach(item -> {
+                state.getCollisionShape(null, null).toAabbs().forEach(item -> {
                     List<Double> coordinateList = Lists.newArrayList();
                     // Convert Box class to an array of coordinates
                     // They need to be converted from min/max coordinates to centres and sizes
@@ -305,8 +304,8 @@ public class MappingsGenerator {
                 // Ignore water, lava, and fire because players can't pick them
                 if (!trimmedIdentifier.equals("minecraft:water") && !trimmedIdentifier.equals("minecraft:lava") && !trimmedIdentifier.equals("minecraft:fire")) {
                     Block block = state.getBlock();
-                    ItemStack pickStack = block.getPickStack(null, null, state);
-                    String pickStackIdentifier = Registry.ITEM.getId(pickStack.getItem()).toString();
+                    ItemStack pickStack = block.getCloneItemStack(null, null, state);
+                    String pickStackIdentifier = Registry.ITEM.getResourceKey(pickStack.getItem()).toString();
                     if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                         object.addProperty("pick_item", pickStackIdentifier);
                     }
@@ -315,9 +314,9 @@ public class MappingsGenerator {
                 // The block's pick item depends on a block entity.
                 // Banners and Shulker Boxes both depend on the block entity.
             }
-            object.addProperty("can_break_with_hand", !state.isToolRequired());
-            MINING_TOOL_ITEMS.forEach(item -> {
-                if (item.getMiningSpeedMultiplier(null, state) != 1.0f) {
+            object.addProperty("can_break_with_hand", !state.requiresCorrectToolForDrops());
+            DIGGER_ITEMS.forEach(item -> {
+                if (item.getDestroySpeed(null, state) != 1.0f) {
                     String itemClassName = item.getClass().getName();
                     String toolType = itemClassName.substring(19, itemClassName.length() -4);
                     object.addProperty("tool_type", toolType.toLowerCase());
@@ -512,16 +511,16 @@ public class MappingsGenerator {
             boolean isBlock = block != Blocks.AIR;
             object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
             if (isBlock) {
-                BlockState state = block.getDefaultState();
+                BlockState state = block.defaultBlockState();
                 // Fix some render issues - :microjang:
                 if (block instanceof WallBlock) {
-                    String blockIdentifier = Registry.BLOCK.getId(block).toString();
+                    String blockIdentifier = Registry.BLOCK.getResourceKey(block).toString();
                     if (!isSensibleWall(blockIdentifier)) { // Blackstone renders fine
                         // Required for the item to render with the correct type (sandstone, stone brick, etc)
-                        state = state.with(WallBlock.UP, false);
+                        state = state.setValue(WallBlock.UP, false);
                     }
                 }
-                object.addProperty("blockRuntimeId", Block.getRawIdFromState(state));
+                object.addProperty("blockRuntimeId", Block.getId(state));
             }
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
@@ -546,32 +545,24 @@ public class MappingsGenerator {
         return object;
     }
 
-    public List<BlockState> getFullBlockDataList() {
-        List<BlockState> blockData = new ArrayList<>();
-        Registry.BLOCK.forEach(material -> blockData.addAll(getBlockDataList(material)));
-        return blockData.stream().sorted(Comparator.comparingInt(this::getID)).collect(Collectors.toList());
-    }
-
-    public List<BlockState> getBlockDataList(Block block) {
-        return block.getStateManager().getStates();
-    }
-
-    public int getID(BlockState blockData) {
-        return Block.getRawIdFromState(blockData);
+    public List<BlockState> getAllStates() {
+        List<BlockState> states = new ArrayList<>();
+        Registry.BLOCK.forEach(block -> states.addAll(block.getStateDefinition().getPossibleStates()));
+        return states.stream().sorted(Comparator.comparingInt(Block::getId)).collect(Collectors.toList());
     }
 
     private String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(Registry.BLOCK.getId(blockState.getBlock()).toString());
-        if (!blockState.getEntries().isEmpty()) {
+        stringBuilder.append(Registry.BLOCK.getResourceKey(blockState.getBlock()).toString());
+        if (!blockState.getValues().isEmpty()) {
             stringBuilder.append('[');
-            stringBuilder.append(blockState.getEntries().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
+            stringBuilder.append(blockState.getValues().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
             stringBuilder.append(']');
         }
         return stringBuilder.toString();
     }
 
-    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_MAP_PRINTER = new Function<Map.Entry<Property<?>, Comparable<?>>, String>() {
+    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_MAP_PRINTER = new Function<>() {
 
         public String apply(Map.Entry<Property<?>, Comparable<?>> entry) {
             if (entry == null) {
@@ -583,7 +574,7 @@ public class MappingsGenerator {
         }
 
         private <T extends Comparable<T>> String nameValue(Property<T> arg, Comparable<?> comparable) {
-            return arg.name((T) comparable);
+            return arg.getName((T) comparable);
         }
     };
 
