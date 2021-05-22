@@ -7,6 +7,13 @@ val serverMappingsHash = "8d6960e996a40b8350f5973d8a237469a9a6a7bc"
 val serverJarVersion = "21w20a"
 val enigmaVersion = "0.27.3"
 
+group = "org.geysermc.mappings-generator"
+version = "1.1.0"
+
+plugins {
+    java
+}
+
 repositories {
     mavenCentral()
     mavenLocal()
