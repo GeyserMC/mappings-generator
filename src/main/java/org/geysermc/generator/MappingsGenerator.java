@@ -42,7 +42,6 @@ public class MappingsGenerator {
     public static final Map<String, SoundEntry> SOUND_ENTRIES = new HashMap<>();
     public static final Map<String, Integer> RUNTIME_ITEM_IDS = new HashMap<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
-    private static final List<DiggerItem> DIGGER_ITEMS = new ArrayList<>();
     private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling", "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern", "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus", "minecraft:crimson_roots", "minecraft:warped_roots");
     // This ends up in collision.json
     // collision_index in blocks.json refers to this to prevent duplication
@@ -64,8 +63,6 @@ public class MappingsGenerator {
             }
         }
         try {
-            // The stream could be either a list of blocks written with varints (breaks nbt parsing) or an nbt tag containing a blocks child with the list of blocks
-            // in NBT format
             NbtList<NbtMap> palette;
             File blockPalette = new File("palettes/blockpalette.nbt");
             if (!blockPalette.exists()) {
@@ -185,13 +182,9 @@ public class MappingsGenerator {
 
             for (ResourceLocation key : Registry.ITEM.keySet()) {
                 Optional<Item> item = Registry.ITEM.getOptional(key);
-                if (item.isPresent()) {
-                    if (item.get() instanceof DiggerItem) {
-                        DiggerItem diggerItem = (DiggerItem) item.get();
-                        DIGGER_ITEMS.add(diggerItem);
-                    }
-                    rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(key.getNamespace() + ":" + key.getPath(), Block.byItem(item.get()), item.get().getMaxStackSize()));
-                }
+                item.ifPresent(value ->
+                        rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(
+                                key.getNamespace() + ":" + key.getPath(), Block.byItem(value), value.getMaxStackSize())));
             }
 
             builder.create().toJson(rootObject, writer);
@@ -270,6 +263,12 @@ public class MappingsGenerator {
             // All walls before 1.16 use the same identifier (cobblestone_wall)
             if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
                 object.addProperty("bedrock_identifier", "minecraft:cobblestone_wall");
+            } else if (trimmedIdentifier.equals("minecraft:powered_rail")) {
+                object.addProperty("bedrock_identifier", "minecraft:golden_rail");
+            } else if (trimmedIdentifier.equals("minecraft:light")) {
+                object.addProperty("bedrock_identifier", "minecraft:light_block");
+            } else if (trimmedIdentifier.equals("minecraft:dirt_path")) {
+                object.addProperty("bedrock_identifier", "minecraft:grass_path");
             } else {
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             }
@@ -314,23 +313,10 @@ public class MappingsGenerator {
                 // The block's pick item depends on a block entity.
                 // Banners and Shulker Boxes both depend on the block entity.
             }
-            object.addProperty("can_break_with_hand", !state.requiresCorrectToolForDrops());
-            DIGGER_ITEMS.forEach(item -> {
-                if (item.getDestroySpeed(null, state) != 1.0f) {
-                    String itemClassName = item.getClass().getName();
-                    String toolType = itemClassName.substring(19, itemClassName.length() -4);
-                    object.addProperty("tool_type", toolType.toLowerCase());
-                }
-            });
+            object.addProperty("can_break_with_hand", !state.isToolRequired());
             // Removes nbt tags from identifier
             // Add tool type for blocks that use shears or sword
-            if (trimmedIdentifier.contains("wool")) {
-                object.addProperty("tool_type", "shears");
-            } else if (trimmedIdentifier.contains("leaves")) {
-                object.addProperty("tool_type", "shears");
-            } else if (trimmedIdentifier.contains("cobweb")) {
-                object.addProperty("tool_type", "sword");
-            } else if (trimmedIdentifier.contains("_bed")) {
+            if (trimmedIdentifier.contains("_bed")) {
                 String woolid = trimmedIdentifier.replace("minecraft:", "");
                 woolid = woolid.split("_bed")[0].toUpperCase();
                 object.addProperty("bed_color", DyeColor.valueOf(woolid).getId());
@@ -395,17 +381,24 @@ public class MappingsGenerator {
         }
 
         JsonObject statesObject = bedrockStates.getAsJsonObject();
-        // Prevent ConcurrentModificationException
-        List<String> toRemove = new ArrayList<>();
-        // Since we now rely on block states being exact after 1.16.100, we need to remove any old states
-        for (Map.Entry<String, JsonElement> entry : statesObject.entrySet()) {
-            if (!STATES.get(blockEntry.getBedrockIdentifier()).contains(entry.getKey()) &&
-                    !entry.getKey().contains("stone_slab_type")) { // Ignore the stone slab types since we ignore them above
-                toRemove.add(entry.getKey());
+        if (blockEntry != null && STATES.get(blockEntry.getBedrockIdentifier()) != null) {
+            // Prevent ConcurrentModificationException
+            List<String> toRemove = new ArrayList<>();
+            // Since we now rely on block states being exact after 1.16.100, we need to remove any old states
+            for (Map.Entry<String, JsonElement> entry : statesObject.entrySet()) {
+                List<String> states = STATES.get(blockEntry.getBedrockIdentifier());
+                if (!states.contains(entry.getKey()) &&
+                        !entry.getKey().contains("stone_slab_type")) { // Ignore the stone slab types since we ignore them above
+                    toRemove.add(entry.getKey());
+                }
             }
-        }
-        for (String key : toRemove) {
-            statesObject.remove(key);
+            for (String key : toRemove) {
+                statesObject.remove(key);
+            }
+        } else if (blockEntry != null) {
+            System.out.println("States for " + blockEntry.getBedrockIdentifier() + " not found!");
+        } else {
+            System.out.println("Block entry for " + blockStateToString(state) + " is null?");
         }
         String[] states = identifier.substring(identifier.lastIndexOf("[") + 1).replace("]", "").split(",");
         for (String javaState : states) {

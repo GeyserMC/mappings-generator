@@ -9,6 +9,14 @@ A standalone program that generates (most of) the [mappings](https://github.com/
 - Run `gradlew installServerJar`. This will download the needed resources, such as the Minecraft server jar along with tooling such as enigma to deobfuscate it so it can be used with this project.
 - If in an IDE such as IntelliJ, refresh your dependencies - this will then add the generated server jar to your dependencies.
 
+- Run `./gradlew build` / `gradlew build` to generate some required Yarn constants
+- Copy the `build/libs/yarn-VERSION+build.local-constants.jar` file to the `mappings-generator` folder.
+- Replacing `(version)` with your desired Minecraft version, run:
+
+```bash
+mvn org.apache.maven.plugins:maven-install-plugin:install-file -Dfile=yarn-(version)+build.local-constants.jar -DgroupId="net.fabricmc" -DartifactId="yarn" -Dversion="(version)+build.local-constants" -Dpackaging="jar"
+```
+
 ## Running
 
 Use the `Run` button in your IDE.
