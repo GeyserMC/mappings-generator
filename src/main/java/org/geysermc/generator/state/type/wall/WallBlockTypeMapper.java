@@ -1,6 +1,6 @@
 package org.geysermc.generator.state.type.wall;
 
-import org.geysermc.generator.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
@@ -13,6 +13,6 @@ public class WallBlockTypeMapper extends StateMapper<String> {
         String trimmedIdentifier = fullIdentifier.split("\\[")[0].split(":")[1];
         // Most walls follow the same naming pattern but not end brick walls
         if (trimmedIdentifier.contains("end_stone_brick")) trimmedIdentifier = "end_brick_wall";
-        return new Pair<>("wall_block_type", trimmedIdentifier.replace("_wall", ""));
+        return Pair.of("wall_block_type", trimmedIdentifier.replace("_wall", ""));
     }
 }

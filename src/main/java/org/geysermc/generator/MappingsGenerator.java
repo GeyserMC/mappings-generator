@@ -15,7 +15,6 @@ import com.nukkitx.nbt.NbtType;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -24,6 +23,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
@@ -304,7 +304,7 @@ public class MappingsGenerator {
                 if (!trimmedIdentifier.equals("minecraft:water") && !trimmedIdentifier.equals("minecraft:lava") && !trimmedIdentifier.equals("minecraft:fire")) {
                     Block block = state.getBlock();
                     ItemStack pickStack = block.getCloneItemStack(null, null, state);
-                    String pickStackIdentifier = Registry.ITEM.getResourceKey(pickStack.getItem()).toString();
+                    String pickStackIdentifier = Registry.ITEM.getKey(pickStack.getItem()).toString();
                     if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                         object.addProperty("pick_item", pickStackIdentifier);
                     }
@@ -313,7 +313,7 @@ public class MappingsGenerator {
                 // The block's pick item depends on a block entity.
                 // Banners and Shulker Boxes both depend on the block entity.
             }
-            object.addProperty("can_break_with_hand", !state.isToolRequired());
+            object.addProperty("can_break_with_hand", !state.requiresCorrectToolForDrops());
             // Removes nbt tags from identifier
             // Add tool type for blocks that use shears or sword
             if (trimmedIdentifier.contains("_bed")) {
@@ -507,7 +507,7 @@ public class MappingsGenerator {
                 BlockState state = block.defaultBlockState();
                 // Fix some render issues - :microjang:
                 if (block instanceof WallBlock) {
-                    String blockIdentifier = Registry.BLOCK.getResourceKey(block).toString();
+                    String blockIdentifier = Registry.BLOCK.getKey(block).toString();
                     if (!isSensibleWall(blockIdentifier)) { // Blackstone renders fine
                         // Required for the item to render with the correct type (sandstone, stone brick, etc)
                         state = state.setValue(WallBlock.UP, false);
@@ -546,7 +546,7 @@ public class MappingsGenerator {
 
     private String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(Registry.BLOCK.getResourceKey(blockState.getBlock()).toString());
+        stringBuilder.append(Registry.BLOCK.getKey(blockState.getBlock()).toString());
         if (!blockState.getValues().isEmpty()) {
             stringBuilder.append('[');
             stringBuilder.append(blockState.getValues().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
@@ -579,27 +579,15 @@ public class MappingsGenerator {
      * @return Converted direction byte
      */
     private static byte getDirectionInt(String direction) {
-        switch (direction) {
-            case "down":
-                return 0;
+        return (byte) switch (direction) {
+            case "down" -> 0;
+            case "north" -> 2;
+            case "south" -> 3;
+            case "west" -> 4;
+            case "east" -> 5;
+            default -> 1;
+        };
 
-            case "up":
-                return 1;
-
-            case "north":
-                return 2;
-
-            case "south":
-                return 3;
-
-            case "west":
-                return 4;
-
-            case "east":
-                return 5;
-        }
-
-        return 1;
     }
 
     /**

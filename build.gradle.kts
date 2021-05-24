@@ -1,17 +1,48 @@
+import org.cadixdev.atlas.Atlas
+import org.cadixdev.bombe.asm.jar.JarEntryRemappingTransformer
+import org.cadixdev.bombe.jar.JarClassEntry
+import org.cadixdev.lorenz.MappingSet
+import org.cadixdev.lorenz.asm.LorenzRemapper
+import org.cadixdev.lorenz.io.proguard.ProGuardReader
+
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.URL
 import java.nio.channels.Channels
+import java.nio.file.Files
+import java.nio.file.Paths
 
 val serverJarHash = "054b2065dd63c3e4227879046beae7acaeb7e8d3"
 val serverMappingsHash = "8d6960e996a40b8350f5973d8a237469a9a6a7bc"
 val serverJarVersion = "21w20a"
-val enigmaVersion = "0.27.3"
 
 group = "org.geysermc.mappings-generator"
 version = "1.1.0"
 
 plugins {
     java
+}
+
+buildscript {
+    val asmVersion = "9.1"
+
+    repositories {
+        mavenCentral()
+        maven(url = "https://jitpack.io")
+    }
+
+    dependencies {
+        classpath("org.cadixdev:lorenz-asm:0.5.7") {
+            exclude("org.ow2.asm")
+        }
+        classpath("org.cadixdev:atlas:0.2.2") {
+            exclude("org.ow2.asm")
+        }
+        classpath("org.cadixdev:lorenz-io-proguard:0.5.7")
+        classpath("org.ow2.asm:asm-util:$asmVersion")
+        classpath("org.ow2.asm:asm-tree:$asmVersion")
+        classpath("org.ow2.asm:asm-commons:$asmVersion")
+    }
 }
 
 repositories {
@@ -48,14 +79,8 @@ val downloadMappings = tasks.register<DownloadFileTask>("downloadMappings") {
     fileLocation = "${serverJarVersion}-mappings.txt"
 }
 
-val downloadEnigma = tasks.register<DownloadFileTask>("downloadEnigma") {
-    url = "https://maven.fabricmc.net/cuchaz/enigma-cli/${enigmaVersion}/enigma-cli-${enigmaVersion}-all.jar"
-    fileLocation = "enigma-cli-${enigmaVersion}-all.jar"
-}
-
 val deobfuscateMinecraftJar = tasks.register<RunEnigmaTask>("deobfuscateMinecraftJar") {
     version = serverJarVersion
-    enigma = enigmaVersion
 }
 
 val publishJarToMavenLocal = tasks.register<PublishJarToMavenLocalTask>("publishJarToMavenLocal") {
@@ -66,7 +91,6 @@ tasks.register("installServerJar") {
     // Not sure if this is the best way to do it but it works...
     downloadMinecraftJar.get().greet()
     downloadMappings.get().greet()
-    downloadEnigma.get().greet()
     deobfuscateMinecraftJar.get().greet()
     publishJarToMavenLocal.get().greet()
 }
@@ -93,22 +117,40 @@ open class DownloadFileTask : DefaultTask() {
 open class RunEnigmaTask : DefaultTask() {
 
     @Internal var version: String? = null
-    @Internal var enigma: String? = null
 
     @TaskAction
     fun greet() {
-        // Convert mappings to Enigma format (https://github.com/FabricMC/Enigma/issues/273)
-        println("Converting server mappings to enigma format...")
-        project.exec {
-            commandLine("java", "-cp", "enigma-cli-${enigma}-all.jar", "cuchaz.enigma.command.Main", "convert-mappings", "proguard", "${version}-mappings.txt", "enigma_file", "${version}-server.mapping")
-        }
-        println("Mappings conversion complete!")
-
-        // Ok, now lets map the jar!
         println("Deobfuscating server jar...")
-        project.exec {
-            commandLine("java", "-cp", "enigma-cli-${enigma}-all.jar", "cuchaz.enigma.command.Main", "deobfuscate", "${version}-server.jar", "${version}-server-deobfuscated.jar", "${version}-server.mapping")
+
+        val dir = System.getProperty("user.dir")
+
+        val mojangMappings = MappingSet.create()
+        try {
+            ProGuardReader(Files.newBufferedReader(Paths.get(dir, "${version}-mappings.txt"))).use { reader ->
+                reader.read().reverse(mojangMappings)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
+
+        Atlas().use { atlas ->
+            atlas.install { ctx ->
+                object : JarEntryRemappingTransformer(LorenzRemapper(mojangMappings, ctx.inheritanceProvider())) {
+                    override fun transform(entry: JarClassEntry): JarClassEntry? {
+                        if (entry.name.startsWith("it/unimi")
+                            || entry.name.startsWith("com/google")
+                            || entry.name.startsWith("com/mojang/datafixers")
+                            || entry.name.startsWith("com/mojang/brigadier")
+                            || entry.name.startsWith("org/apache")) {
+                            return entry
+                        }
+                        return super.transform(entry)
+                    }
+                }
+            }
+            atlas.run(Paths.get(dir, "${version}-server.jar"), Paths.get(dir, "${version}-server-deobfuscated.jar"))
+        }
+
         println("Deobfuscation complete!")
     }
 }
@@ -133,7 +175,6 @@ open class InstallServerJarTask : DefaultTask() {
 
     @Internal var minecraftJar: TaskProvider<*>? = null
     @Internal var mappings: TaskProvider<*>? = null
-    @Internal var enigma: TaskProvider<*>? = null
     @Internal var deobfuscateJar: TaskProvider<*>? = null
     @Internal var publish: TaskProvider<*>? = null
 
@@ -141,7 +182,6 @@ open class InstallServerJarTask : DefaultTask() {
     fun greet() {
         dependsOn(minecraftJar)
         dependsOn(mappings)
-        dependsOn(enigma)
         dependsOn(deobfuscateJar)
         dependsOn(publish)
     }

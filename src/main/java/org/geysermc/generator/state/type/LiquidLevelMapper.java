@@ -1,6 +1,6 @@
 package org.geysermc.generator.state.type;
 
-import org.geysermc.generator.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
@@ -9,6 +9,6 @@ public class LiquidLevelMapper extends StateMapper<Integer> {
 
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        return new Pair<>("liquid_depth", Integer.parseInt(value));
+        return Pair.of("liquid_depth", Integer.parseInt(value));
     }
 }

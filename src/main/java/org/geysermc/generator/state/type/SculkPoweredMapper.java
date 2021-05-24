@@ -1,6 +1,6 @@
 package org.geysermc.generator.state.type;
 
-import org.geysermc.generator.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
@@ -8,6 +8,6 @@ import org.geysermc.generator.state.StateRemapper;
 public class SculkPoweredMapper extends StateMapper<Boolean> {
     @Override
     public Pair<String, Boolean> translateState(String fullIdentifier, String value) {
-        return new Pair<>("powered_bit", Integer.parseInt(value) > 0);
+        return Pair.of("powered_bit", Integer.parseInt(value) > 0);
     }
 }
