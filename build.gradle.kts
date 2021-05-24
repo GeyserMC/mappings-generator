@@ -79,7 +79,7 @@ val downloadMappings = tasks.register<DownloadFileTask>("downloadMappings") {
     fileLocation = "${serverJarVersion}-mappings.txt"
 }
 
-val deobfuscateMinecraftJar = tasks.register<RunEnigmaTask>("deobfuscateMinecraftJar") {
+val deobfuscateMinecraftJar = tasks.register<DeobfuscateJarTask>("deobfuscateMinecraftJar") {
     version = serverJarVersion
 }
 
@@ -114,7 +114,7 @@ open class DownloadFileTask : DefaultTask() {
     }
 }
 
-open class RunEnigmaTask : DefaultTask() {
+open class DeobfuscateJarTask : DefaultTask() {
 
     @Internal var version: String? = null
 
