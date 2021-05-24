@@ -12,11 +12,11 @@ A standalone program that generates (most of) the [mappings](https://github.com/
 ## Running
 
 Use the `Run` button in your IDE.
-Once the program is done running, files will be created containing mappings needed for the version you are using. Please keep in mind that while this generator will map most of the needed information manually, in many instances (such as with game updates with completely new values), you will have to do some manual mapping of some kind or create mappers within this project.
+Once the program is done running, files will be created containing mappings needed for the version you are using. Please keep in mind that while this generator will map most of the needed information on its own, in many instances (such as with game updates with completely new values), you will have to do some manual mapping of some kind or create mappers within this project.
 
 ## Updating for future versions
 
-Updating for future versions is fairly simple. In `build.gradle.kts`, there are 3 primary values you will want to change:
+Updating for future versions is fairly simple. In the `build.gradle.kts` file, there are 3 primary values you will want to change:
 ```kotlin
 val serverJarHash = "054b2065dd63c3e4227879046beae7acaeb7e8d3"
 val serverMappingsHash = "8d6960e996a40b8350f5973d8a237469a9a6a7bc"
@@ -31,6 +31,6 @@ val serverMappingsHash = "41285beda6d251d190f2bf33beadd4fee187df7a"
 val serverJarVersion = "1.16.5"
 ```
 
-Once you have updated these values, once again run the `gradlew installServerJar` command to install this to your local maven repository, then refresh your dependencies in order to work with the updated code.
+Once you have updated these values, once again run the `gradlew installServerJar` command to install this to your local maven repository, then refresh your dependencies in order to work with the updated code. 
 
 Keep in mind that this code is not guaranteed to work across versions as it relies on Minecraft code which can change at any time.
