@@ -171,19 +171,3 @@ open class PublishJarToMavenLocalTask : DefaultTask() {
         println("Maven local publishing complete!")
     }
 }
-
-open class InstallServerJarTask : DefaultTask() {
-
-    @Internal var minecraftJar: TaskProvider<*>? = null
-    @Internal var mappings: TaskProvider<*>? = null
-    @Internal var deobfuscateJar: TaskProvider<*>? = null
-    @Internal var publish: TaskProvider<*>? = null
-
-    @TaskAction
-    fun greet() {
-        dependsOn(minecraftJar)
-        dependsOn(mappings)
-        dependsOn(deobfuscateJar)
-        dependsOn(publish)
-    }
-}
