@@ -133,6 +133,7 @@ open class DeobfuscateJarTask : DefaultTask() {
             e.printStackTrace()
         }
 
+        // Adapted from https://github.com/SpongePowered/Sponge/blob/2def9ef39130023a09ce800873ac163943bf92e8/vanilla/src/installer/java/org/spongepowered/vanilla/installer/InstallerMain.java#L301
         Atlas().use { atlas ->
             atlas.install { ctx ->
                 object : JarEntryRemappingTransformer(LorenzRemapper(mojangMappings, ctx.inheritanceProvider())) {
