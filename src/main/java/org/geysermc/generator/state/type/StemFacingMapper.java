@@ -1,6 +1,6 @@
 package org.geysermc.generator.state.type;
 
-import org.geysermc.generator.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
@@ -9,21 +9,13 @@ public class StemFacingMapper extends StateMapper<Integer> {
 
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        int direction = 0;
-        switch (value) {
-            case "north":
-                direction = 2;
-                break;
-            case "west":
-                direction = 4;
-                break;
-            case "south":
-                direction = 3;
-                break;
-            case "east":
-                direction = 5;
-                break;
-        }
-        return new Pair<>("facing_direction", direction);
+        int direction = switch (value) {
+            case "north" -> 2;
+            case "west" -> 4;
+            case "south" -> 3;
+            case "east" -> 5;
+            default -> 0;
+        };
+        return Pair.of("facing_direction", direction);
     }
 }

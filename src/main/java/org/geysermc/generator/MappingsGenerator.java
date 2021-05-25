@@ -12,15 +12,18 @@ import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtType;
-import net.minecraft.block.*;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.MiningToolItem;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
@@ -111,7 +114,7 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
-            for (BlockState blockState : getFullBlockDataList()) {
+            for (BlockState blockState : getAllStates()) {
                 rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState)));
             }
 
@@ -177,13 +180,13 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
-            for (Identifier key : Registry.ITEM.getIds()) {
-                Optional<Item> item = Registry.ITEM.getOrEmpty(key);
+            for (ResourceLocation key : Registry.ITEM.keySet()) {
+                Optional<Item> item = Registry.ITEM.getOptional(key);
                 item.ifPresent(value ->
                         rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(
-                                key.getNamespace() + ":" + key.getPath(), Block.getBlockFromItem(value), value.getMaxCount())));
+                                key.getNamespace() + ":" + key.getPath(), Block.byItem(value), value.getMaxStackSize())));
             }
-            
+
             builder.create().toJson(rootObject, writer);
             writer.close();
             System.out.println("Finished item writing process!");
@@ -222,15 +225,15 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
-            for (Identifier key : Registry.SOUND_EVENT.getIds()) {
-                Optional<SoundEvent> sound = Registry.SOUND_EVENT.getOrEmpty(key);
+            for (ResourceLocation key : Registry.SOUND_EVENT.keySet()) {
+                Optional<SoundEvent> sound = Registry.SOUND_EVENT.getOptional(key);
                 sound.ifPresent(soundEvent -> {
-                    SoundEntry soundEntry = SOUND_ENTRIES.get(soundEvent.getId().getPath());
+                    SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
                     if (soundEntry == null) {
-                        soundEntry = new SoundEntry(soundEvent.getId().getPath(), "", -1, null, false);
+                        soundEntry = new SoundEntry(key.getPath(), "", -1, null, false);
                     }
                     JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
-                    if (soundEntry.getExtraData() <= 0 && !soundEvent.getId().getPath().equals("block.note_block.harp")) {
+                    if (soundEntry.getExtraData() <= 0 && !key.getPath().equals("block.note_block.harp")) {
                         object.remove("extra_data");
                     }
                     if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
@@ -269,10 +272,10 @@ public class MappingsGenerator {
             } else {
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             }
-            object.addProperty("block_hardness", state.getHardness(null, null));
+            object.addProperty("block_hardness", state.getDestroySpeed(null, null));
             List<List<Double>> collisionBoxes = Lists.newArrayList();
             try {
-                state.getCollisionShape(null, null).getBoundingBoxes().forEach(item -> {
+                state.getCollisionShape(null, null).toAabbs().forEach(item -> {
                     List<Double> coordinateList = Lists.newArrayList();
                     // Convert Box class to an array of coordinates
                     // They need to be converted from min/max coordinates to centres and sizes
@@ -300,8 +303,8 @@ public class MappingsGenerator {
                 // Ignore water, lava, and fire because players can't pick them
                 if (!trimmedIdentifier.equals("minecraft:water") && !trimmedIdentifier.equals("minecraft:lava") && !trimmedIdentifier.equals("minecraft:fire")) {
                     Block block = state.getBlock();
-                    ItemStack pickStack = block.getPickStack(null, null, state);
-                    String pickStackIdentifier = Registry.ITEM.getId(pickStack.getItem()).toString();
+                    ItemStack pickStack = block.getCloneItemStack(null, null, state);
+                    String pickStackIdentifier = Registry.ITEM.getKey(pickStack.getItem()).toString();
                     if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                         object.addProperty("pick_item", pickStackIdentifier);
                     }
@@ -310,7 +313,7 @@ public class MappingsGenerator {
                 // The block's pick item depends on a block entity.
                 // Banners and Shulker Boxes both depend on the block entity.
             }
-            object.addProperty("can_break_with_hand", !state.isToolRequired());
+            object.addProperty("can_break_with_hand", !state.requiresCorrectToolForDrops());
             // Removes nbt tags from identifier
             // Add tool type for blocks that use shears or sword
             if (trimmedIdentifier.contains("_bed")) {
@@ -501,16 +504,16 @@ public class MappingsGenerator {
             boolean isBlock = block != Blocks.AIR;
             object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
             if (isBlock) {
-                BlockState state = block.getDefaultState();
+                BlockState state = block.defaultBlockState();
                 // Fix some render issues - :microjang:
                 if (block instanceof WallBlock) {
-                    String blockIdentifier = Registry.BLOCK.getId(block).toString();
+                    String blockIdentifier = Registry.BLOCK.getKey(block).toString();
                     if (!isSensibleWall(blockIdentifier)) { // Blackstone renders fine
                         // Required for the item to render with the correct type (sandstone, stone brick, etc)
-                        state = state.with(WallBlock.UP, false);
+                        state = state.setValue(WallBlock.UP, false);
                     }
                 }
-                object.addProperty("blockRuntimeId", Block.getRawIdFromState(state));
+                object.addProperty("blockRuntimeId", Block.getId(state));
             }
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
@@ -535,32 +538,24 @@ public class MappingsGenerator {
         return object;
     }
 
-    public List<BlockState> getFullBlockDataList() {
-        List<BlockState> blockData = new ArrayList<>();
-        Registry.BLOCK.forEach(material -> blockData.addAll(getBlockDataList(material)));
-        return blockData.stream().sorted(Comparator.comparingInt(this::getID)).collect(Collectors.toList());
-    }
-
-    public List<BlockState> getBlockDataList(Block block) {
-        return block.getStateManager().getStates();
-    }
-
-    public int getID(BlockState blockData) {
-        return Block.getRawIdFromState(blockData);
+    public List<BlockState> getAllStates() {
+        List<BlockState> states = new ArrayList<>();
+        Registry.BLOCK.forEach(block -> states.addAll(block.getStateDefinition().getPossibleStates()));
+        return states.stream().sorted(Comparator.comparingInt(Block::getId)).collect(Collectors.toList());
     }
 
     private String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(Registry.BLOCK.getId(blockState.getBlock()).toString());
-        if (!blockState.getEntries().isEmpty()) {
+        stringBuilder.append(Registry.BLOCK.getKey(blockState.getBlock()).toString());
+        if (!blockState.getValues().isEmpty()) {
             stringBuilder.append('[');
-            stringBuilder.append(blockState.getEntries().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
+            stringBuilder.append(blockState.getValues().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
             stringBuilder.append(']');
         }
         return stringBuilder.toString();
     }
 
-    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_MAP_PRINTER = new Function<Map.Entry<Property<?>, Comparable<?>>, String>() {
+    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_MAP_PRINTER = new Function<>() {
 
         public String apply(Map.Entry<Property<?>, Comparable<?>> entry) {
             if (entry == null) {
@@ -572,7 +567,7 @@ public class MappingsGenerator {
         }
 
         private <T extends Comparable<T>> String nameValue(Property<T> arg, Comparable<?> comparable) {
-            return arg.name((T) comparable);
+            return arg.getName((T) comparable);
         }
     };
 
@@ -584,27 +579,15 @@ public class MappingsGenerator {
      * @return Converted direction byte
      */
     private static byte getDirectionInt(String direction) {
-        switch (direction) {
-            case "down":
-                return 0;
+        return (byte) switch (direction) {
+            case "down" -> 0;
+            case "north" -> 2;
+            case "south" -> 3;
+            case "west" -> 4;
+            case "east" -> 5;
+            default -> 1;
+        };
 
-            case "up":
-                return 1;
-
-            case "north":
-                return 2;
-
-            case "south":
-                return 3;
-
-            case "west":
-                return 4;
-
-            case "east":
-                return 5;
-        }
-
-        return 1;
     }
 
     /**
