@@ -12,9 +12,9 @@ import java.nio.channels.Channels
 import java.nio.file.Files
 import java.nio.file.Paths
 
-val serverJarHash = "80a01a1178bcfb67b42636df3a9cdd275f3cc4d4"
-val serverMappingsHash = "1f6f65434a5ac334607a1141d676f7974308ae36"
-val serverJarVersion = "1.17-pre1"
+val serverJarHash = "18abbb3f980fc9b05188535db45a67276ea41f90"
+val serverMappingsHash = "394bffe6a0ba2ee2eaeb7163b0184afc533c704c"
+val serverJarVersion = "1.17-pre3"
 
 group = "org.geysermc.mappings-generator"
 version = "1.1.0"
