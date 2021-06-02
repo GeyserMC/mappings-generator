@@ -20,10 +20,6 @@ public class Main {
         System.setErr(err);
         System.setOut(out);
 
-        for (PositionSourceType<?> positionSourceType : Registry.POSITION_SOURCE_TYPE) {
-            System.out.println(positionSourceType);
-        }
-
         MappingsGenerator generator = new MappingsGenerator();
         generator.generateItems();
         generator.generateBlocks();
