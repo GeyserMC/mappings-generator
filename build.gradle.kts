@@ -21,6 +21,7 @@ version = "1.1.0"
 
 plugins {
     java
+    `maven-publish`
 }
 
 buildscript {
@@ -65,6 +66,17 @@ dependencies {
     annotationProcessor("org.projectlombok", "lombok", "1.18.20")
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("serverJar") {
+            groupId = "net.minecraft"
+            artifactId = "server"
+            version = serverJarVersion
+            artifact("${serverJarVersion}-server-deobfuscated.jar")
+        }
+    }
+}
+
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_16
 }
@@ -80,19 +92,16 @@ val downloadMappings = tasks.register<DownloadFileTask>("downloadMappings") {
 }
 
 val deobfuscateMinecraftJar = tasks.register<DeobfuscateJarTask>("deobfuscateMinecraftJar") {
-    version = serverJarVersion
-}
+    dependsOn("downloadMinecraftJar")
+    dependsOn("downloadMappings")
 
-val publishJarToMavenLocal = tasks.register<PublishJarToMavenLocalTask>("publishJarToMavenLocal") {
     version = serverJarVersion
 }
 
 tasks.register("installServerJar") {
-    // Not sure if this is the best way to do it but it works...
-    downloadMinecraftJar.get().greet()
-    downloadMappings.get().greet()
-    deobfuscateMinecraftJar.get().greet()
-    publishJarToMavenLocal.get().greet()
+    mustRunAfter("deobfuscateMinecraftJar")
+    dependsOn("deobfuscateMinecraftJar")
+    dependsOn("publishServerJarPublicationToMavenLocal")
 }
 
 open class DownloadFileTask : DefaultTask() {
@@ -102,15 +111,18 @@ open class DownloadFileTask : DefaultTask() {
 
     @TaskAction
     fun greet() {
-        println("Downloading file ${fileLocation}...")
+        val file = File(fileLocation!!)
+        if (!file.exists()) {
+            println("Downloading file ${fileLocation}...")
 
-        val url = URL(url)
-        val channel = Channels.newChannel(url.openStream())
+            val url = URL(url)
+            val channel = Channels.newChannel(url.openStream())
 
-        val outputStream = FileOutputStream(fileLocation!!)
-        outputStream.channel.transferFrom(channel, 0, Long.MAX_VALUE)
+            val outputStream = file.outputStream()
+            outputStream.channel.transferFrom(channel, 0, Long.MAX_VALUE)
 
-        println("Download of $fileLocation complete!")
+            println("Download of $fileLocation complete!")
+        }
     }
 }
 
@@ -153,21 +165,5 @@ open class DeobfuscateJarTask : DefaultTask() {
         }
 
         println("Deobfuscation complete!")
-    }
-}
-
-open class PublishJarToMavenLocalTask : DefaultTask() {
-
-    @Internal var version: String? = null
-
-    @TaskAction
-    fun greet() {
-        val mvn = if (System.getProperty("os.name").toLowerCase().contains("windows")) "mvn.cmd" else "mvn"
-
-        println("Publishing to maven local...")
-        project.exec {
-            commandLine(mvn, "install:install-file", "-Dfile=${version}-server-deobfuscated.jar", "-DgroupId=net.minecraft", "-DartifactId=server", "-Dversion=${version}", "-Dpackaging=jar")
-        }
-        println("Maven local publishing complete!")
     }
 }
