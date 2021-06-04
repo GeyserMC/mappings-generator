@@ -167,6 +167,7 @@ public class MappingsGenerator {
                 RUNTIME_ITEM_IDS.put("minecraft:stonecutter", RUNTIME_ITEM_IDS.get("minecraft:stonecutter_block")); // Conflicts with, surprisingly, the OLD MCPE stonecutter
                 RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
                 RUNTIME_ITEM_IDS.put("minecraft:item_frame", RUNTIME_ITEM_IDS.get("minecraft:frame"));
+                RUNTIME_ITEM_IDS.put("minecraft:glow_item_frame", RUNTIME_ITEM_IDS.get("minecraft:glow_frame"));
                 RUNTIME_ITEM_IDS.put("minecraft:globe_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
                 RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
                 RUNTIME_ITEM_IDS.put("minecraft:zombified_piglin_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:zombie_pigman_spawn_egg"));
