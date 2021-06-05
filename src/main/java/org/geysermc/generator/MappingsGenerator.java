@@ -164,22 +164,29 @@ public class MappingsGenerator {
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
+
                 // Fix some discrepancies - identifier is the Java string and ID is the Bedrock number ID
+
+                // Conflicts
                 RUNTIME_ITEM_IDS.put("minecraft:grass", RUNTIME_ITEM_IDS.get("minecraft:tallgrass")); // Conflicts with grass block
-                RUNTIME_ITEM_IDS.put("minecraft:snow", RUNTIME_ITEM_IDS.get("minecraft:snow_layer")); // Conflicts with snow block
+                RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
                 RUNTIME_ITEM_IDS.put("minecraft:melon", RUNTIME_ITEM_IDS.get("minecraft:melon_block")); // Conflicts with melon slice
-                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", RUNTIME_ITEM_IDS.get("minecraft:undyed_shulker_box"));
+                RUNTIME_ITEM_IDS.put("minecraft:snow", RUNTIME_ITEM_IDS.get("minecraft:snow_layer")); // Conflicts with snow block
                 RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", RUNTIME_ITEM_IDS.get("minecraft:normal_stone_stairs")); // Conflicts with cobblestone stairs
                 RUNTIME_ITEM_IDS.put("minecraft:stonecutter", RUNTIME_ITEM_IDS.get("minecraft:stonecutter_block")); // Conflicts with, surprisingly, the OLD MCPE stonecutter
-                RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
-                RUNTIME_ITEM_IDS.put("minecraft:item_frame", RUNTIME_ITEM_IDS.get("minecraft:frame"));
+
+                // Changed names
                 RUNTIME_ITEM_IDS.put("minecraft:glow_item_frame", RUNTIME_ITEM_IDS.get("minecraft:glow_frame"));
+                RUNTIME_ITEM_IDS.put("minecraft:item_frame", RUNTIME_ITEM_IDS.get("minecraft:frame"));
+                RUNTIME_ITEM_IDS.put("minecraft:oak_door", RUNTIME_ITEM_IDS.get("minecraft:wooden_door"));
+                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", RUNTIME_ITEM_IDS.get("minecraft:undyed_shulker_box"));
+                RUNTIME_ITEM_IDS.put("minecraft:small_dripleaf", RUNTIME_ITEM_IDS.get("minecraft:small_dripleaf_block"));
+                RUNTIME_ITEM_IDS.put("minecraft:waxed_copper_block", RUNTIME_ITEM_IDS.get("minecraft:waxed_copper"));
+
+                // Item replacements
                 RUNTIME_ITEM_IDS.put("minecraft:globe_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
                 RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
                 RUNTIME_ITEM_IDS.put("minecraft:zombified_piglin_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:zombie_pigman_spawn_egg"));
-                RUNTIME_ITEM_IDS.put("minecraft:oak_door", RUNTIME_ITEM_IDS.get("minecraft:wooden_door"));
-                RUNTIME_ITEM_IDS.put("minecraft:small_dripleaf", RUNTIME_ITEM_IDS.get("minecraft:small_dripleaf_block"));
-
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -269,7 +276,7 @@ public class MappingsGenerator {
 
         String bedrockIdentifier;
         // All walls before 1.16 use the same identifier (cobblestone_wall)
-        if (isSensibleWall(trimmedIdentifier)) {
+        if (trimmedIdentifier.endsWith("_wall") && isSensibleWall(trimmedIdentifier)) {
             // Reset any existing mapping to cobblestone wall
             bedrockIdentifier = trimmedIdentifier;
         } else if (trimmedIdentifier.endsWith("_wall")) {
@@ -299,10 +306,10 @@ public class MappingsGenerator {
                 if (blockEntry.getBedrockIdentifier().contains("double") && !blockEntry.getBedrockIdentifier().contains("copper")) {
                     bedrockIdentifier = blockEntry.getBedrockIdentifier();
                 } else {
-                    bedrockIdentifier = formatSlab(trimmedIdentifier);
+                    bedrockIdentifier = formatDoubleSlab(trimmedIdentifier);
                 }
             } else {
-                bedrockIdentifier = formatSlab(trimmedIdentifier);
+                bedrockIdentifier = formatDoubleSlab(trimmedIdentifier);
             }
         } else {
             // Default to trimmed identifier, or the existing identifier
@@ -667,7 +674,7 @@ public class MappingsGenerator {
     /**
      * @return the correct double slab identifier for Bedrock
      */
-    private static String formatSlab(String identifier) {
+    private static String formatDoubleSlab(String identifier) {
         if (identifier.contains("double")) {
             return identifier;
         }
