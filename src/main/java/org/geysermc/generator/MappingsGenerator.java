@@ -438,6 +438,30 @@ public class MappingsGenerator {
             }
         }
 
+        if (trimmedIdentifier.equals("minecraft:glow_lichen")) {
+            int bitset = 0;
+            List<String> statesList = Arrays.asList(states);
+            if (statesList.contains("down=true")) {
+                bitset |= 1;
+            }
+            if (statesList.contains("up=true")) {
+                bitset |= 1 << 1;
+            }
+            if (statesList.contains("north=true")) {
+                bitset |= 1 << 2;
+            }
+            if (statesList.contains("south=true")) {
+                bitset |= 1 << 3;
+            }
+            if (statesList.contains("west=true")) {
+                bitset |= 1 << 4;
+            }
+            if (statesList.contains("east=true")) {
+                bitset |= 1 << 5;
+            }
+            statesObject.addProperty("multi_face_direction_bits", bitset);
+        }
+
         String stateIdentifier = trimmedIdentifier;
         if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
             stateIdentifier = "minecraft:cobblestone_wall";
