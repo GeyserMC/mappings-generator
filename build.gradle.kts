@@ -5,16 +5,15 @@ import org.cadixdev.lorenz.MappingSet
 import org.cadixdev.lorenz.asm.LorenzRemapper
 import org.cadixdev.lorenz.io.proguard.ProGuardReader
 
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URL
 import java.nio.channels.Channels
 import java.nio.file.Files
 import java.nio.file.Paths
 
-val serverJarHash = "18abbb3f980fc9b05188535db45a67276ea41f90"
-val serverMappingsHash = "394bffe6a0ba2ee2eaeb7163b0184afc533c704c"
-val serverJarVersion = "1.17-pre3"
+val serverJarHash = "4de310c8c4f4a8ab4574246c1d63e3de3af1444d"
+val serverMappingsHash = "98a1398dc4144f92e10dd6967a231763741952e7"
+val serverJarVersion = "1.17-rc1"
 
 group = "org.geysermc.mappings-generator"
 version = "1.1.0"

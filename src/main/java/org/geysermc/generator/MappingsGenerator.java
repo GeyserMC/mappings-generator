@@ -262,7 +262,10 @@ public class MappingsGenerator {
         if (BLOCK_ENTRIES.containsKey(identifier)) {
             blockEntry = BLOCK_ENTRIES.get(identifier);
             // All walls before 1.16 use the same identifier (cobblestone_wall)
-            if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
+            if (isSensibleWall(trimmedIdentifier)) {
+                // Reset any existing mapping to cobblestone wall
+                object.addProperty("bedrock_identifier", trimmedIdentifier);
+            } else if (trimmedIdentifier.endsWith("_wall")) {
                 object.addProperty("bedrock_identifier", "minecraft:cobblestone_wall");
             } else if (trimmedIdentifier.equals("minecraft:powered_rail")) {
                 object.addProperty("bedrock_identifier", "minecraft:golden_rail");
@@ -270,6 +273,8 @@ public class MappingsGenerator {
                 object.addProperty("bedrock_identifier", "minecraft:light_block");
             } else if (trimmedIdentifier.equals("minecraft:dirt_path")) {
                 object.addProperty("bedrock_identifier", "minecraft:grass_path");
+            } else if (trimmedIdentifier.equals("minecraft:small_dripleaf")) {
+                object.addProperty("bedrock_identifier", "minecraft:small_dripleaf_block");
             } else {
                 object.addProperty("bedrock_identifier", blockEntry.getBedrockIdentifier());
             }
@@ -454,7 +459,7 @@ public class MappingsGenerator {
         }
 
         if (statesObject.entrySet().size() != 0) {
-            if (statesObject.has("wall_block_type") && trimmedIdentifier.contains("blackstone")) {
+            if (statesObject.has("wall_block_type") && isSensibleWall(trimmedIdentifier)) {
                 statesObject.getAsJsonObject().remove("wall_block_type");
             }
             object.add("bedrock_states", statesObject);
@@ -595,6 +600,6 @@ public class MappingsGenerator {
      * @return true if this wall can be treated normally and not stupidly
      */
     private static boolean isSensibleWall(String identifier) {
-        return identifier.contains("blackstone");
+        return identifier.contains("blackstone") || identifier.contains("deepslate");
     }
 }
