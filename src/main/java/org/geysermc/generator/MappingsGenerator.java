@@ -444,6 +444,15 @@ public class MappingsGenerator {
                         }
                     }
                 }
+                String[] antiBlockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).excludingBlockRegex();
+                if (antiBlockRegex.length != 0) {
+                    for (String excludeRegex : antiBlockRegex) {
+                        if (trimmedIdentifier.matches(excludeRegex)) {
+                            continue stateLoop;
+                        }
+                    }
+                }
+
                 String value = javaState.split("=")[1];
                 Pair<String, ?> bedrockState = stateMapper.translateState(identifier, value);
                 if (bedrockState.getValue() instanceof Number) {

@@ -15,6 +15,13 @@ public @interface StateRemapper {
     String[] blockRegex() default "";
 
     /**
+     * Regex string to exclude blocks when remapping states for blocks. Leave empty to exclude no blocks.
+     *
+     * @return regex string to exclude blocks when remapping states for blocks
+     */
+    String[] excludingBlockRegex() default "";
+
+    /**
      * The name of the Minecraft: Java Edition blockstate data.
      *
      * @return the name of the Minecraft: java edition blockstate data.
