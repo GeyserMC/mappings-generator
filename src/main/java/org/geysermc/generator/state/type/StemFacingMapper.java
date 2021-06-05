@@ -4,7 +4,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
-@StateRemapper(value = "facing", blockRegex = ".*_stem.?$")
+@StateRemapper(value = "facing", blockRegex = ".*[^f]_stem.?$")
 public class StemFacingMapper extends StateMapper<Integer> {
 
     @Override

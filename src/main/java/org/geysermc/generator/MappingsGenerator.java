@@ -490,6 +490,14 @@ public class MappingsGenerator {
             }
         }
 
+        else if (trimmedIdentifier.contains("big_dripleaf")) {
+            boolean isHead = !trimmedIdentifier.contains("stem");
+            statesObject.addProperty("big_dripleaf_head", isHead);
+            if (!isHead) {
+                statesObject.addProperty("big_dripleaf_tilt", "none");
+            }
+        }
+
         String stateIdentifier = trimmedIdentifier;
         if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
             stateIdentifier = "minecraft:cobblestone_wall";
