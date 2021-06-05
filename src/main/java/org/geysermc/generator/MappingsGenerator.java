@@ -444,10 +444,10 @@ public class MappingsGenerator {
                         }
                     }
                 }
-                String[] antiBlockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).excludingBlockRegex();
-                if (antiBlockRegex.length != 0) {
-                    for (String excludeRegex : antiBlockRegex) {
-                        if (trimmedIdentifier.matches(excludeRegex)) {
+                String[] excludingBlockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).excludingBlockRegex();
+                if (excludingBlockRegex.length != 0) {
+                    for (String regex : excludingBlockRegex) {
+                        if (trimmedIdentifier.matches(regex)) {
                             continue stateLoop;
                         }
                     }
