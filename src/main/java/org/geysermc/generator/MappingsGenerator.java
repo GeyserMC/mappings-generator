@@ -178,6 +178,7 @@ public class MappingsGenerator {
                 RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
                 RUNTIME_ITEM_IDS.put("minecraft:zombified_piglin_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:zombie_pigman_spawn_egg"));
                 RUNTIME_ITEM_IDS.put("minecraft:oak_door", RUNTIME_ITEM_IDS.get("minecraft:wooden_door"));
+                RUNTIME_ITEM_IDS.put("minecraft:small_dripleaf", RUNTIME_ITEM_IDS.get("minecraft:small_dripleaf_block"));
 
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
