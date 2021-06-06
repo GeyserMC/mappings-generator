@@ -10,7 +10,7 @@ public class CandleCountMapper extends StateMapper<Integer> {
 
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        // todo: don't map candles to pickles and cake candles to cake once Bedrock gets candles
+        // map candles to pickles until bedrock gets them
         int additionalPickles = Integer.parseInt(value) - 1;
         return Pair.of("cluster_count", additionalPickles);
     }
