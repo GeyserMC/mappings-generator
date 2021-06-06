@@ -19,7 +19,6 @@ public class VinesAgeMapper extends StateMapper<Integer> {
             return Pair.of("twisting_vines_age", age);
         } else {
             // Cave vines
-            System.out.println("Set age to " + age + " for " + fullIdentifier);
             return Pair.of("growing_plant_age", age);
         }
     }
