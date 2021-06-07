@@ -161,13 +161,15 @@ public class MappingsGenerator {
             }
 
             try {
+                // Get all a map of all the bedrock names and their ids
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
 
+                // Now, we transform the map so that all keys are java names and bedrock ids
                 // Fix some discrepancies - identifier is the Java string and ID is the Bedrock number ID
 
-                // Conflicts
+                // Conflicts - both names exist on each platform but they are different blocks
                 RUNTIME_ITEM_IDS.put("minecraft:grass", RUNTIME_ITEM_IDS.get("minecraft:tallgrass")); // Conflicts with grass block
                 RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
                 RUNTIME_ITEM_IDS.put("minecraft:melon", RUNTIME_ITEM_IDS.get("minecraft:melon_block")); // Conflicts with melon slice
@@ -175,7 +177,7 @@ public class MappingsGenerator {
                 RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", RUNTIME_ITEM_IDS.get("minecraft:normal_stone_stairs")); // Conflicts with cobblestone stairs
                 RUNTIME_ITEM_IDS.put("minecraft:stonecutter", RUNTIME_ITEM_IDS.get("minecraft:stonecutter_block")); // Conflicts with, surprisingly, the OLD MCPE stonecutter
 
-                // Changed names
+                // Changed names - the block has a different name on java edition, so we add a new key with the same value. the old bedrock name key stays, with zero use.
                 RUNTIME_ITEM_IDS.put("minecraft:glow_item_frame", RUNTIME_ITEM_IDS.get("minecraft:glow_frame"));
                 RUNTIME_ITEM_IDS.put("minecraft:item_frame", RUNTIME_ITEM_IDS.get("minecraft:frame"));
                 RUNTIME_ITEM_IDS.put("minecraft:oak_door", RUNTIME_ITEM_IDS.get("minecraft:wooden_door"));
@@ -183,7 +185,7 @@ public class MappingsGenerator {
                 RUNTIME_ITEM_IDS.put("minecraft:small_dripleaf", RUNTIME_ITEM_IDS.get("minecraft:small_dripleaf_block"));
                 RUNTIME_ITEM_IDS.put("minecraft:waxed_copper_block", RUNTIME_ITEM_IDS.get("minecraft:waxed_copper"));
 
-                // Item replacements
+                // Item replacements - if an item doesn't exist on bedrock edition, we set it to something that does
                 RUNTIME_ITEM_IDS.put("minecraft:globe_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
                 RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
                 RUNTIME_ITEM_IDS.put("minecraft:sculk_sensor", RUNTIME_ITEM_IDS.get("minecraft:info_update")); // soon
@@ -573,6 +575,8 @@ public class MappingsGenerator {
                 if (replacementIdentifier != null) {
                     object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get("minecraft:" + replacementIdentifier));
                 } else {
+                    // Add a sout here if you want to see which java item names aren't in RUNTIME_ITEM_IDS
+                    // Such items exist because the don't have the same name as the bedrock counterpart, and they haven't been added manually to RUNTIME_ITEM_IDS in this file
                     object.addProperty("bedrock_id", itemEntry.getBedrockId());
                 }
             }
@@ -593,6 +597,9 @@ public class MappingsGenerator {
         } else {
             object.addProperty("bedrock_id", 248); // update block (missing mapping)
             object.addProperty("bedrock_data", 0);
+        }
+        if (object.get("bedrock_id").getAsInt() == 248) {
+            System.out.println("Failed to map " + identifier + " to a bedrock ID other than the update block");
         }
         if (stackSize != 64) {
             object.addProperty("stack_size", stackSize);

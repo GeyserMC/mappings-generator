@@ -22,6 +22,8 @@ public class Main {
         generator.generateBlocks();
         generator.generateSounds();
 
-        // todo: don't map candles to sea_pickles and candle_cakes to cakes once bedrock gets them
+        // todo: the following items/blocks to be remapped properly once added to bedrock edition
+        // bundle
+        // candle, candle_cakes, potted_azalea,
     }
 }
