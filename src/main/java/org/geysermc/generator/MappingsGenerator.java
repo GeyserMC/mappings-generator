@@ -278,7 +278,7 @@ public class MappingsGenerator {
         sameNameAddedItems.add("Bedrock item names that are new and are in Java:");
         differentNameAddedItems.add("Bedrock item names that are new and are not in Java:");
         sameNameIdChanges.add("Bedrock item names that have had their IDs changed, and are in Java:");
-        differentNameIdChanges.add("Bedrock item names have had their IDs changed, and are not in Java:");
+        differentNameIdChanges.add("Bedrock item names that have had their IDs changed, and are not in Java:");
 
         for (String existingName : oldRuntimeIds.keySet()) {
             if (!newRuntimeIds.containsKey(existingName)) {
