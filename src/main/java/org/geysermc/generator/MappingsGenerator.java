@@ -599,7 +599,7 @@ public class MappingsGenerator {
             object.addProperty("bedrock_data", 0);
         }
         if (object.get("bedrock_id").getAsInt() == 248) {
-            System.out.println("Failed to map " + identifier + " to a bedrock ID other than the update block");
+            System.out.println("Failed to map java item " + identifier + " to a bedrock ID other than the update block (248).");
         }
         if (stackSize != 64) {
             object.addProperty("stack_size", stackSize);
