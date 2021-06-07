@@ -143,6 +143,7 @@ public class MappingsGenerator {
         try {
             File mappings = new File("mappings/items.json");
             File itemPalette = new File("palettes/runtime_item_states.json");
+            File oldItemPalette = new File("palettes/old_runtime_item_states.json");
             if (!mappings.exists()) {
                 System.out.println("Could not find mappings submodule! Did you clone them?");
                 return;
@@ -165,34 +166,43 @@ public class MappingsGenerator {
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);
                 entries.forEach(item -> RUNTIME_ITEM_IDS.put(item.getIdentifier(), item.getLegacy_id()));
-
-                // Now, we transform the map so that all keys are java names and bedrock ids
-                // Fix some discrepancies - identifier is the Java string and ID is the Bedrock number ID
-
-                // Conflicts - both names exist on each platform but they are different blocks
-                RUNTIME_ITEM_IDS.put("minecraft:grass", RUNTIME_ITEM_IDS.get("minecraft:tallgrass")); // Conflicts with grass block
-                RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
-                RUNTIME_ITEM_IDS.put("minecraft:melon", RUNTIME_ITEM_IDS.get("minecraft:melon_block")); // Conflicts with melon slice
-                RUNTIME_ITEM_IDS.put("minecraft:snow", RUNTIME_ITEM_IDS.get("minecraft:snow_layer")); // Conflicts with snow block
-                RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", RUNTIME_ITEM_IDS.get("minecraft:normal_stone_stairs")); // Conflicts with cobblestone stairs
-                RUNTIME_ITEM_IDS.put("minecraft:stonecutter", RUNTIME_ITEM_IDS.get("minecraft:stonecutter_block")); // Conflicts with, surprisingly, the OLD MCPE stonecutter
-
-                // Changed names - the block has a different name on java edition, so we add a new key with the same value. the old bedrock name key stays, with zero use.
-                RUNTIME_ITEM_IDS.put("minecraft:glow_item_frame", RUNTIME_ITEM_IDS.get("minecraft:glow_frame"));
-                RUNTIME_ITEM_IDS.put("minecraft:item_frame", RUNTIME_ITEM_IDS.get("minecraft:frame"));
-                RUNTIME_ITEM_IDS.put("minecraft:oak_door", RUNTIME_ITEM_IDS.get("minecraft:wooden_door"));
-                RUNTIME_ITEM_IDS.put("minecraft:shulker_box", RUNTIME_ITEM_IDS.get("minecraft:undyed_shulker_box"));
-                RUNTIME_ITEM_IDS.put("minecraft:small_dripleaf", RUNTIME_ITEM_IDS.get("minecraft:small_dripleaf_block"));
-                RUNTIME_ITEM_IDS.put("minecraft:waxed_copper_block", RUNTIME_ITEM_IDS.get("minecraft:waxed_copper"));
-
-                // Item replacements - if an item doesn't exist on bedrock edition, we set it to something that does
-                RUNTIME_ITEM_IDS.put("minecraft:globe_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
-                RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
-                RUNTIME_ITEM_IDS.put("minecraft:sculk_sensor", RUNTIME_ITEM_IDS.get("minecraft:info_update")); // soon
-                RUNTIME_ITEM_IDS.put("minecraft:zombified_piglin_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:zombie_pigman_spawn_egg"));
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
+                return;
             }
+
+            if (!oldItemPalette.exists()) {
+                System.out.println("Could not find old bedrock item palette (old_runtime_item_states.json), not creating difference file with the current item palette.");
+            } else {
+                createItemDiff(new HashMap<>(RUNTIME_ITEM_IDS), oldItemPalette);
+                System.out.println("A difference file to compare an old bedrock palette to the new bedrock palette has been created (bedrock_item_diff.txt).");
+            }
+
+            // Now, we transform the map so that there is a key for every java name string, bedrock ID as the value
+            // Fix some discrepancies:
+
+            // Conflicts - both names exist on each platform but they are different blocks
+            RUNTIME_ITEM_IDS.put("minecraft:grass", RUNTIME_ITEM_IDS.get("minecraft:tallgrass")); // Conflicts with grass block
+            RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
+            RUNTIME_ITEM_IDS.put("minecraft:melon", RUNTIME_ITEM_IDS.get("minecraft:melon_block")); // Conflicts with melon slice
+            RUNTIME_ITEM_IDS.put("minecraft:snow", RUNTIME_ITEM_IDS.get("minecraft:snow_layer")); // Conflicts with snow block
+            RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", RUNTIME_ITEM_IDS.get("minecraft:normal_stone_stairs")); // Conflicts with cobblestone stairs
+            RUNTIME_ITEM_IDS.put("minecraft:stonecutter", RUNTIME_ITEM_IDS.get("minecraft:stonecutter_block")); // Conflicts with, surprisingly, the OLD MCPE stonecutter
+
+            // Changed names - the block has a different name on java edition, so we add a new key with the same value. the old bedrock name key stays, with zero use.
+            RUNTIME_ITEM_IDS.put("minecraft:glow_item_frame", RUNTIME_ITEM_IDS.get("minecraft:glow_frame"));
+            RUNTIME_ITEM_IDS.put("minecraft:item_frame", RUNTIME_ITEM_IDS.get("minecraft:frame"));
+            RUNTIME_ITEM_IDS.put("minecraft:oak_door", RUNTIME_ITEM_IDS.get("minecraft:wooden_door"));
+            RUNTIME_ITEM_IDS.put("minecraft:shulker_box", RUNTIME_ITEM_IDS.get("minecraft:undyed_shulker_box"));
+            RUNTIME_ITEM_IDS.put("minecraft:small_dripleaf", RUNTIME_ITEM_IDS.get("minecraft:small_dripleaf_block"));
+            RUNTIME_ITEM_IDS.put("minecraft:waxed_copper_block", RUNTIME_ITEM_IDS.get("minecraft:waxed_copper"));
+
+            // Item replacements - if an item doesn't exist on bedrock edition, we set it to something that does
+            RUNTIME_ITEM_IDS.put("minecraft:globe_banner_pattern", RUNTIME_ITEM_IDS.get("minecraft:banner_pattern"));
+            RUNTIME_ITEM_IDS.put("minecraft:trader_llama_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:llama_spawn_egg"));
+            RUNTIME_ITEM_IDS.put("minecraft:sculk_sensor", RUNTIME_ITEM_IDS.get("minecraft:info_update")); // soon
+            RUNTIME_ITEM_IDS.put("minecraft:zombified_piglin_spawn_egg", RUNTIME_ITEM_IDS.get("minecraft:zombie_pigman_spawn_egg"));
+
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             FileWriter writer = new FileWriter(mappings);
@@ -220,6 +230,109 @@ public class MappingsGenerator {
             }
         } catch (IOException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Create a file to compare the items in the old bedrock item palette vs the current bedrock item palette
+     * @param newRuntimeIds a map of bedrock namespaced id to numerical id
+     * @param oldItemPalette the old bedrock item palette
+     * @throws IOException if there is an exception reading the old palette or writing the diff file
+     */
+    public void createItemDiff(Map<String, Integer> newRuntimeIds, File oldItemPalette) throws IOException {
+        // Set up a blank file
+        File diff = new File("palettes/bedrock_item_diff.txt");
+        if (diff.exists()) {
+            if (!diff.delete()) {
+                System.out.println("Failed to delete an old item diff file (bedrock_item_diff.txt), skipping diff calculation.");
+                return;
+            }
+        }
+        if (!diff.createNewFile()) {
+            System.out.println("Failed to create blank file for diff calculation (bedrock_item_diff.txt).");
+            return;
+        }
+
+        // Get the old palette
+        Type listType = new TypeToken<List<PaletteItemEntry>>() {}.getType();
+        List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(oldItemPalette), listType);
+        Map<String, Integer> oldRuntimeIds = new HashMap<>();
+        entries.forEach(item -> oldRuntimeIds.put(item.getIdentifier(), item.getLegacy_id()));
+
+        // Get the java items, to categorize the diff
+        List<String> javaItems = new ArrayList<>();
+        for (ResourceLocation key : Registry.ITEM.keySet()) {
+            Optional<Item> item = Registry.ITEM.getOptional(key);
+            item.ifPresent( value -> javaItems.add(key.getNamespace() + ":" + key.getPath()));
+        }
+
+        // Create all our categories
+        List<String> sameNameRemovedItems = new ArrayList<>();
+        List<String> differentNameRemovedItems = new ArrayList<>();
+        List<String> sameNameAddedItems = new ArrayList<>();
+        List<String> differentNameAddedItems = new ArrayList<>();
+        List<String> sameNameIdChanges = new ArrayList<>();
+        List<String> differentNameIdChanges = new ArrayList<>();
+        sameNameRemovedItems.add("Bedrock item names that have been removed and are in Java:");
+        differentNameRemovedItems.add("Bedrock item names that have been removed and are not in Java:");
+        sameNameAddedItems.add("Bedrock item names that are new and are in Java:");
+        differentNameAddedItems.add("Bedrock item names that are new and are not in Java:");
+        sameNameIdChanges.add("Bedrock item names that have had their IDs changed, and are in Java:");
+        differentNameIdChanges.add("Bedrock item names have had their IDs changed, and are not in Java:");
+
+        for (String existingName : oldRuntimeIds.keySet()) {
+            if (!newRuntimeIds.containsKey(existingName)) {
+                // Add lines for names that have been removed
+                String entry = "-- " + existingName + " : " + oldRuntimeIds.get(existingName);
+                if (javaItems.contains(existingName)) {
+                    sameNameRemovedItems.add(entry);
+                } else {
+                    differentNameRemovedItems.add(entry);
+                }
+            }
+        }
+        for (String newName : newRuntimeIds.keySet()) {
+            if (!oldRuntimeIds.containsKey(newName)) {
+                // Add lines for names that have been added
+                String entry = "++ " + newName + " : " + newRuntimeIds.get(newName);
+                if (javaItems.contains(newName)) {
+                    sameNameAddedItems.add(entry);
+                } else {
+                    differentNameAddedItems.add(entry);
+                }
+            } else {
+                // Add lines for names that exist in both, but the ID has changed
+                int oldId = oldRuntimeIds.get(newName);
+                int newId = newRuntimeIds.get(newName);
+
+                if (oldId != newId) {
+                    String entry = "|| " + newName + " : " + oldId + " --> " + newId;
+                    if (javaItems.contains(newName)) {
+                        sameNameIdChanges.add(entry);
+                    } else {
+                        differentNameIdChanges.add(entry);
+                    }
+                }
+            }
+        }
+
+        // Combine all the categories
+        List<String> allEntries = new ArrayList<>();
+        allEntries.addAll(sameNameRemovedItems);
+        allEntries.addAll(differentNameRemovedItems);
+        allEntries.addAll(sameNameAddedItems);
+        allEntries.addAll(differentNameAddedItems);
+        allEntries.addAll(sameNameIdChanges);
+        allEntries.addAll(differentNameIdChanges);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(diff))) {
+            for (String line : allEntries) {
+                writer.write(line);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("Failed to write bedrock item difference calculation to file:");
+            e.printStackTrace();
         }
     }
 
@@ -575,8 +688,8 @@ public class MappingsGenerator {
                 if (replacementIdentifier != null) {
                     object.addProperty("bedrock_id", RUNTIME_ITEM_IDS.get("minecraft:" + replacementIdentifier));
                 } else {
-                    // Add a sout here if you want to see which java item names aren't in RUNTIME_ITEM_IDS
-                    // Such items exist because the don't have the same name as the bedrock counterpart, and they haven't been added manually to RUNTIME_ITEM_IDS in this file
+                    // print a line here if you want to see which java item names aren't in RUNTIME_ITEM_IDS
+                    // Such items exist because they have a different name, and aren't fixed in generateItems(), so they have only been mapped manually in items.json
                     object.addProperty("bedrock_id", itemEntry.getBedrockId());
                 }
             }

@@ -1,0 +1,378 @@
+Bedrock item names that have been removed and are in Java:
+Bedrock item names that have been removed and are not in Java:
+Bedrock item names that are new and are in Java:
+++ minecraft:deepslate_tiles : -387
+++ minecraft:deepslate_tile_stairs : -389
+++ minecraft:exposed_cut_copper_slab : -362
+++ minecraft:waxed_oxidized_cut_copper_stairs : -448
+++ minecraft:deepslate_copper_ore : -408
+++ minecraft:tuff : -333
+++ minecraft:waxed_oxidized_copper : -446
+++ minecraft:calcite : -326
+++ minecraft:exposed_cut_copper : -348
+++ minecraft:glow_ink_sac : 503
+++ minecraft:glow_lichen : -411
+++ minecraft:waxed_oxidized_cut_copper_slab : -449
+++ minecraft:waxed_oxidized_cut_copper : -447
+++ minecraft:pointed_dripstone : -308
+++ minecraft:amethyst_shard : 623
+++ minecraft:large_amethyst_bud : -330
+++ minecraft:weathered_cut_copper_stairs : -356
+++ minecraft:waxed_exposed_cut_copper_stairs : -359
+++ minecraft:powder_snow_bucket : 368
+++ minecraft:moss_block : -320
+++ minecraft:raw_gold : 506
+++ minecraft:cut_copper : -347
+++ minecraft:waxed_weathered_copper : -346
+++ minecraft:oxidized_cut_copper_slab : -364
+++ minecraft:azalea : -337
+++ minecraft:lightning_rod : -312
+++ minecraft:polished_deepslate_wall : -386
+++ minecraft:waxed_exposed_cut_copper_slab : -366
+++ minecraft:waxed_weathered_cut_copper_slab : -367
+++ minecraft:infested_deepslate : -454
+++ minecraft:raw_copper : 507
+++ minecraft:weathered_cut_copper_slab : -363
+++ minecraft:sculk_sensor : -307
+++ minecraft:glow_squid_spawn_egg : 502
+++ minecraft:cracked_deepslate_tiles : -409
+++ minecraft:tinted_glass : -334
+++ minecraft:polished_deepslate : -383
+++ minecraft:goat_spawn_egg : 501
+++ minecraft:deepslate_iron_ore : -401
+++ minecraft:polished_deepslate_stairs : -385
+++ minecraft:glow_berries : 630
+++ minecraft:exposed_cut_copper_stairs : -355
+++ minecraft:waxed_cut_copper_stairs : -358
+++ minecraft:moss_carpet : -335
+++ minecraft:cobbled_deepslate_stairs : -381
+++ minecraft:chiseled_deepslate : -395
+++ minecraft:hanging_roots : -319
+++ minecraft:polished_deepslate_slab : -384
+++ minecraft:amethyst_block : -327
+++ minecraft:big_dripleaf : -323
+++ minecraft:waxed_weathered_cut_copper : -353
+++ minecraft:oxidized_cut_copper_stairs : -357
+++ minecraft:deepslate_emerald_ore : -407
+++ minecraft:small_amethyst_bud : -332
+++ minecraft:deepslate_brick_slab : -392
+++ minecraft:smooth_basalt : -377
+++ minecraft:cut_copper_stairs : -354
+++ minecraft:copper_block : -340
+++ minecraft:weathered_copper : -342
+++ minecraft:exposed_copper : -341
+++ minecraft:waxed_exposed_cut_copper : -352
+++ minecraft:cobbled_deepslate_wall : -382
+++ minecraft:flowering_azalea : -338
+++ minecraft:weathered_cut_copper : -349
+++ minecraft:copper_ingot : 504
+++ minecraft:deepslate_redstone_ore : -403
+++ minecraft:azalea_leaves : -324
+++ minecraft:cracked_deepslate_bricks : -410
+++ minecraft:deepslate_lapis_ore : -400
+++ minecraft:raw_iron_block : -451
+++ minecraft:deepslate_brick_wall : -394
+++ minecraft:dripstone_block : -317
+++ minecraft:raw_gold_block : -453
+++ minecraft:waxed_cut_copper : -351
+++ minecraft:axolotl_spawn_egg : 500
+++ minecraft:spore_blossom : -321
+++ minecraft:budding_amethyst : -328
+++ minecraft:oxidized_copper : -343
+++ minecraft:deepslate_diamond_ore : -405
+++ minecraft:deepslate_brick_stairs : -393
+++ minecraft:deepslate_coal_ore : -406
+++ minecraft:amethyst_cluster : -329
+++ minecraft:waxed_weathered_cut_copper_stairs : -360
+++ minecraft:deepslate_tile_slab : -388
+++ minecraft:raw_iron : 505
+++ minecraft:spyglass : 624
+++ minecraft:cobbled_deepslate : -379
+++ minecraft:waxed_cut_copper_slab : -365
+++ minecraft:cut_copper_slab : -361
+++ minecraft:deepslate_gold_ore : -402
+++ minecraft:deepslate_tile_wall : -390
+++ minecraft:waxed_exposed_copper : -345
+++ minecraft:deepslate_bricks : -391
+++ minecraft:oxidized_cut_copper : -350
+++ minecraft:raw_copper_block : -452
+++ minecraft:medium_amethyst_bud : -331
+++ minecraft:axolotl_bucket : 369
+++ minecraft:deepslate : -378
+++ minecraft:copper_ore : -311
+++ minecraft:cobbled_deepslate_slab : -380
+Bedrock item names that are new and are not in Java:
+++ minecraft:waxed_oxidized_double_cut_copper_slab : -450
+++ minecraft:dirt_with_roots : -318
+++ minecraft:item.glow_frame : -339
+++ minecraft:lit_deepslate_redstone_ore : -404
+++ minecraft:goat_horn : 622
+++ minecraft:cave_vines : -322
+++ minecraft:powder_snow : -306
+++ minecraft:exposed_double_cut_copper_slab : -369
+++ minecraft:azalea_leaves_flowered : -325
+++ minecraft:waxed_double_cut_copper_slab : -372
+++ minecraft:weathered_double_cut_copper_slab : -370
+++ minecraft:polished_deepslate_double_slab : -397
+++ minecraft:waxed_copper : -344
+++ minecraft:waxed_exposed_double_cut_copper_slab : -373
+++ minecraft:glow_frame : 621
+++ minecraft:oxidized_double_cut_copper_slab : -371
+++ minecraft:deepslate_tile_double_slab : -398
+++ minecraft:double_cut_copper_slab : -368
+++ minecraft:cobbled_deepslate_double_slab : -396
+++ minecraft:deepslate_brick_double_slab : -399
+++ minecraft:cave_vines_head_with_berries : -376
+++ minecraft:waxed_weathered_double_cut_copper_slab : -374
+++ minecraft:small_dripleaf_block : -336
+++ minecraft:cave_vines_body_with_berries : -375
+Bedrock item names that have had their IDs changed, and are in Java:
+|| minecraft:ghast_spawn_egg : 452 --> 454
+|| minecraft:name_tag : 538 --> 548
+|| minecraft:flower_banner_pattern : 571 --> 581
+|| minecraft:golden_horse_armor : 522 --> 532
+|| minecraft:saddle : 369 --> 371
+|| minecraft:zoglin_spawn_egg : 496 --> 498
+|| minecraft:blue_dye : 397 --> 399
+|| minecraft:skull_banner_pattern : 573 --> 583
+|| minecraft:endermite_spawn_egg : 458 --> 460
+|| minecraft:polar_bear_spawn_egg : 470 --> 472
+|| minecraft:firework_star : 510 --> 520
+|| minecraft:quartz : 514 --> 524
+|| minecraft:written_book : 501 --> 511
+|| minecraft:honey_bottle : 581 --> 591
+|| minecraft:white_dye : 408 --> 410
+|| minecraft:netherite_hoe : 596 --> 606
+|| minecraft:cyan_dye : 399 --> 401
+|| minecraft:crimson_sign : 602 --> 612
+|| minecraft:iron_horse_armor : 521 --> 531
+|| minecraft:chest_minecart : 387 --> 389
+|| minecraft:light_blue_dye : 405 --> 407
+|| minecraft:netherite_boots : 600 --> 610
+|| minecraft:lime_dye : 403 --> 405
+|| minecraft:zombie_villager_spawn_egg : 475 --> 477
+|| minecraft:stray_spawn_egg : 460 --> 462
+|| minecraft:armor_stand : 542 --> 552
+|| minecraft:green_dye : 395 --> 397
+|| minecraft:evoker_spawn_egg : 473 --> 475
+|| minecraft:music_disc_pigstep : 608 --> 618
+|| minecraft:wither_skeleton_spawn_egg : 462 --> 464
+|| minecraft:jungle_boat : 375 --> 377
+|| minecraft:black_dye : 393 --> 395
+|| minecraft:trident : 536 --> 546
+|| minecraft:prismarine_shard : 555 --> 565
+|| minecraft:magma_cube_spawn_egg : 453 --> 455
+|| minecraft:scute : 562 --> 572
+|| minecraft:dark_oak_door : 547 --> 557
+|| minecraft:nautilus_shell : 560 --> 570
+|| minecraft:tropical_fish_spawn_egg : 477 --> 479
+|| minecraft:minecart : 368 --> 370
+|| minecraft:clay_ball : 382 --> 384
+|| minecraft:sugar : 414 --> 416
+|| minecraft:music_disc_strad : 532 --> 542
+|| minecraft:vex_spawn_egg : 474 --> 476
+|| minecraft:wandering_trader_spawn_egg : 490 --> 492
+|| minecraft:hopper_minecart : 516 --> 526
+|| minecraft:glistering_melon_slice : 432 --> 434
+|| minecraft:brown_dye : 396 --> 398
+|| minecraft:tnt_minecart : 515 --> 525
+|| minecraft:leather_horse_armor : 520 --> 530
+|| minecraft:acacia_door : 546 --> 556
+|| minecraft:flower_pot : 504 --> 514
+|| minecraft:panda_spawn_egg : 487 --> 489
+|| minecraft:spruce_sign : 566 --> 576
+|| minecraft:egg : 388 --> 390
+|| minecraft:splash_potion : 551 --> 561
+|| minecraft:silverfish_spawn_egg : 441 --> 443
+|| minecraft:enchanted_book : 511 --> 521
+|| minecraft:honeycomb : 580 --> 590
+|| minecraft:music_disc_11 : 534 --> 544
+|| minecraft:music_disc_13 : 524 --> 534
+|| minecraft:leather : 379 --> 381
+|| minecraft:kelp : 380 --> 382
+|| minecraft:music_disc_stal : 531 --> 541
+|| minecraft:end_crystal : 615 --> 629
+|| minecraft:experience_bottle : 498 --> 508
+|| minecraft:comparator : 512 --> 522
+|| minecraft:ender_eye : 431 --> 433
+|| minecraft:heart_of_the_sea : 561 --> 571
+|| minecraft:ocelot_spawn_egg : 449 --> 451
+|| minecraft:birch_sign : 567 --> 577
+|| minecraft:music_disc_mall : 529 --> 539
+|| minecraft:campfire : 578 --> 588
+|| minecraft:elytra : 554 --> 564
+|| minecraft:skeleton_spawn_egg : 442 --> 444
+|| minecraft:iron_door : 370 --> 372
+|| minecraft:villager_spawn_egg : 447 --> 449
+|| minecraft:mutton : 540 --> 550
+|| minecraft:firework_rocket : 509 --> 519
+|| minecraft:crimson_door : 604 --> 614
+|| minecraft:shulker_shell : 556 --> 566
+|| minecraft:elder_guardian_spawn_egg : 469 --> 471
+|| minecraft:acacia_boat : 377 --> 379
+|| minecraft:emerald : 502 --> 512
+|| minecraft:nether_star : 508 --> 518
+|| minecraft:oak_boat : 373 --> 375
+|| minecraft:slime_ball : 386 --> 388
+|| minecraft:phantom_spawn_egg : 484 --> 486
+|| minecraft:hoglin_spawn_egg : 494 --> 496
+|| minecraft:brick : 381 --> 383
+|| minecraft:dark_oak_boat : 378 --> 380
+|| minecraft:potion : 424 --> 426
+|| minecraft:husk_spawn_egg : 461 --> 463
+|| minecraft:music_disc_blocks : 526 --> 536
+|| minecraft:blaze_spawn_egg : 454 --> 456
+|| minecraft:book : 385 --> 387
+|| minecraft:mule_spawn_egg : 464 --> 466
+|| minecraft:bone : 413 --> 415
+|| minecraft:creeper_banner_pattern : 572 --> 582
+|| minecraft:jungle_door : 545 --> 555
+|| minecraft:diamond_horse_armor : 523 --> 533
+|| minecraft:zombie_horse_spawn_egg : 466 --> 468
+|| minecraft:spruce_door : 543 --> 553
+|| minecraft:bee_spawn_egg : 492 --> 494
+|| minecraft:cod_spawn_egg : 478 --> 480
+|| minecraft:writable_book : 500 --> 510
+|| minecraft:snowball : 372 --> 374
+|| minecraft:llama_spawn_egg : 471 --> 473
+|| minecraft:fox_spawn_egg : 488 --> 490
+|| minecraft:piglin_brute_spawn_egg : 497 --> 499
+|| minecraft:soul_campfire : 610 --> 620
+|| minecraft:pig_spawn_egg : 435 --> 437
+|| minecraft:compass : 389 --> 391
+|| minecraft:cow_spawn_egg : 434 --> 436
+|| minecraft:cake : 415 --> 417
+|| minecraft:birch_door : 544 --> 554
+|| minecraft:filled_map : 418 --> 420
+|| minecraft:ghast_tear : 422 --> 424
+|| minecraft:squid_spawn_egg : 448 --> 450
+|| minecraft:cooked_mutton : 541 --> 551
+|| minecraft:blaze_powder : 427 --> 429
+|| minecraft:magenta_dye : 406 --> 408
+|| minecraft:netherite_leggings : 599 --> 609
+|| minecraft:magma_cream : 428 --> 430
+|| minecraft:red_dye : 394 --> 396
+|| minecraft:witch_spawn_egg : 450 --> 452
+|| minecraft:popped_chorus_fruit : 549 --> 559
+|| minecraft:ink_sac : 411 --> 413
+|| minecraft:orange_dye : 407 --> 409
+|| minecraft:pillager_spawn_egg : 489 --> 491
+|| minecraft:prismarine_crystals : 539 --> 549
+|| minecraft:cave_spider_spawn_egg : 455 --> 457
+|| minecraft:bone_meal : 409 --> 411
+|| minecraft:brewing_stand : 429 --> 431
+|| minecraft:chain : 607 --> 617
+|| minecraft:bat_spawn_egg : 451 --> 453
+|| minecraft:spruce_boat : 376 --> 378
+|| minecraft:paper : 384 --> 386
+|| minecraft:spider_spawn_egg : 444 --> 446
+|| minecraft:piglin_banner_pattern : 577 --> 587
+|| minecraft:rabbit_spawn_egg : 457 --> 459
+|| minecraft:fire_charge : 499 --> 509
+|| minecraft:music_disc_cat : 525 --> 535
+|| minecraft:cauldron : 430 --> 432
+|| minecraft:jungle_sign : 568 --> 578
+|| minecraft:warped_sign : 603 --> 613
+|| minecraft:blaze_rod : 421 --> 423
+|| minecraft:mojang_banner_pattern : 574 --> 584
+|| minecraft:piglin_spawn_egg : 495 --> 497
+|| minecraft:netherite_shovel : 593 --> 603
+|| minecraft:netherite_scrap : 601 --> 611
+|| minecraft:turtle_spawn_egg : 483 --> 485
+|| minecraft:mooshroom_spawn_egg : 438 --> 440
+|| minecraft:phantom_membrane : 564 --> 574
+|| minecraft:fermented_spider_eye : 426 --> 428
+|| minecraft:repeater : 417 --> 419
+|| minecraft:music_disc_mellohi : 530 --> 540
+|| minecraft:pufferfish_spawn_egg : 479 --> 481
+|| minecraft:parrot_spawn_egg : 476 --> 478
+|| minecraft:zombie_spawn_egg : 445 --> 447
+|| minecraft:music_disc_chirp : 527 --> 537
+|| minecraft:redstone : 371 --> 373
+|| minecraft:wolf_spawn_egg : 437 --> 439
+|| minecraft:shears : 419 --> 421
+|| minecraft:rabbit_hide : 519 --> 529
+|| minecraft:gray_dye : 401 --> 403
+|| minecraft:cocoa_beans : 410 --> 412
+|| minecraft:iron_nugget : 559 --> 569
+|| minecraft:skeleton_horse_spawn_egg : 465 --> 467
+|| minecraft:suspicious_stew : 579 --> 589
+|| minecraft:sheep_spawn_egg : 436 --> 438
+|| minecraft:music_disc_ward : 533 --> 543
+|| minecraft:carrot_on_a_stick : 507 --> 517
+|| minecraft:netherite_pickaxe : 594 --> 604
+|| minecraft:netherite_ingot : 591 --> 601
+|| minecraft:slime_spawn_egg : 443 --> 445
+|| minecraft:vindicator_spawn_egg : 472 --> 474
+|| minecraft:dragon_breath : 550 --> 560
+|| minecraft:netherite_helmet : 597 --> 607
+|| minecraft:drowned_spawn_egg : 481 --> 483
+|| minecraft:glass_bottle : 425 --> 427
+|| minecraft:dolphin_spawn_egg : 482 --> 484
+|| minecraft:ender_pearl : 420 --> 422
+|| minecraft:music_disc_far : 528 --> 538
+|| minecraft:donkey_spawn_egg : 463 --> 465
+|| minecraft:rabbit_foot : 518 --> 528
+|| minecraft:purple_dye : 398 --> 400
+|| minecraft:gold_nugget : 423 --> 425
+|| minecraft:birch_boat : 374 --> 376
+|| minecraft:nether_sprouts : 609 --> 619
+|| minecraft:enderman_spawn_egg : 440 --> 442
+|| minecraft:lead : 537 --> 547
+|| minecraft:chicken_spawn_egg : 433 --> 435
+|| minecraft:shulker_spawn_egg : 467 --> 469
+|| minecraft:strider_spawn_egg : 493 --> 495
+|| minecraft:netherite_chestplate : 598 --> 608
+|| minecraft:hopper : 517 --> 527
+|| minecraft:dark_oak_sign : 570 --> 580
+|| minecraft:warped_fungus_on_a_stick : 606 --> 616
+|| minecraft:glowstone_dust : 392 --> 394
+|| minecraft:yellow_dye : 404 --> 406
+|| minecraft:music_disc_wait : 535 --> 545
+|| minecraft:cat_spawn_egg : 486 --> 488
+|| minecraft:fishing_rod : 390 --> 392
+|| minecraft:guardian_spawn_egg : 459 --> 461
+|| minecraft:pink_dye : 402 --> 404
+|| minecraft:totem_of_undying : 558 --> 568
+|| minecraft:netherite_axe : 595 --> 605
+|| minecraft:salmon_spawn_egg : 480 --> 482
+|| minecraft:creeper_spawn_egg : 439 --> 441
+|| minecraft:turtle_helmet : 563 --> 573
+|| minecraft:crossbow : 565 --> 575
+|| minecraft:acacia_sign : 569 --> 579
+|| minecraft:warped_door : 605 --> 615
+|| minecraft:chorus_fruit : 548 --> 558
+|| minecraft:horse_spawn_egg : 456 --> 458
+|| minecraft:clock : 391 --> 393
+|| minecraft:lapis_lazuli : 412 --> 414
+|| minecraft:lingering_potion : 552 --> 562
+|| minecraft:ravager_spawn_egg : 491 --> 493
+|| minecraft:command_block_minecart : 553 --> 563
+|| minecraft:sugar_cane : 383 --> 385
+|| minecraft:light_gray_dye : 400 --> 402
+|| minecraft:netherite_sword : 592 --> 602
+Bedrock item names have had their IDs changed, and are not in Java:
+|| minecraft:balloon : 587 --> 597
+|| minecraft:empty_map : 505 --> 515
+|| minecraft:field_masoned_banner_pattern : 575 --> 585
+|| minecraft:compound : 583 --> 593
+|| minecraft:banner_pattern : 613 --> 627
+|| minecraft:medicine : 588 --> 598
+|| minecraft:frame : 503 --> 513
+|| minecraft:skull : 506 --> 516
+|| minecraft:bordure_indented_banner_pattern : 576 --> 586
+|| minecraft:spawn_egg : 614 --> 628
+|| minecraft:netherbrick : 513 --> 523
+|| minecraft:npc_spawn_egg : 468 --> 470
+|| minecraft:bed : 416 --> 418
+|| minecraft:ice_bomb : 584 --> 594
+|| minecraft:bleach : 585 --> 595
+|| minecraft:boat : 611 --> 625
+|| minecraft:lodestone_compass : 590 --> 600
+|| minecraft:sparkler : 589 --> 599
+|| minecraft:camera : 582 --> 592
+|| minecraft:dye : 612 --> 626
+|| minecraft:zombie_pigman_spawn_egg : 446 --> 448
+|| minecraft:banner : 557 --> 567
+|| minecraft:rapid_fertilizer : 586 --> 596
+|| minecraft:agent_spawn_egg : 485 --> 487

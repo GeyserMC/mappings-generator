@@ -14,3 +14,7 @@ The required palette is included in this repository, however if you would like t
 After running ProxyPass and connecting to it from Minecraft Bedrock the palettes should be dumped to the data folder. 
 
 Currently, mappings-generator only uses `runtime_item_states.json`; copy that file to this directory.
+
+A difference file (`bedrock_item_diff.txt`) can be generated to show items that have been added, removed, or had their numerical IDs changed. 
+`old_runtime_item_states.json` must be provided in this directory, which should be a `runtime_item_states.json` of an older game version.  
+**Warning**: Although Bedrock Edition and Java Edition may both have an identical item name, there are many that are actually different items.
