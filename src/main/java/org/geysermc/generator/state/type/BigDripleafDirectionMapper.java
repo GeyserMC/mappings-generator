@@ -4,17 +4,17 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
-@StateRemapper(value = "facing", blockRegex = "^minecraft:bee_nest|^minecraft:beehive")
-public class BeeNestDirectionMapper extends StateMapper<Integer> {
+@StateRemapper(value = "facing", blockRegex = "^minecraft:big_dripleaf|^minecraft:big_dripleaf_stem")
+public class BigDripleafDirectionMapper extends StateMapper<Integer> {
 
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        int direction = switch (value) {
+        return Pair.of("direction", switch (value) {
+            case "south" -> 0;
             case "west" -> 1;
             case "north" -> 2;
             case "east" -> 3;
-            default -> 0;
-        };
-        return Pair.of("direction", direction);
+            default -> throw new RuntimeException("Could not determine big dripleaf direction!");
+        });
     }
 }

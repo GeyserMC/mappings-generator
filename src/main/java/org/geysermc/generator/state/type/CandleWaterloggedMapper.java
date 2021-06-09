@@ -4,11 +4,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
-@StateRemapper(value = "open", blockRegex = ".*door.?$")
-public class DoorOpenMapper extends StateMapper<Boolean> {
+@StateRemapper(value = "waterlogged", blockRegex = ".*candle$")
+public class CandleWaterloggedMapper extends StateMapper<Boolean> {
 
     @Override
     public Pair<String, Boolean> translateState(String fullIdentifier, String value) {
-        return Pair.of("open_bit", Boolean.parseBoolean(value));
+        // sea pickles dead_bit is true if there is no water
+        return Pair.of("dead_bit", !value.equals("true"));
     }
 }

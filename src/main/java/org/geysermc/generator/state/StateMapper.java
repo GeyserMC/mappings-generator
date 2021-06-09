@@ -1,6 +1,6 @@
 package org.geysermc.generator.state;
 
-import org.geysermc.generator.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public abstract class StateMapper<T> {
 

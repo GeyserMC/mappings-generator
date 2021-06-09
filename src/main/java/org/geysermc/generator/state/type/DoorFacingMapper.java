@@ -1,6 +1,6 @@
 package org.geysermc.generator.state.type;
 
-import org.geysermc.generator.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
@@ -9,21 +9,12 @@ public class DoorFacingMapper extends StateMapper<Integer> {
 
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        int direction = 0;
-        switch (value) {
-            case "north":
-                direction = 3;
-                break;
-            case "west":
-                direction = 2;
-                break;
-            case "south":
-                direction = 1;
-                break;
-            case "east":
-                direction = 0;
-                break;
-        }
-        return new Pair<>("direction", direction);
+        int direction = switch (value) {
+            case "north" -> 3;
+            case "west" -> 2;
+            case "south" -> 1;
+            default -> 0;
+        };
+        return Pair.of("direction", direction);
     }
 }

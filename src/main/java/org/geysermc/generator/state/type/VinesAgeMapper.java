@@ -1,6 +1,6 @@
 package org.geysermc.generator.state.type;
 
-import org.geysermc.generator.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
@@ -12,10 +12,14 @@ public class VinesAgeMapper extends StateMapper<Integer> {
         int age = 0;
         try {
             age = Integer.parseInt(value);
-        } catch (NumberFormatException e) { }
+        } catch (NumberFormatException ignored) { }
         if (fullIdentifier.contains("weeping")) {
-            return new Pair<>("weeping_vines_age", age);
+            return Pair.of("weeping_vines_age", age);
+        } else if (fullIdentifier.contains("twisting")) {
+            return Pair.of("twisting_vines_age", age);
+        } else {
+            // Cave vines
+            return Pair.of("growing_plant_age", age);
         }
-        return new Pair<>("twisting_vines_age", age);
     }
 }
