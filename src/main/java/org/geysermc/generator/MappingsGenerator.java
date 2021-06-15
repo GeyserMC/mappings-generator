@@ -171,6 +171,7 @@ public class MappingsGenerator {
                 RUNTIME_ITEM_IDS.put("minecraft:grass", RUNTIME_ITEM_IDS.get("minecraft:tallgrass")); // Conflicts with grass block
                 RUNTIME_ITEM_IDS.put("minecraft:map", RUNTIME_ITEM_IDS.get("minecraft:empty_map")); // Conflicts with filled map
                 RUNTIME_ITEM_IDS.put("minecraft:melon", RUNTIME_ITEM_IDS.get("minecraft:melon_block")); // Conflicts with melon slice
+                RUNTIME_ITEM_IDS.put("minecraft:nether_brick", RUNTIME_ITEM_IDS.get("minecraft:netherbrick")); // This is the item; the block conflicts
                 RUNTIME_ITEM_IDS.put("minecraft:snow", RUNTIME_ITEM_IDS.get("minecraft:snow_layer")); // Conflicts with snow block
                 RUNTIME_ITEM_IDS.put("minecraft:stone_stairs", RUNTIME_ITEM_IDS.get("minecraft:normal_stone_stairs")); // Conflicts with cobblestone stairs
                 RUNTIME_ITEM_IDS.put("minecraft:stonecutter", RUNTIME_ITEM_IDS.get("minecraft:stonecutter_block")); // Conflicts with, surprisingly, the OLD MCPE stonecutter
