@@ -118,13 +118,13 @@ public class MappingsGenerator {
             STATES.put("minecraft:attached_melon_stem", Arrays.asList("growth", "facing_direction"));
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
             for (BlockState blockState : getAllStates()) {
                 rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState)));
             }
 
+            FileWriter writer = new FileWriter(mappings);
             builder.create().toJson(rootObject, writer);
             writer.close();
 
@@ -250,14 +250,6 @@ public class MappingsGenerator {
                 validBedrockSounds = new HashSet<>(json.getAsJsonObject("sound_definitions").keySet());
             }
 
-            // Not needed actually
-//            try (InputStream stream = fileSystem.provider().newInputStream(fileSystem.getPath("sounds/music_definitions.json"))) {
-//                JsonObject json = parser.parse(new String(stream.readAllBytes())).getAsJsonObject();
-//                for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
-//                    validBedrockSounds.add(entry.getValue().getAsJsonObject().get("event_name").getAsString());
-//                }
-//            }
-
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
@@ -270,11 +262,11 @@ public class MappingsGenerator {
                         soundEntry = new SoundEntry(key.getPath(), "", -1, null, false);
                         bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
                     } else {
-                        if (soundEntry.getPlaysoundMapping() == null || soundEntry.getPlaysoundMapping().isEmpty()) {
-                            bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
-                        } else {
+//                        if (soundEntry.getPlaysoundMapping() == null || soundEntry.getPlaysoundMapping().isEmpty()) {
+//                            bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
+//                        } else {
                             bedrockIdentifier = soundEntry.getPlaysoundMapping();
-                        }
+                        //} To be uncommented when PlaySound mapping resumes
                     }
                     soundEntry.setPlaysoundMapping(bedrockIdentifier);
                     JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
@@ -346,6 +338,9 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:cauldron";
         } else if (trimmedIdentifier.equals("minecraft:waxed_copper_block")) {
             bedrockIdentifier = "minecraft:waxed_copper";
+        } else if (trimmedIdentifier.contains("candle")) {
+            // Resetting old identifiers
+            bedrockIdentifier = trimmedIdentifier;
         } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double")) {
             // Fixes 1.16 double slabs
             if (blockEntry != null) {
