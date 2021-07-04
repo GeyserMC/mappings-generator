@@ -15,6 +15,8 @@ val serverJarHash = "4de310c8c4f4a8ab4574246c1d63e3de3af1444d"
 val serverMappingsHash = "98a1398dc4144f92e10dd6967a231763741952e7"
 val serverJarVersion = "1.17-rc1"
 
+val bedrockResourcePackVersion = "1.17.0.2"
+
 group = "org.geysermc.mappings-generator"
 version = "1.1.0"
 
@@ -88,6 +90,11 @@ val downloadMinecraftJar = tasks.register<DownloadFileTask>("downloadMinecraftJa
 val downloadMappings = tasks.register<DownloadFileTask>("downloadMappings") {
     url = "https://launcher.mojang.com/v1/objects/${serverMappingsHash}/server.txt"
     fileLocation = "${serverJarVersion}-mappings.txt"
+}
+
+val downloadResourcePack = tasks.register<DownloadFileTask>("downloadResourcePack") {
+    url = "https://void.bedrock.dev/resources/${bedrockResourcePackVersion}.zip"
+    fileLocation = "bedrockresourcepack.zip"
 }
 
 val deobfuscateMinecraftJar = tasks.register<DeobfuscateJarTask>("deobfuscateMinecraftJar") {

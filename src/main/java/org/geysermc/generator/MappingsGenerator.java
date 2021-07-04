@@ -3,11 +3,9 @@ package org.geysermc.generator;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
@@ -30,6 +28,9 @@ import org.reflections.Reflections;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -236,19 +237,46 @@ public class MappingsGenerator {
                 SOUND_ENTRIES.putAll(map);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
+                return;
             }
 
+            Set<String> validBedrockSounds;
+            JsonParser parser = new JsonParser();
+
+            FileSystem fileSystem = FileSystems.newFileSystem(Paths.get("bedrockresourcepack.zip"));
+
+            try (InputStream stream = fileSystem.provider().newInputStream(fileSystem.getPath("sounds/sound_definitions.json"))) {
+                JsonObject json = parser.parse(new String(stream.readAllBytes())).getAsJsonObject();
+                validBedrockSounds = new HashSet<>(json.getAsJsonObject("sound_definitions").keySet());
+            }
+
+            // Not needed actually
+//            try (InputStream stream = fileSystem.provider().newInputStream(fileSystem.getPath("sounds/music_definitions.json"))) {
+//                JsonObject json = parser.parse(new String(stream.readAllBytes())).getAsJsonObject();
+//                for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+//                    validBedrockSounds.add(entry.getValue().getAsJsonObject().get("event_name").getAsString());
+//                }
+//            }
+
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
             for (ResourceLocation key : Registry.SOUND_EVENT.keySet()) {
                 Optional<SoundEvent> sound = Registry.SOUND_EVENT.getOptional(key);
                 sound.ifPresent(soundEvent -> {
                     SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
+                    String bedrockIdentifier;
                     if (soundEntry == null) {
                         soundEntry = new SoundEntry(key.getPath(), "", -1, null, false);
+                        bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
+                    } else {
+                        if (soundEntry.getPlaysoundMapping() == null || soundEntry.getPlaysoundMapping().isEmpty()) {
+                            bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
+                        } else {
+                            bedrockIdentifier = soundEntry.getPlaysoundMapping();
+                        }
                     }
+                    soundEntry.setPlaysoundMapping(bedrockIdentifier);
                     JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
                     if (soundEntry.getExtraData() <= 0 && !key.getPath().equals("block.note_block.harp")) {
                         object.remove("extra_data");
@@ -259,16 +287,32 @@ public class MappingsGenerator {
                     if (!soundEntry.isLevelEvent()) {
                         object.remove("level_event");
                     }
+                    if (!validBedrockSounds.contains(bedrockIdentifier)) {
+                        System.out.println("No matching sound found for Bedrock! Bedrock: " + bedrockIdentifier + ", Java: " + key.getPath());
+                    }
                     rootObject.add(key.getPath(), object);
                 });
             }
 
+            FileWriter writer = new FileWriter(mappings);
             builder.create().toJson(rootObject, writer);
             writer.close();
             System.out.println("Finished sound writing process!");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private String assumeBedrockSoundIdentifier(String javaIdentifier) {
+        String bedrockIdentifer = javaIdentifier.replace("entity.", "mob.");
+        if (bedrockIdentifer.startsWith("block.")) {
+            bedrockIdentifer = bedrockIdentifer.substring("block.".length());
+            String[] parts = bedrockIdentifer.split("\\.");
+            if (parts.length > 1) {
+                bedrockIdentifer = parts[1] + "." + parts[0];
+            }
+        }
+        return bedrockIdentifer;
     }
 
     public JsonObject getRemapBlock(BlockState state, String identifier) {
