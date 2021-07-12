@@ -1,10 +1,9 @@
 package org.geysermc.generator;
 
-import com.google.common.collect.*;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
@@ -28,6 +27,9 @@ import org.reflections.Reflections;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -116,13 +118,13 @@ public class MappingsGenerator {
             STATES.put("minecraft:attached_melon_stem", Arrays.asList("growth", "facing_direction"));
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
             for (BlockState blockState : getAllStates()) {
                 rootObject.add(blockStateToString(blockState), getRemapBlock(blockState, blockStateToString(blockState)));
             }
 
+            FileWriter writer = new FileWriter(mappings);
             builder.create().toJson(rootObject, writer);
             writer.close();
 
@@ -238,19 +240,38 @@ public class MappingsGenerator {
                 SOUND_ENTRIES.putAll(map);
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
+                return;
+            }
+
+            Set<String> validBedrockSounds;
+            JsonParser parser = new JsonParser();
+
+            FileSystem fileSystem = FileSystems.newFileSystem(Paths.get("bedrockresourcepack.zip"));
+
+            try (InputStream stream = fileSystem.provider().newInputStream(fileSystem.getPath("sounds/sound_definitions.json"))) {
+                JsonObject json = parser.parse(new String(stream.readAllBytes())).getAsJsonObject();
+                validBedrockSounds = new HashSet<>(json.getAsJsonObject("sound_definitions").keySet());
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            FileWriter writer = new FileWriter(mappings);
             JsonObject rootObject = new JsonObject();
 
             for (ResourceLocation key : Registry.SOUND_EVENT.keySet()) {
                 Optional<SoundEvent> sound = Registry.SOUND_EVENT.getOptional(key);
                 sound.ifPresent(soundEvent -> {
                     SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
+                    String bedrockIdentifier;
                     if (soundEntry == null) {
                         soundEntry = new SoundEntry(key.getPath(), "", -1, null, false);
+                        bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
+                    } else {
+//                        if (soundEntry.getPlaysoundMapping() == null || soundEntry.getPlaysoundMapping().isEmpty()) {
+//                            bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
+//                        } else {
+                            bedrockIdentifier = soundEntry.getPlaysoundMapping();
+                        //} To be uncommented when PlaySound mapping resumes
                     }
+                    soundEntry.setPlaysoundMapping(bedrockIdentifier);
                     JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
                     if (soundEntry.getExtraData() <= 0 && !key.getPath().equals("block.note_block.harp")) {
                         object.remove("extra_data");
@@ -261,16 +282,32 @@ public class MappingsGenerator {
                     if (!soundEntry.isLevelEvent()) {
                         object.remove("level_event");
                     }
+                    if (!validBedrockSounds.contains(bedrockIdentifier)) {
+                        System.out.println("No matching sound found for Bedrock! Bedrock: " + bedrockIdentifier + ", Java: " + key.getPath());
+                    }
                     rootObject.add(key.getPath(), object);
                 });
             }
 
+            FileWriter writer = new FileWriter(mappings);
             builder.create().toJson(rootObject, writer);
             writer.close();
             System.out.println("Finished sound writing process!");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private String assumeBedrockSoundIdentifier(String javaIdentifier) {
+        String bedrockIdentifer = javaIdentifier.replace("entity.", "mob.");
+        if (bedrockIdentifer.startsWith("block.")) {
+            bedrockIdentifer = bedrockIdentifer.substring("block.".length());
+            String[] parts = bedrockIdentifer.split("\\.");
+            if (parts.length > 1) {
+                bedrockIdentifer = parts[1] + "." + parts[0];
+            }
+        }
+        return bedrockIdentifer;
     }
 
     public JsonObject getRemapBlock(BlockState state, String identifier) {
@@ -304,6 +341,9 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:cauldron";
         } else if (trimmedIdentifier.equals("minecraft:waxed_copper_block")) {
             bedrockIdentifier = "minecraft:waxed_copper";
+        } else if (trimmedIdentifier.contains("candle")) {
+            // Resetting old identifiers
+            bedrockIdentifier = trimmedIdentifier;
         } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double")) {
             // Fixes 1.16 double slabs
             if (blockEntry != null) {
@@ -542,50 +582,45 @@ public class MappingsGenerator {
 
     public JsonObject getRemapItem(String identifier, Block block, int stackSize) {
         JsonObject object = new JsonObject();
-        if (ITEM_ENTRIES.containsKey(identifier)) {
-            ItemEntry itemEntry = ITEM_ENTRIES.get(identifier);
-            // Deal with items that we replace
-            String bedrockIdentifier = switch (identifier.replace("minecraft:", "")) {
-                case "knowledge_book" -> "book";
-                case "tipped_arrow", "spectral_arrow" -> "arrow";
-                case "debug_stick" -> "stick";
-                case "furnace_minecart" -> "hopper_minecart";
-                default -> JAVA_TO_BEDROCK_ITEM_OVERRIDE.getOrDefault(identifier, itemEntry.getBedrockIdentifier()).replace("minecraft:", "");
-            };
+        ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
+        // Deal with items that we replace
+        String bedrockIdentifier = switch (identifier.replace("minecraft:", "")) {
+            case "knowledge_book" -> "book";
+            case "tipped_arrow", "spectral_arrow" -> "arrow";
+            case "debug_stick" -> "stick";
+            case "furnace_minecart" -> "hopper_minecart";
+            default -> JAVA_TO_BEDROCK_ITEM_OVERRIDE.getOrDefault(identifier, itemEntry.getBedrockIdentifier()).replace("minecraft:", "");
+        };
 
-            if (identifier.endsWith("banner")) { // Don't include banner patterns
-                bedrockIdentifier = "banner";
-            } else if (identifier.endsWith("bed")) {
-                bedrockIdentifier = "bed";
-            } else if (identifier.endsWith("_skull") || (identifier.endsWith("_head"))) {
-                bedrockIdentifier = "skull";
-            } else if (identifier.endsWith("_shulker_box")) {
-                // Colored shulker boxes only
-                bedrockIdentifier = "shulker_box";
-            }
-            object.addProperty("bedrock_identifier", "minecraft:" + bedrockIdentifier);
+        if (identifier.endsWith("banner")) { // Don't include banner patterns
+            bedrockIdentifier = "banner";
+        } else if (identifier.endsWith("bed")) {
+            bedrockIdentifier = "bed";
+        } else if (identifier.endsWith("_skull") || (identifier.endsWith("_head"))) {
+            bedrockIdentifier = "skull";
+        } else if (identifier.endsWith("_shulker_box")) {
+            // Colored shulker boxes only
+            bedrockIdentifier = "shulker_box";
+        }
+        object.addProperty("bedrock_identifier", "minecraft:" + bedrockIdentifier);
 
-            if (!VALID_BEDROCK_ITEMS.contains("minecraft:" + bedrockIdentifier)) {
-                System.out.println(bedrockIdentifier + " not found in Bedrock runtime item states!");
-            }
+        if (!VALID_BEDROCK_ITEMS.contains("minecraft:" + bedrockIdentifier)) {
+            System.out.println(bedrockIdentifier + " not found in Bedrock runtime item states!");
+        }
 
-            boolean isBlock = block != Blocks.AIR;
-            object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
-            if (isBlock) {
-                BlockState state = block.defaultBlockState();
-                // Fix some render issues - :microjang:
-                if (block instanceof WallBlock) {
-                    String blockIdentifier = Registry.BLOCK.getKey(block).toString();
-                    if (!isSensibleWall(blockIdentifier)) { // Blackstone renders fine
-                        // Required for the item to render with the correct type (sandstone, stone brick, etc)
-                        state = state.setValue(WallBlock.UP, false);
-                    }
+        boolean isBlock = block != Blocks.AIR;
+        object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
+        if (isBlock) {
+            BlockState state = block.defaultBlockState();
+            // Fix some render issues - :microjang:
+            if (block instanceof WallBlock) {
+                String blockIdentifier = Registry.BLOCK.getKey(block).toString();
+                if (!isSensibleWall(blockIdentifier)) { // Blackstone renders fine
+                    // Required for the item to render with the correct type (sandstone, stone brick, etc)
+                    state = state.setValue(WallBlock.UP, false);
                 }
-                object.addProperty("blockRuntimeId", Block.getId(state));
             }
-        } else {
-            object.addProperty("bedrock_identifier", "minecraft:update_block");
-            object.addProperty("bedrock_data", 0);
+            object.addProperty("blockRuntimeId", Block.getId(state));
         }
         if (stackSize != 64) {
             object.addProperty("stack_size", stackSize);
