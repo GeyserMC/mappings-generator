@@ -9,8 +9,8 @@ import lombok.Setter;
 @Getter @Setter
 public class ItemEntry {
 
-    @SerializedName("bedrock_id")
-    private int bedrockId;
+    @SerializedName("bedrock_identifier")
+    private String bedrockIdentifier;
 
     @SerializedName("bedrock_data")
     private int bedrockData;
