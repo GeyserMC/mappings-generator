@@ -9,6 +9,8 @@ import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtType;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -611,16 +613,21 @@ public class MappingsGenerator {
         boolean isBlock = block != Blocks.AIR;
         object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
         if (isBlock) {
-            BlockState state = block.defaultBlockState();
-            // Fix some render issues - :microjang:
-            if (block instanceof WallBlock) {
-                String blockIdentifier = Registry.BLOCK.getKey(block).toString();
-                if (!isSensibleWall(blockIdentifier)) { // Blackstone renders fine
-                    // Required for the item to render with the correct type (sandstone, stone brick, etc)
-                    state = state.setValue(WallBlock.UP, false);
+            int firstStateId = -1;
+            int lastStateId = -1;
+            for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
+                if (state.getBlock() == block) {
+                    int stateId = Block.getId(state);
+                    if (firstStateId == -1) {
+                        firstStateId = stateId;
+                    }
+                    lastStateId = stateId;
                 }
             }
-            object.addProperty("blockRuntimeId", Block.getId(state));
+            object.addProperty("firstBlockRuntimeId", firstStateId);
+            if (firstStateId != lastStateId) {
+                object.addProperty("lastBlockRuntimeId", lastStateId);
+            }
         }
         if (stackSize != 64) {
             object.addProperty("stack_size", stackSize);
