@@ -62,6 +62,9 @@ public class MapColors {
             new Color(22, 126, 134),
             new Color(58, 142, 140),
             new Color(86, 44, 62),
-            new Color(20, 180, 133)
+            new Color(20, 180, 133),
+            new Color(100, 100, 100),
+            new Color(216, 175, 147),
+            new Color(127, 167, 150)
     };
 }
