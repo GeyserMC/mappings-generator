@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import com.mojang.serialization.Codec;
 import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
@@ -12,11 +13,16 @@ import com.nukkitx.nbt.NbtType;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallBlock;
@@ -310,6 +316,113 @@ public class MappingsGenerator {
             }
         }
         return bedrockIdentifer;
+    }
+
+    public void generateBiomes() {
+        try {
+            File mappings = new File("mappings/biomes.json");
+            if (!mappings.exists()) {
+                System.out.println("Could not find mappings submodule! Did you clone them?");
+                return;
+            }
+
+            Map<String, BiomeEntry> biomesMap = new HashMap<>();
+            try {
+                Type mapType = new TypeToken<Map<String, BiomeEntry>>() {}.getType();
+                Map<String, BiomeEntry> existingBiomes = GSON.fromJson(new FileReader(mappings), mapType);
+                if (existingBiomes != null) {
+                    biomesMap.putAll(existingBiomes);
+                }
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+                return;
+            }
+
+            File biomeIdMap = new File("palettes/biome_id_map.json");
+            if (!mappings.exists()) {
+                System.out.println("Biome ID map doesn't exist!!!");
+                return;
+            }
+
+            // Used to know if a biome is valid or not for Bedrock
+            JsonObject bedrockBiomes = new JsonParser().parse(new FileReader(biomeIdMap)).getAsJsonObject();
+            List<String> usedIds = new ArrayList<>();
+
+            int i = -1;
+            for (Map.Entry<ResourceKey<Biome>, Biome> entry : BuiltinRegistries.BIOME.entrySet()) {
+                i++;
+                JsonElement biomeId = bedrockBiomes.get(entry.getKey().location().getPath());
+                if (biomeId == null) {
+                    String replacementBiome = switch (entry.getKey().location().getPath()) {
+                        // Name changes - Java -> Bedrock
+                        case "mountains" -> "extreme_hills";
+                        case "swamp" -> "swampland";
+                        case "nether_wastes" -> "hell";
+                        case "snowy_tundra" -> "ice_plains";
+                        case "snowy_mountains" -> "ice_mountains";
+                        case "mushroom_fields" -> "mushroom_island";
+                        case "mushroom_field_shore" -> "mushroom_island_shore";
+                        case "wooded_hills" -> "forest_hills";
+                        case "mountain_edge" -> "extreme_hills_edge";
+                        case "stone_shore" -> "stone_beach";
+                        case "snowy_beach" -> "cold_beach";
+                        case "dark_forest" -> "roofed_forest";
+                        case "snowy_taiga" -> "cold_taiga";
+                        case "snowy_taiga_hills" -> "cold_taiga_hills";
+                        case "giant_tree_taiga" -> "mega_taiga";
+                        case "giant_tree_taiga_hills" -> "mega_taiga_hills";
+                        case "wooded_mountains" -> "extreme_hills_plus_trees";
+                        case "badlands" -> "mesa";
+                        case "wooded_badlands_plateau" -> "mesa_plateau_stone"; // Blame the Minecraft wiki
+                        case "badlands_plateau" ->  "mesa_plateau";
+                        case "desert_lakes" -> "desert_mutated";
+                        case "gravelly_mountains" -> "extreme_hills_mutated";
+                        case "taiga_mountains" -> "taiga_mutated";
+                        case "swamp_hills" -> "swampland_mutated";
+                        case "ice_spikes" -> "ice_plains_spikes";
+                        case "modified_jungle" -> "jungle_mutated";
+                        case "modified_jungle_edge" -> "jungle_edge_mutated";
+                        case "tall_birch_forest" -> "birch_forest_mutated";
+                        case "tall_birch_hills" -> "birch_forest_hills_mutated";
+                        case "dark_forest_hills" -> "roofed_forest_mutated";
+                        case "snowy_taiga_mountains" -> "cold_taiga_mutated";
+                        case "giant_spruce_taiga" -> "redwood_taiga_mutated";
+                        case "giant_spruce_taiga_hills" -> "redwood_taiga_hills_mutated";
+                        case "modified_gravelly_mountains" -> "extreme_hills_plus_trees_mutated"; // Blame the Minecraft wiki
+                        case "shattered_savanna" -> "savanna_mutated";
+                        case "shattered_savanna_plateau" -> "savanna_plateau_mutated";
+                        case "eroded_badlands" -> "mesa_bryce";
+                        case "modified_wooded_badlands_plateau" -> "mesa_plateau_stone_mutated"; // Blame the Minecraft wiki
+                        case "modified_badlands_plateau" -> "mesa_plateau_mutated";
+                        case "soul_sand_valley" -> "soulsand_valley";
+
+                        // Biomes that don't exist on Bedrock
+                        case "small_end_islands", "end_midlands", "end_highlands", "end_barrens" -> "the_end";
+                        case "dripstone_caves", "lush_caves" -> "extreme_hills"; // TODO these are already in the caves and cliffs datapack
+                        default -> null;
+                    };
+                    if (replacementBiome != null) {
+                        biomeId = bedrockBiomes.get(replacementBiome);
+                        if (biomeId == null) {
+                            throw new IllegalStateException("Biome ID was null when explicitly replaced for " + replacementBiome);
+                        }
+                    } else {
+                        System.out.println("Replacement biome required for " + entry.getKey().location().getPath() + " (ID: " + i + ")");
+                        continue;
+                    }
+                }
+
+                biomesMap.put(entry.getKey().location().toString(), new BiomeEntry(biomeId.getAsInt()));
+            }
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            FileWriter writer = new FileWriter(mappings);
+            builder.create().toJson(biomesMap, writer);
+            writer.close();
+            System.out.println("Finished biome writing process!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public JsonObject getRemapBlock(BlockState state, String identifier) {

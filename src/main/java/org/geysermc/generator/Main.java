@@ -21,7 +21,6 @@ public class Main {
         generator.generateItems();
         generator.generateBlocks();
         generator.generateSounds();
-
-        // todo: don't map candles to sea_pickles and candle_cakes to cakes once bedrock gets them
+        generator.generateBiomes();
     }
 }
