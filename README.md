@@ -31,6 +31,6 @@ val clientMappingsHash = "41285beda6d251d190f2bf33beadd4fee187df7a"
 val clientJarVersion = "1.16.5"
 ```
 
-Once you have updated these values, once again run the `gradlew installclientJar` command to install this to your local maven repository, then refresh your dependencies in order to work with the updated code. 
+Once you have updated these values, once again run the `gradlew installClientJar` command to install this to your local maven repository, then refresh your dependencies in order to work with the updated code. 
 
 Keep in mind that this code is not guaranteed to work across versions as it relies on Minecraft code which can change at any time.
