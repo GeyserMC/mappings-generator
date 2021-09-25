@@ -22,5 +22,6 @@ public class Main {
         generator.generateBlocks();
         generator.generateSounds();
         generator.generateBiomes();
+        generator.generateMapColors();
     }
 }

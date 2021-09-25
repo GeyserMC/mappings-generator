@@ -12,6 +12,7 @@ import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtType;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.data.BuiltinRegistries;
@@ -28,17 +29,20 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.material.MaterialColor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
 
+import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -421,6 +425,42 @@ public class MappingsGenerator {
             writer.close();
             System.out.println("Finished biome writing process!");
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void generateMapColors() {
+        List<Color> mapColors = new ArrayList<>();
+        for (MaterialColor color : MaterialColor.MATERIAL_COLORS) {
+            if (color == null) {
+                continue;
+            }
+
+            for (int i = 0; i <= 3; i++) {
+                int rgb = color.calculateRGBColor(i);
+                mapColors.add(new Color(rgb, true));
+            }
+        }
+
+        StringBuilder finalOutput = new StringBuilder();
+        for (int i = 0; i < mapColors.size(); i++) {
+            Color color = mapColors.get(i);
+            finalOutput.append("COLOR_").append(i).append("(").append(color.getRed()).append(", ").append(color.getGreen()).append(", ").append(color.getBlue()).append("),\n");
+        }
+
+        // Remap the empty colors
+        finalOutput = new StringBuilder(finalOutput.toString().replaceAll("\\(0, 0, 0\\)", "(-1, -1, -1)"));
+
+        // Fix the end
+        finalOutput = new StringBuilder(finalOutput.substring(0, finalOutput.length() - 2) + ";");
+
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("./map_colors.txt"));
+            writer.write(finalOutput.toString());
+            writer.close();
+            System.out.println("Finished map color writing process!");
+        } catch (IOException e) {
+            System.out.println("Failed to write map_colors.txt!");
             e.printStackTrace();
         }
     }

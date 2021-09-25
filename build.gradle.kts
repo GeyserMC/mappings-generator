@@ -11,9 +11,9 @@ import java.nio.channels.Channels
 import java.nio.file.Files
 import java.nio.file.Paths
 
-val serverJarHash = "4de310c8c4f4a8ab4574246c1d63e3de3af1444d"
-val serverMappingsHash = "98a1398dc4144f92e10dd6967a231763741952e7"
-val serverJarVersion = "1.17-rc1"
+val clientJarHash = "8d9b65467c7913fcf6f5b2e729d44a1e00fde150"
+val clientMappingsHash = "e4d540e0cba05a6097e885dffdf363e621f87d3f"
+val clientJarVersion = "1.17.1"
 
 val bedrockResourcePackVersion = "1.17.0.2"
 
@@ -54,6 +54,7 @@ repositories {
     maven(url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven(url = "https://repo.opencollab.dev/maven-releases/")
     maven(url = "https://repo.opencollab.dev/maven-snapshots/")
+    maven(url = "https://libraries.minecraft.net/")
 }
 
 dependencies {
@@ -62,18 +63,24 @@ dependencies {
     implementation("org.reflections", "reflections", "0.9.12")
     implementation("com.nukkitx", "nbt", "2.0.2")
     implementation("com.google.code.gson", "gson", "2.8.5")
-    implementation("net.minecraft", "server", serverJarVersion)
+    implementation("net.minecraft", "client", clientJarVersion)
+
+    implementation("com.mojang", "brigadier", "1.0.18")
+    implementation("com.mojang", "datafixerupper", "4.0.26")
+    implementation("com.mojang", "javabridge", "1.1.23")
+    implementation("io.netty", "netty-all", "4.1.25.Final")
+    implementation("it.unimi.dsi", "fastutil", "8.5.6")
 
     annotationProcessor("org.projectlombok", "lombok", "1.18.20")
 }
 
 publishing {
     publications {
-        create<MavenPublication>("serverJar") {
+        create<MavenPublication>("clientJar") {
             groupId = "net.minecraft"
-            artifactId = "server"
-            version = serverJarVersion
-            artifact("${serverJarVersion}-server-deobfuscated.jar")
+            artifactId = "client"
+            version = clientJarVersion
+            artifact("${clientJarVersion}-client-deobfuscated.jar")
         }
     }
 }
@@ -83,13 +90,13 @@ configure<JavaPluginConvention> {
 }
 
 val downloadMinecraftJar = tasks.register<DownloadFileTask>("downloadMinecraftJar") {
-    url = "https://launcher.mojang.com/v1/objects/${serverJarHash}/server.jar"
-    fileLocation = "${serverJarVersion}-server.jar"
+    url = "https://launcher.mojang.com/v1/objects/${clientJarHash}/client.jar"
+    fileLocation = "${clientJarVersion}-client.jar"
 }
 
 val downloadMappings = tasks.register<DownloadFileTask>("downloadMappings") {
-    url = "https://launcher.mojang.com/v1/objects/${serverMappingsHash}/server.txt"
-    fileLocation = "${serverJarVersion}-mappings.txt"
+    url = "https://launcher.mojang.com/v1/objects/${clientMappingsHash}/client.txt"
+    fileLocation = "${clientJarVersion}-mappings.txt"
 }
 
 val downloadResourcePack = tasks.register<DownloadFileTask>("downloadResourcePack") {
@@ -101,13 +108,13 @@ val deobfuscateMinecraftJar = tasks.register<DeobfuscateJarTask>("deobfuscateMin
     dependsOn("downloadMinecraftJar")
     dependsOn("downloadMappings")
 
-    version = serverJarVersion
+    version = clientJarVersion
 }
 
-tasks.register("installServerJar") {
+tasks.register("installClientJar") {
     mustRunAfter("deobfuscateMinecraftJar")
     dependsOn("deobfuscateMinecraftJar")
-    dependsOn("publishServerJarPublicationToMavenLocal")
+    dependsOn("publishClientJarPublicationToMavenLocal")
 }
 
 open class DownloadFileTask : DefaultTask() {
@@ -138,7 +145,7 @@ open class DeobfuscateJarTask : DefaultTask() {
 
     @TaskAction
     fun greet() {
-        println("Deobfuscating server jar...")
+        println("Deobfuscating client jar...")
 
         val dir = System.getProperty("user.dir")
 
@@ -167,7 +174,7 @@ open class DeobfuscateJarTask : DefaultTask() {
                     }
                 }
             }
-            atlas.run(Paths.get(dir, "${version}-server.jar"), Paths.get(dir, "${version}-server-deobfuscated.jar"))
+            atlas.run(Paths.get(dir, "${version}-client.jar"), Paths.get(dir, "${version}-client-deobfuscated.jar"))
         }
 
         println("Deobfuscation complete!")
