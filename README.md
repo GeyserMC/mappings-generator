@@ -6,8 +6,8 @@ A standalone program that generates (most of) the [mappings](https://github.com/
 
 - Clone this repository locally: `git clone https://github.com/GeyserMC/mappings-generator`
 - Navigate to the `mappings-generator` directory.
-- Run `gradlew installServerJar`. This will download the needed resources, such as the Minecraft server jar along with deobfuscating it so it can be used with this project.
-- If in an IDE such as IntelliJ, refresh your dependencies - this will then add the generated server jar to your dependencies.
+- Run `gradlew installClientJar`. This will download the needed resources, such as the Minecraft client jar along with deobfuscating it so it can be used with this project.
+- If in an IDE such as IntelliJ, refresh your dependencies - this will then add the generated client jar to your dependencies.
 
 ## Running
 
