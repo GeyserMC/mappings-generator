@@ -476,9 +476,12 @@ public class MappingsGenerator {
                 List<String> incompatibleEnchantments = new ArrayList<>();
                 List<String> validItems = new ArrayList<>();
                 for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry2 : Registry.ENCHANTMENT.entrySet()) {
-                    if (entry != entry2 && !enchantment.isCompatibleWith(entry2.getValue())) {
+                    if (enchantment != entry2.getValue() && !enchantment.isCompatibleWith(entry2.getValue())) {
                         incompatibleEnchantments.add(entry2.getKey().location().getPath());
                     }
+                }
+                if (incompatibleEnchantments.isEmpty()) {
+                    incompatibleEnchantments = null;
                 }
                 // Super inefficient, but I don't think there is a better way
                 for (ResourceLocation key : Registry.ITEM.keySet()) {
