@@ -22,6 +22,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
@@ -461,6 +462,44 @@ public class MappingsGenerator {
             System.out.println("Finished map color writing process!");
         } catch (IOException e) {
             System.out.println("Failed to write map_colors.txt!");
+            e.printStackTrace();
+        }
+    }
+
+    public void generateEnchantments() {
+        try {
+            Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
+            for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry : Registry.ENCHANTMENT.entrySet()) {
+                Enchantment enchantment = entry.getValue();
+                String rarity = enchantment.getRarity().toString().toLowerCase();
+                int maxLevel = enchantment.getMaxLevel();
+                List<String> incompatibleEnchantments = new ArrayList<>();
+                List<String> validItems = new ArrayList<>();
+                for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry2 : Registry.ENCHANTMENT.entrySet()) {
+                    if (entry != entry2 && !enchantment.isCompatibleWith(entry2.getValue())) {
+                        incompatibleEnchantments.add(entry2.getKey().location().getPath());
+                    }
+                }
+                // Super inefficient, but I don't think there is a better way
+                for (ResourceLocation key : Registry.ITEM.keySet()) {
+                    Optional<Item> item = Registry.ITEM.getOptional(key);
+                    item.ifPresent(value -> {
+                        ItemStack itemStack = new ItemStack(value);
+                        if (enchantment.canEnchant(itemStack)) {
+                            validItems.add(key.getNamespace() + ":" + key.getPath());
+                        }
+                    });
+                }
+                enchantmentMap.put(entry.getKey().location().getPath(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
+            }
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            File mappings = new File("mappings/enchantments.json");
+            FileWriter writer = new FileWriter(mappings);
+            builder.create().toJson(enchantmentMap, writer);
+            writer.close();
+            System.out.println("Finished enchantment writing process!");
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
