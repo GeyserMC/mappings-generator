@@ -477,7 +477,7 @@ public class MappingsGenerator {
                 List<String> validItems = new ArrayList<>();
                 for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry2 : Registry.ENCHANTMENT.entrySet()) {
                     if (enchantment != entry2.getValue() && !enchantment.isCompatibleWith(entry2.getValue())) {
-                        incompatibleEnchantments.add(entry2.getKey().location().getPath());
+                        incompatibleEnchantments.add(entry2.getKey().location().toString());
                     }
                 }
                 if (incompatibleEnchantments.isEmpty()) {
@@ -493,7 +493,7 @@ public class MappingsGenerator {
                         }
                     });
                 }
-                enchantmentMap.put(entry.getKey().location().getPath(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
+                enchantmentMap.put(entry.getKey().location().toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();

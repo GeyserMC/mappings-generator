@@ -16,7 +16,7 @@ public class EnchantmentEntry {
     @SerializedName("max_level")
     private int maxLevel;
 
-    @SerializedName("incompatible_enchants")
+    @SerializedName("incompatible_enchantments")
     private List<String> incompatibleEnchantments;
 
     @SerializedName("valid_items")
