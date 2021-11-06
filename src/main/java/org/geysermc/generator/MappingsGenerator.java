@@ -24,6 +24,9 @@ import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.stats.Stat;
+import net.minecraft.stats.StatFormatter;
+import net.minecraft.stats.Stats;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -43,6 +46,7 @@ import org.reflections.Reflections;
 
 import java.awt.*;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -475,6 +479,43 @@ public class MappingsGenerator {
             System.out.println("Finished map color writing process!");
         } catch (IOException e) {
             System.out.println("Failed to write map_colors.txt!");
+            e.printStackTrace();
+        }
+    }
+
+    public void generateStatistics() {
+        try {
+            // The formatter field is private and does not have an accessor
+            Field formatterField = Stat.class.getDeclaredField("formatter");
+            formatterField.setAccessible(true);
+
+            Map<String, String> statisticMap = new HashMap<>();
+            for (Stat<?> stat : Stats.CUSTOM) {
+                StatFormatter statFormatter = (StatFormatter) formatterField.get(stat);
+                String format;
+                if (statFormatter == StatFormatter.DIVIDE_BY_TEN) {
+                    format = "divide_by_ten";
+                } else if (statFormatter == StatFormatter.DISTANCE) {
+                    format = "distance";
+                } else if (statFormatter == StatFormatter.TIME) {
+                    format = "time";
+                } else {
+                    format = "default";
+                }
+
+                if (!format.equals("default")) {
+                    ResourceLocation location = (ResourceLocation) stat.getValue();
+                    statisticMap.put(location.getPath(), format);
+                }
+            }
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            File mappings = new File("mappings/statistics.json");
+            FileWriter writer = new FileWriter(mappings);
+            builder.create().toJson(statisticMap, writer);
+            writer.close();
+            System.out.println("Finished statistics writing process!");
+        } catch (IOException | NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
     }

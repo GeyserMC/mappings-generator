@@ -13,5 +13,6 @@ public class Main {
         generator.generateMapColors();
         generator.generateEnchantments();
         generator.generateParticles();
+        generator.generateStatistics();
     }
 }
