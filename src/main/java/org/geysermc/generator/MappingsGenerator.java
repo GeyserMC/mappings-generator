@@ -861,6 +861,7 @@ public class MappingsGenerator {
                 } else if (tieredItem.getTier() == Tiers.STONE) {
                     repairMaterials.add("minecraft:cobblestone");
                     repairMaterials.add("minecraft:cobbled_deepslate");
+                    repairMaterials.add("minecraft:blackstone"); // JE only https://bugs.mojang.com/browse/MCPE-71859
                 } else {
                     repairIngredient = tieredItem.getTier().getRepairIngredient();
                 }
