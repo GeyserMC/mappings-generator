@@ -1,0 +1,4 @@
+accessWidener v1 named
+
+# Allows us to iterate through material colors
+accessible field net/minecraft/world/level/material/MaterialColor MATERIAL_COLORS [Lnet/minecraft/world/level/material/MaterialColor;

@@ -436,8 +436,8 @@ public class MappingsGenerator {
                 continue;
             }
 
-            for (int i = 0; i <= 3; i++) {
-                int rgb = color.calculateRGBColor(i);
+            for (MaterialColor.Brightness brightness : MaterialColor.Brightness.values()) {
+                int rgb = color.calculateRGBColor(brightness);
                 mapColors.add(new Color(rgb, true));
             }
         }
