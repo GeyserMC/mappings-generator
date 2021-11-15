@@ -19,9 +19,9 @@ import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
@@ -66,6 +66,8 @@ public class MappingsGenerator {
     // collision_index in blocks.json refers to this to prevent duplication
     // This helps to reduce file size
     public static final List<List<List<Double>>> COLLISION_LIST = Lists.newArrayList();
+
+    private static final JsonArray ALL_PLANKS = new JsonArray();
 
     private static final Gson GSON = new Gson();
 
@@ -213,10 +215,16 @@ public class MappingsGenerator {
             JsonObject rootObject = new JsonObject();
 
             for (ResourceLocation key : Registry.ITEM.keySet()) {
+                if (key.getPath().endsWith("planks")) {
+                    ALL_PLANKS.add(key.toString());
+                }
+            }
+
+            for (ResourceLocation key : Registry.ITEM.keySet()) {
                 Optional<Item> item = Registry.ITEM.getOptional(key);
                 item.ifPresent(value ->
-                        rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(
-                                key.getNamespace() + ":" + key.getPath(), Block.byItem(value), value.getMaxStackSize())));
+                        rootObject.add(key.toString(), getRemapItem(
+                                key.toString(), value, Block.byItem(value), value.getMaxStackSize())));
             }
 
             FileWriter writer = new FileWriter(mappings);
@@ -461,6 +469,47 @@ public class MappingsGenerator {
             System.out.println("Finished map color writing process!");
         } catch (IOException e) {
             System.out.println("Failed to write map_colors.txt!");
+            e.printStackTrace();
+        }
+    }
+
+    public void generateEnchantments() {
+        try {
+            Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
+            for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry : Registry.ENCHANTMENT.entrySet()) {
+                Enchantment enchantment = entry.getValue();
+                String rarity = enchantment.getRarity().toString().toLowerCase();
+                int maxLevel = enchantment.getMaxLevel();
+                List<String> incompatibleEnchantments = new ArrayList<>();
+                List<String> validItems = new ArrayList<>();
+                for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry2 : Registry.ENCHANTMENT.entrySet()) {
+                    if (enchantment != entry2.getValue() && !enchantment.isCompatibleWith(entry2.getValue())) {
+                        incompatibleEnchantments.add(entry2.getKey().location().toString());
+                    }
+                }
+                if (incompatibleEnchantments.isEmpty()) {
+                    incompatibleEnchantments = null;
+                }
+                // Super inefficient, but I don't think there is a better way
+                for (ResourceLocation key : Registry.ITEM.keySet()) {
+                    Optional<Item> item = Registry.ITEM.getOptional(key);
+                    item.ifPresent(value -> {
+                        ItemStack itemStack = new ItemStack(value);
+                        if (enchantment.canEnchant(itemStack)) {
+                            validItems.add(key.getNamespace() + ":" + key.getPath());
+                        }
+                    });
+                }
+                enchantmentMap.put(entry.getKey().location().toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
+            }
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            File mappings = new File("mappings/enchantments.json");
+            FileWriter writer = new FileWriter(mappings);
+            builder.create().toJson(enchantmentMap, writer);
+            writer.close();
+            System.out.println("Finished enchantment writing process!");
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -735,7 +784,7 @@ public class MappingsGenerator {
         return object;
     }
 
-    public JsonObject getRemapItem(String identifier, Block block, int stackSize) {
+    public JsonObject getRemapItem(String identifier, Item item, Block block, int stackSize) {
         JsonObject object = new JsonObject();
         ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
         // Deal with items that we replace
@@ -797,7 +846,37 @@ public class MappingsGenerator {
             Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[0]::equals).findAny();
             optToolType.ifPresent(s -> object.addProperty("tool_type", s));
         }
-
+        if (item.getMaxDamage() > 0) {
+            object.addProperty("max_damage", item.getMaxDamage());
+            Ingredient repairIngredient = null;
+            JsonArray repairMaterials = new JsonArray();
+            // Some repair ingredients use item tags which are not loaded
+            if (item instanceof ArmorItem armorItem) {
+                repairIngredient = armorItem.getMaterial().getRepairIngredient();
+            } else if (item instanceof ElytraItem) {
+                repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
+            } else if (item instanceof TieredItem tieredItem) {
+                if (tieredItem.getTier() == Tiers.WOOD) {
+                    repairMaterials = ALL_PLANKS;
+                } else if (tieredItem.getTier() == Tiers.STONE) {
+                    repairMaterials.add("minecraft:cobblestone");
+                    repairMaterials.add("minecraft:cobbled_deepslate");
+                    repairMaterials.add("minecraft:blackstone"); // JE only https://bugs.mojang.com/browse/MCPE-71859
+                } else {
+                    repairIngredient = tieredItem.getTier().getRepairIngredient();
+                }
+            } else if (item instanceof ShieldItem) {
+                repairMaterials = ALL_PLANKS;
+            }
+            if (repairIngredient != null) {
+                for (ItemStack repairItem : repairIngredient.getItems()) {
+                    repairMaterials.add(Registry.ITEM.getKey(repairItem.getItem()).toString());
+                }
+            }
+            if (repairMaterials.size() > 0) {
+                object.add("repair_materials", repairMaterials);
+            }
+        }
         return object;
     }
 
