@@ -5,33 +5,45 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import com.mojang.serialization.Codec;
 import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtType;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.material.MaterialColor;
 import net.minecraft.world.level.material.PushReaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
 
+import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -55,6 +67,8 @@ public class MappingsGenerator {
     // collision_index in blocks.json refers to this to prevent duplication
     // This helps to reduce file size
     public static final List<List<List<Double>>> COLLISION_LIST = Lists.newArrayList();
+
+    private static final JsonArray ALL_PLANKS = new JsonArray();
 
     private static final Gson GSON = new Gson();
 
@@ -202,10 +216,16 @@ public class MappingsGenerator {
             JsonObject rootObject = new JsonObject();
 
             for (ResourceLocation key : Registry.ITEM.keySet()) {
+                if (key.getPath().endsWith("planks")) {
+                    ALL_PLANKS.add(key.toString());
+                }
+            }
+
+            for (ResourceLocation key : Registry.ITEM.keySet()) {
                 Optional<Item> item = Registry.ITEM.getOptional(key);
                 item.ifPresent(value ->
-                        rootObject.add(key.getNamespace() + ":" + key.getPath(), getRemapItem(
-                                key.getNamespace() + ":" + key.getPath(), Block.byItem(value), value.getMaxStackSize())));
+                        rootObject.add(key.toString(), getRemapItem(
+                                key.toString(), value, Block.byItem(value), value.getMaxStackSize())));
             }
 
             FileWriter writer = new FileWriter(mappings);
@@ -309,6 +329,190 @@ public class MappingsGenerator {
             }
         }
         return bedrockIdentifer;
+    }
+
+    public void generateBiomes() {
+        try {
+            File mappings = new File("mappings/biomes.json");
+            if (!mappings.exists()) {
+                System.out.println("Could not find mappings submodule! Did you clone them?");
+                return;
+            }
+
+            Map<String, BiomeEntry> biomesMap = new HashMap<>();
+            try {
+                Type mapType = new TypeToken<Map<String, BiomeEntry>>() {}.getType();
+                Map<String, BiomeEntry> existingBiomes = GSON.fromJson(new FileReader(mappings), mapType);
+                if (existingBiomes != null) {
+                    biomesMap.putAll(existingBiomes);
+                }
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+                return;
+            }
+
+            File biomeIdMap = new File("palettes/biome_id_map.json");
+            if (!mappings.exists()) {
+                System.out.println("Biome ID map doesn't exist!!!");
+                return;
+            }
+
+            // Used to know if a biome is valid or not for Bedrock
+            JsonObject bedrockBiomes = new JsonParser().parse(new FileReader(biomeIdMap)).getAsJsonObject();
+            List<String> usedIds = new ArrayList<>();
+
+            int i = -1;
+            for (Map.Entry<ResourceKey<Biome>, Biome> entry : BuiltinRegistries.BIOME.entrySet()) {
+                i++;
+                JsonElement biomeId = bedrockBiomes.get(entry.getKey().location().getPath());
+                if (biomeId == null) {
+                    String replacementBiome = switch (entry.getKey().location().getPath()) {
+                        // Name changes - Java -> Bedrock
+                        case "mountains" -> "extreme_hills";
+                        case "swamp" -> "swampland";
+                        case "nether_wastes" -> "hell";
+                        case "snowy_tundra" -> "ice_plains";
+                        case "snowy_mountains" -> "ice_mountains";
+                        case "mushroom_fields" -> "mushroom_island";
+                        case "mushroom_field_shore" -> "mushroom_island_shore";
+                        case "wooded_hills" -> "forest_hills";
+                        case "mountain_edge" -> "extreme_hills_edge";
+                        case "stone_shore" -> "stone_beach";
+                        case "snowy_beach" -> "cold_beach";
+                        case "dark_forest" -> "roofed_forest";
+                        case "snowy_taiga" -> "cold_taiga";
+                        case "snowy_taiga_hills" -> "cold_taiga_hills";
+                        case "giant_tree_taiga" -> "mega_taiga";
+                        case "giant_tree_taiga_hills" -> "mega_taiga_hills";
+                        case "wooded_mountains" -> "extreme_hills_plus_trees";
+                        case "badlands" -> "mesa";
+                        case "wooded_badlands_plateau" -> "mesa_plateau_stone"; // Blame the Minecraft wiki
+                        case "badlands_plateau" ->  "mesa_plateau";
+                        case "desert_lakes" -> "desert_mutated";
+                        case "gravelly_mountains" -> "extreme_hills_mutated";
+                        case "taiga_mountains" -> "taiga_mutated";
+                        case "swamp_hills" -> "swampland_mutated";
+                        case "ice_spikes" -> "ice_plains_spikes";
+                        case "modified_jungle" -> "jungle_mutated";
+                        case "modified_jungle_edge" -> "jungle_edge_mutated";
+                        case "tall_birch_forest" -> "birch_forest_mutated";
+                        case "tall_birch_hills" -> "birch_forest_hills_mutated";
+                        case "dark_forest_hills" -> "roofed_forest_mutated";
+                        case "snowy_taiga_mountains" -> "cold_taiga_mutated";
+                        case "giant_spruce_taiga" -> "redwood_taiga_mutated";
+                        case "giant_spruce_taiga_hills" -> "redwood_taiga_hills_mutated";
+                        case "modified_gravelly_mountains" -> "extreme_hills_plus_trees_mutated"; // Blame the Minecraft wiki
+                        case "shattered_savanna" -> "savanna_mutated";
+                        case "shattered_savanna_plateau" -> "savanna_plateau_mutated";
+                        case "eroded_badlands" -> "mesa_bryce";
+                        case "modified_wooded_badlands_plateau" -> "mesa_plateau_stone_mutated"; // Blame the Minecraft wiki
+                        case "modified_badlands_plateau" -> "mesa_plateau_mutated";
+                        case "soul_sand_valley" -> "soulsand_valley";
+
+                        // Biomes that don't exist on Bedrock
+                        case "small_end_islands", "end_midlands", "end_highlands", "end_barrens" -> "the_end";
+                        case "dripstone_caves", "lush_caves" -> "extreme_hills"; // TODO these are already in the caves and cliffs datapack
+                        default -> null;
+                    };
+                    if (replacementBiome != null) {
+                        biomeId = bedrockBiomes.get(replacementBiome);
+                        if (biomeId == null) {
+                            throw new IllegalStateException("Biome ID was null when explicitly replaced for " + replacementBiome);
+                        }
+                    } else {
+                        System.out.println("Replacement biome required for " + entry.getKey().location().getPath() + " (ID: " + i + ")");
+                        continue;
+                    }
+                }
+
+                biomesMap.put(entry.getKey().location().toString(), new BiomeEntry(biomeId.getAsInt()));
+            }
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            FileWriter writer = new FileWriter(mappings);
+            builder.create().toJson(biomesMap, writer);
+            writer.close();
+            System.out.println("Finished biome writing process!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void generateMapColors() {
+        List<Color> mapColors = new ArrayList<>();
+        for (MaterialColor color : MaterialColor.MATERIAL_COLORS) {
+            if (color == null) {
+                continue;
+            }
+
+            for (int i = 0; i <= 3; i++) {
+                int rgb = color.calculateRGBColor(i);
+                mapColors.add(new Color(rgb, true));
+            }
+        }
+
+        StringBuilder finalOutput = new StringBuilder();
+        for (int i = 0; i < mapColors.size(); i++) {
+            Color color = mapColors.get(i);
+            finalOutput.append("COLOR_").append(i).append("(").append(color.getRed()).append(", ").append(color.getGreen()).append(", ").append(color.getBlue()).append("),\n");
+        }
+
+        // Remap the empty colors
+        finalOutput = new StringBuilder(finalOutput.toString().replaceAll("\\(0, 0, 0\\)", "(-1, -1, -1)"));
+
+        // Fix the end
+        finalOutput = new StringBuilder(finalOutput.substring(0, finalOutput.length() - 2) + ";");
+
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("./map_colors.txt"));
+            writer.write(finalOutput.toString());
+            writer.close();
+            System.out.println("Finished map color writing process!");
+        } catch (IOException e) {
+            System.out.println("Failed to write map_colors.txt!");
+            e.printStackTrace();
+        }
+    }
+
+    public void generateEnchantments() {
+        try {
+            Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
+            for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry : Registry.ENCHANTMENT.entrySet()) {
+                Enchantment enchantment = entry.getValue();
+                String rarity = enchantment.getRarity().toString().toLowerCase();
+                int maxLevel = enchantment.getMaxLevel();
+                List<String> incompatibleEnchantments = new ArrayList<>();
+                List<String> validItems = new ArrayList<>();
+                for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry2 : Registry.ENCHANTMENT.entrySet()) {
+                    if (enchantment != entry2.getValue() && !enchantment.isCompatibleWith(entry2.getValue())) {
+                        incompatibleEnchantments.add(entry2.getKey().location().toString());
+                    }
+                }
+                if (incompatibleEnchantments.isEmpty()) {
+                    incompatibleEnchantments = null;
+                }
+                // Super inefficient, but I don't think there is a better way
+                for (ResourceLocation key : Registry.ITEM.keySet()) {
+                    Optional<Item> item = Registry.ITEM.getOptional(key);
+                    item.ifPresent(value -> {
+                        ItemStack itemStack = new ItemStack(value);
+                        if (enchantment.canEnchant(itemStack)) {
+                            validItems.add(key.getNamespace() + ":" + key.getPath());
+                        }
+                    });
+                }
+                enchantmentMap.put(entry.getKey().location().toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
+            }
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            File mappings = new File("mappings/enchantments.json");
+            FileWriter writer = new FileWriter(mappings);
+            builder.create().toJson(enchantmentMap, writer);
+            writer.close();
+            System.out.println("Finished enchantment writing process!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public JsonObject getRemapBlock(BlockState state, String identifier) {
@@ -590,7 +794,7 @@ public class MappingsGenerator {
         return object;
     }
 
-    public JsonObject getRemapItem(String identifier, Block block, int stackSize) {
+    public JsonObject getRemapItem(String identifier, Item item, Block block, int stackSize) {
         JsonObject object = new JsonObject();
         ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
         // Deal with items that we replace
@@ -621,16 +825,21 @@ public class MappingsGenerator {
         boolean isBlock = block != Blocks.AIR;
         object.addProperty("bedrock_data", isBlock ? itemEntry.getBedrockData() : 0);
         if (isBlock) {
-            BlockState state = block.defaultBlockState();
-            // Fix some render issues - :microjang:
-            if (block instanceof WallBlock) {
-                String blockIdentifier = Registry.BLOCK.getKey(block).toString();
-                if (!isSensibleWall(blockIdentifier)) { // Blackstone renders fine
-                    // Required for the item to render with the correct type (sandstone, stone brick, etc)
-                    state = state.setValue(WallBlock.UP, false);
+            int firstStateId = -1;
+            int lastStateId = -1;
+            for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
+                if (state.getBlock() == block) {
+                    int stateId = Block.getId(state);
+                    if (firstStateId == -1) {
+                        firstStateId = stateId;
+                    }
+                    lastStateId = stateId;
                 }
             }
-            object.addProperty("blockRuntimeId", Block.getId(state));
+            object.addProperty("firstBlockRuntimeId", firstStateId);
+            if (firstStateId != lastStateId) {
+                object.addProperty("lastBlockRuntimeId", lastStateId);
+            }
         }
         if (stackSize != 64) {
             object.addProperty("stack_size", stackSize);
@@ -647,7 +856,37 @@ public class MappingsGenerator {
             Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[0]::equals).findAny();
             optToolType.ifPresent(s -> object.addProperty("tool_type", s));
         }
-
+        if (item.getMaxDamage() > 0) {
+            object.addProperty("max_damage", item.getMaxDamage());
+            Ingredient repairIngredient = null;
+            JsonArray repairMaterials = new JsonArray();
+            // Some repair ingredients use item tags which are not loaded
+            if (item instanceof ArmorItem armorItem) {
+                repairIngredient = armorItem.getMaterial().getRepairIngredient();
+            } else if (item instanceof ElytraItem) {
+                repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
+            } else if (item instanceof TieredItem tieredItem) {
+                if (tieredItem.getTier() == Tiers.WOOD) {
+                    repairMaterials = ALL_PLANKS;
+                } else if (tieredItem.getTier() == Tiers.STONE) {
+                    repairMaterials.add("minecraft:cobblestone");
+                    repairMaterials.add("minecraft:cobbled_deepslate");
+                    repairMaterials.add("minecraft:blackstone"); // JE only https://bugs.mojang.com/browse/MCPE-71859
+                } else {
+                    repairIngredient = tieredItem.getTier().getRepairIngredient();
+                }
+            } else if (item instanceof ShieldItem) {
+                repairMaterials = ALL_PLANKS;
+            }
+            if (repairIngredient != null) {
+                for (ItemStack repairItem : repairIngredient.getItems()) {
+                    repairMaterials.add(Registry.ITEM.getKey(repairItem.getItem()).toString());
+                }
+            }
+            if (repairMaterials.size() > 0) {
+                object.add("repair_materials", repairMaterials);
+            }
+        }
         return object;
     }
 
