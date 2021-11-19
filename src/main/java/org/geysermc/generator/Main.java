@@ -1,10 +1,5 @@
 package org.geysermc.generator;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
-
-import java.io.PrintStream;
-
 public class Main {
 
     public static void main(String[] args) {
@@ -17,5 +12,6 @@ public class Main {
         generator.generateBiomes();
         generator.generateMapColors();
         generator.generateEnchantments();
+        generator.generateParticles();
     }
 }

@@ -5,16 +5,21 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import com.mojang.serialization.Codec;
 import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtType;
+import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -40,6 +45,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
@@ -312,6 +318,7 @@ public class MappingsGenerator {
             FileWriter writer = new FileWriter(mappings);
             builder.create().toJson(rootObject, writer);
             writer.close();
+            fileSystem.close();
             System.out.println("Finished sound writing process!");
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -357,8 +364,7 @@ public class MappingsGenerator {
             }
 
             // Used to know if a biome is valid or not for Bedrock
-            JsonObject bedrockBiomes = new JsonParser().parse(new FileReader(biomeIdMap)).getAsJsonObject();
-            List<String> usedIds = new ArrayList<>();
+            JsonObject bedrockBiomes = JsonParser.parseReader(new FileReader(biomeIdMap)).getAsJsonObject();
 
             int i = -1;
             for (Map.Entry<ResourceKey<Biome>, Biome> entry : BuiltinRegistries.BIOME.entrySet()) {
@@ -509,6 +515,92 @@ public class MappingsGenerator {
             builder.create().toJson(enchantmentMap, writer);
             writer.close();
             System.out.println("Finished enchantment writing process!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void generateParticles() {
+        File mappings = new File("mappings/particles.json");
+        if (!mappings.exists()) {
+            System.out.println("Could not find mappings submodule! Did you clone them?");
+            return;
+        }
+
+        Map<String, ParticleEntry> particles;
+        try {
+            Type mapType = new TypeToken<Map<String, ParticleEntry>>() {}.getType();
+            particles = GSON.fromJson(new FileReader(mappings), mapType);
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        List<String> validParticleIds = new ArrayList<>();
+        try (FileSystem fileSystem = FileSystems.newFileSystem(Paths.get("bedrockresourcepack.zip"))) {
+            Path particlesPath = fileSystem.getPath("particles");
+            fileSystem.provider().newDirectoryStream(particlesPath, (entry) -> true)
+                    .forEach((jsonPath) -> {
+                        try {
+                            JsonElement json = JsonParser.parseReader(new InputStreamReader(fileSystem.provider().newInputStream(jsonPath)));
+                            String bedrockId = json.getAsJsonObject()
+                                    .getAsJsonObject("particle_effect")
+                                    .getAsJsonObject("description")
+                                    .get("identifier")
+                                    .getAsString();
+                            validParticleIds.add(bedrockId);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // We don't need to worry about registry order since MCProtocolLib will take that of that
+        Map<String, ParticleEntry> newParticles = new TreeMap<>();
+
+        for (Map.Entry<String, ParticleEntry> entry : particles.entrySet()) {
+            ResourceLocation location = new ResourceLocation("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
+            if (Registry.PARTICLE_TYPE.get(location) == null) {
+                System.out.println("Particle of type " + entry.getKey() + " does not exist in this jar! It will be removed.");
+            }
+        }
+
+        for (Map.Entry<ResourceKey<ParticleType<?>>, ParticleType<?>> entry : Registry.PARTICLE_TYPE.entrySet()) {
+            String enumName = entry.getKey().location().getPath().toUpperCase(Locale.ROOT);
+            ParticleEntry geyserParticle = particles.computeIfAbsent(enumName, ($) -> new ParticleEntry());
+            if (geyserParticle.cloudburstLevelEventType != null) {
+                try {
+                    LevelEventType.valueOf(geyserParticle.cloudburstLevelEventType);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Particle type " + geyserParticle.cloudburstLevelEventType + " does not exist in the Cloudburst Protocol!");
+                    geyserParticle.cloudburstLevelEventType = null;
+                }
+            }
+            if (geyserParticle.bedrockId != null && !geyserParticle.bedrockId.startsWith("geyseropt:")) {
+                // Ignore Geyser prefixes as these won't be found in the Bedrock resource pack
+                if (!validParticleIds.contains(geyserParticle.bedrockId)) {
+                    System.out.println("Bedrock particle ID " + geyserParticle.bedrockId + " not found in resource pack.");
+                }
+            }
+            if (geyserParticle.cloudburstLevelEventType == null && geyserParticle.bedrockId == null) {
+                System.out.println("No Bedrock particle mapped for " + enumName);
+                if (validParticleIds.contains(entry.getKey().location().toString())) {
+                    System.out.println("But the Bedrock resource pack contains a particle with the ID " + entry.getKey().location());
+                }
+            }
+            newParticles.put(enumName, geyserParticle);
+        }
+
+        try {
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            JsonWriter writer = new JsonWriter(new FileWriter(mappings));
+            writer.setIndent("\t"); // Tabs just to keep the diff nice for older mappings
+            builder.create().toJson(newParticles, Map.class, writer);
+            writer.close();
+            System.out.println("Finished particle writing process!");
         } catch (IOException e) {
             e.printStackTrace();
         }

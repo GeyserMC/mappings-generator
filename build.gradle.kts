@@ -1,7 +1,7 @@
 import java.net.URL
 import java.nio.channels.Channels
 
-val bedrockResourcePackVersion = "1.17.0.2"
+val bedrockResourcePackVersion = "1.18.0.27"
 
 group = "org.geysermc.mappings-generator"
 version = "1.1.0"
@@ -17,18 +17,18 @@ dependencies {
 
     implementation("org.reflections", "reflections", "0.9.12")
     implementation("com.nukkitx", "nbt", "2.0.2")
-    implementation("com.google.code.gson", "gson", "2.8.5")
+    implementation("com.nukkitx.protocol", "bedrock-common", "2.9.3-SNAPSHOT")
 
     annotationProcessor("org.projectlombok", "lombok", "1.18.20")
 }
 
 configure<JavaPluginConvention> {
-    sourceCompatibility = JavaVersion.VERSION_16
+    sourceCompatibility = JavaVersion.VERSION_17
 }
 
 minecraft {
     // https://github.com/SpongePowered/Sponge/blob/3cb480a347a33a424797c0e8f36b91cd1437d21d/build.gradle.kts
-    version("1.18-pre1")
+    version("1.18-pre4")
     platform(org.spongepowered.gradle.vanilla.repository.MinecraftPlatform.CLIENT)
     project.sourceSets["main"].resources
         .filter { it.name.endsWith(".accesswidener") }
