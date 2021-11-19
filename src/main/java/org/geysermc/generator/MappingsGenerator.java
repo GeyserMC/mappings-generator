@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.MaterialColor;
+import net.minecraft.world.level.material.PushReaction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
@@ -591,6 +592,15 @@ public class MappingsGenerator {
         }
         // This points to the index of the collision in collision.json
         object.addProperty("collision_index", COLLISION_LIST.lastIndexOf(collisionBoxes));
+
+        PushReaction pushReaction = state.getPistonPushReaction();
+        if (pushReaction != PushReaction.NORMAL) {
+            object.addProperty("piston_behavior", pushReaction.toString().toLowerCase());
+        }
+
+        if (state.hasBlockEntity()) {
+            object.addProperty("has_block_entity", true);
+        }
 
         try {
             // Ignore water, lava, and fire because players can't pick them
