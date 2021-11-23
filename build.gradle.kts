@@ -17,7 +17,7 @@ dependencies {
 
     implementation("org.reflections", "reflections", "0.9.12")
     implementation("com.nukkitx", "nbt", "2.0.2")
-    implementation("com.nukkitx.protocol", "bedrock-common", "2.9.3-SNAPSHOT")
+    implementation("com.nukkitx.protocol", "bedrock-common", "2.9.4-SNAPSHOT")
 
     annotationProcessor("org.projectlombok", "lombok", "1.18.20")
 }
@@ -28,7 +28,7 @@ configure<JavaPluginConvention> {
 
 minecraft {
     // https://github.com/SpongePowered/Sponge/blob/3cb480a347a33a424797c0e8f36b91cd1437d21d/build.gradle.kts
-    version("1.18-pre4")
+    version("1.18-pre7")
     platform(org.spongepowered.gradle.vanilla.repository.MinecraftPlatform.CLIENT)
     project.sourceSets["main"].resources
         .filter { it.name.endsWith(".accesswidener") }

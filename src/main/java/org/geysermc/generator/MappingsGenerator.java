@@ -213,7 +213,6 @@ public class MappingsGenerator {
                 // Item replacements
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:globe_banner_pattern", "minecraft:banner_pattern");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trader_llama_spawn_egg", "minecraft:llama_spawn_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:sculk_sensor", "minecraft:info_update"); // soon
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
