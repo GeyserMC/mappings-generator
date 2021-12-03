@@ -485,13 +485,9 @@ public class MappingsGenerator {
 
     public void generateStatistics() {
         try {
-            // The formatter field is private and does not have an accessor
-            Field formatterField = Stat.class.getDeclaredField("formatter");
-            formatterField.setAccessible(true);
-
             Map<String, String> statisticMap = new HashMap<>();
             for (Stat<?> stat : Stats.CUSTOM) {
-                StatFormatter statFormatter = (StatFormatter) formatterField.get(stat);
+                StatFormatter statFormatter = stat.formatter;
                 String format;
                 if (statFormatter == StatFormatter.DIVIDE_BY_TEN) {
                     format = "divide_by_ten";
@@ -515,7 +511,7 @@ public class MappingsGenerator {
             builder.create().toJson(statisticMap, writer);
             writer.close();
             System.out.println("Finished statistics writing process!");
-        } catch (IOException | NoSuchFieldException | IllegalAccessException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
