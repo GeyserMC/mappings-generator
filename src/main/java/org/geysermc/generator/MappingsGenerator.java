@@ -484,34 +484,40 @@ public class MappingsGenerator {
     }
 
     public void generateStatistics() {
-        try {
-            Map<String, String> statisticMap = new HashMap<>();
-            for (Stat<?> stat : Stats.CUSTOM) {
-                StatFormatter statFormatter = stat.formatter;
-                String format;
-                if (statFormatter == StatFormatter.DIVIDE_BY_TEN) {
-                    format = "divide_by_ten";
-                } else if (statFormatter == StatFormatter.DISTANCE) {
-                    format = "distance";
-                } else if (statFormatter == StatFormatter.TIME) {
-                    format = "time";
-                } else {
-                    format = "default";
-                }
+        StringBuilder finalOutput = new StringBuilder();
+        for (int i = 0; i < Registry.CUSTOM_STAT.size(); i++) {
+            ResourceLocation location = Registry.CUSTOM_STAT.byId(i);
+            Stat<?> stat = Stats.CUSTOM.get(location);
 
-                if (!format.equals("default")) {
-                    ResourceLocation location = (ResourceLocation) stat.getValue();
-                    statisticMap.put(location.getPath(), format);
-                }
+            String format;
+            if (stat.formatter == StatFormatter.DIVIDE_BY_TEN) {
+                format = "TENTHS";
+            } else if (stat.formatter == StatFormatter.DISTANCE) {
+                format = "DISTANCE";
+            } else if (stat.formatter == StatFormatter.TIME) {
+                format = "TIME";
+            } else {
+                format = "INTEGER";
             }
 
-            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            File mappings = new File("mappings/statistics.json");
-            FileWriter writer = new FileWriter(mappings);
-            builder.create().toJson(statisticMap, writer);
+            finalOutput.append(location.getPath().toUpperCase(Locale.ROOT));
+            if (!format.equals("INTEGER")) {
+                finalOutput.append("(StatisticFormat.").append(format).append(")");
+            }
+            if (i != (Registry.CUSTOM_STAT.size() - 1)) {
+                finalOutput.append(",\n");
+            } else {
+                finalOutput.append(";");
+            }
+        }
+
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("./statistics.txt"));
+            writer.write(finalOutput.toString());
             writer.close();
             System.out.println("Finished statistics writing process!");
         } catch (IOException e) {
+            System.out.println("Failed to write statistics.txt!");
             e.printStackTrace();
         }
     }
