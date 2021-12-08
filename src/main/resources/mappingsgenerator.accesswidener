@@ -2,3 +2,5 @@ accessWidener v1 named
 
 # Allows us to iterate through material colors
 accessible field net/minecraft/world/level/material/MaterialColor MATERIAL_COLORS [Lnet/minecraft/world/level/material/MaterialColor;
+# Allow us to access the formatter used for each statistic
+accessible field net/minecraft/stats/Stat formatter Lnet/minecraft/stats/StatFormatter;
