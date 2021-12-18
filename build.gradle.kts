@@ -1,6 +1,7 @@
 import java.net.URL
 import java.nio.channels.Channels
 
+val javaMinecraftVersion = "1.18.1"
 val bedrockResourcePackVersion = "1.18.0.27"
 
 group = "org.geysermc.mappings-generator"
@@ -28,7 +29,7 @@ configure<JavaPluginConvention> {
 
 minecraft {
     // https://github.com/SpongePowered/Sponge/blob/3cb480a347a33a424797c0e8f36b91cd1437d21d/build.gradle.kts
-    version("1.18-pre7")
+    version(javaMinecraftVersion)
     platform(org.spongepowered.gradle.vanilla.repository.MinecraftPlatform.CLIENT)
     project.sourceSets["main"].resources
         .filter { it.name.endsWith(".accesswidener") }

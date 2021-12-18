@@ -5,9 +5,8 @@ A standalone program that generates (most of) the [mappings](https://github.com/
 ## Setup
 
 - Clone this repository locally: `git clone https://github.com/GeyserMC/mappings-generator`
+- Ensure submodules are cloned
 - Navigate to the `mappings-generator` directory.
-- Run `gradlew installClientJar`. This will download the needed resources, such as the Minecraft client jar along with deobfuscating it so it can be used with this project.
-- If in an IDE such as IntelliJ, refresh your dependencies - this will then add the generated client jar to your dependencies.
 
 ## Running
 
@@ -16,21 +15,4 @@ Once the program is done running, files will be created containing mappings need
 
 ## Updating for future versions
 
-Updating for future versions is fairly simple. In the `build.gradle.kts` file, there are 3 primary values you will want to change:
-```kotlin
-val clientJarHash = "054b2065dd63c3e4227879046beae7acaeb7e8d3"
-val clientMappingsHash = "8d6960e996a40b8350f5973d8a237469a9a6a7bc"
-val clientJarVersion = "21w20a"
-```
-These control which client jar to download, mappings file, and the version you will be downloading. These hashes can be retrieved from the relevant Minecraft wiki page for which version you want to use. These can be found in the relevant download links on the wiki page.
-
-Here is how it would look for Minecraft 1.16.5:
-```kotlin
-val clientJarHash = "1b557e7b033b583cd9f66746b7a9ab1ec1673ced"
-val clientMappingsHash = "41285beda6d251d190f2bf33beadd4fee187df7a"
-val clientJarVersion = "1.16.5"
-```
-
-Once you have updated these values, once again run the `gradlew installClientJar` command to install this to your local maven repository, then refresh your dependencies in order to work with the updated code. 
-
-Keep in mind that this code is not guaranteed to work across versions as it relies on Minecraft code which can change at any time.
+Update the `javaMinecraftVersion` variable in `build.gradle.kts` to your desired version.
