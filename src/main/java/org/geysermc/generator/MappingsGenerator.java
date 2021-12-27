@@ -5,20 +5,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import com.mojang.serialization.Codec;
 import com.nukkitx.nbt.NBTInputStream;
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.nbt.NbtType;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
-import net.minecraft.client.color.block.BlockColors;
-import net.minecraft.client.particle.Particle;
 import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceKey;
@@ -28,10 +21,8 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.MaterialColor;
@@ -345,7 +336,7 @@ public class MappingsGenerator {
                 return;
             }
 
-            Map<String, BiomeEntry> biomesMap = new HashMap<>();
+            Map<String, BiomeEntry> biomesMap = new TreeMap<>();
             try {
                 Type mapType = new TypeToken<Map<String, BiomeEntry>>() {}.getType();
                 Map<String, BiomeEntry> existingBiomes = GSON.fromJson(new FileReader(mappings), mapType);
@@ -358,7 +349,7 @@ public class MappingsGenerator {
             }
 
             File biomeIdMap = new File("palettes/biome_id_map.json");
-            if (!mappings.exists()) {
+            if (!biomeIdMap.exists()) {
                 System.out.println("Biome ID map doesn't exist!!!");
                 return;
             }
@@ -416,7 +407,6 @@ public class MappingsGenerator {
 
                         // Biomes that don't exist on Bedrock
                         case "small_end_islands", "end_midlands", "end_highlands", "end_barrens" -> "the_end";
-                        case "dripstone_caves", "lush_caves" -> "extreme_hills"; // TODO these are already in the caves and cliffs datapack
                         default -> null;
                     };
                     if (replacementBiome != null) {
