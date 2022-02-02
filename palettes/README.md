@@ -2,8 +2,7 @@
 
 Starting with v411, the block palette is no longer sent as a parameter in the StartGamePacket. 
 
-After obtaining, place the block palette here. There is no alternative for most developers to obtain a block palette from a Bedrock client/server at 
-this time.
+After obtaining, place the block palette here. You can use this Bedrock server mod to generate a block palette: https://github.com/pmmp/mapping
 
 # Bedrock Item Palettes
 
