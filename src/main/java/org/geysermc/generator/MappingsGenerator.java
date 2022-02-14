@@ -937,6 +937,17 @@ public class MappingsGenerator {
             Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[0]::equals).findAny();
             optToolType.ifPresent(s -> object.addProperty("tool_type", s));
         }
+        String[] armorTypes = {"helmet", "leggings", "chestplate", "boots"};
+        if (identifierSplit.length > 1) {
+            Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[1]::equals).findAny();
+            if (optToolType.isPresent()) {
+                object.addProperty("armor_type", optToolType.get());
+                object.addProperty("armor_tier", identifierSplit[0]);
+            }
+        } else {
+            Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[0]::equals).findAny();
+            optToolType.ifPresent(s -> object.addProperty("armor_type", s));
+        }
         if (item.getMaxDamage() > 0) {
             object.addProperty("max_damage", item.getMaxDamage());
             Ingredient repairIngredient = null;
@@ -944,6 +955,7 @@ public class MappingsGenerator {
             // Some repair ingredients use item tags which are not loaded
             if (item instanceof ArmorItem armorItem) {
                 repairIngredient = armorItem.getMaterial().getRepairIngredient();
+                object.addProperty("protection_value", armorItem.getDefense());
             } else if (item instanceof ElytraItem) {
                 repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
             } else if (item instanceof TieredItem tieredItem) {
