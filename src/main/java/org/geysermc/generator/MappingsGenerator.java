@@ -630,6 +630,8 @@ public class MappingsGenerator {
         } else if (trimmedIdentifier.contains("candle")) {
             // Resetting old identifiers
             bedrockIdentifier = trimmedIdentifier;
+        } else if (identifier.equals("minecraft:deepslate_redstone_ore[lit=true]")) {
+            bedrockIdentifier = "minecraft:lit_deepslate_redstone_ore";
         } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double")) {
             // Fixes 1.16 double slabs
             if (blockEntry != null) {
