@@ -200,7 +200,7 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:shulker_box", "minecraft:undyed_shulker_box");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg","minecraft:zombie_pigman_spawn_egg");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
 
                 // Item replacements
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trader_llama_spawn_egg", "minecraft:llama_spawn_egg");
@@ -211,17 +211,18 @@ public class MappingsGenerator {
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
-            for (ResourceLocation key : Registry.ITEM.keySet()) {
+            for (int i = 0; i < Registry.ITEM.size(); i++) {
+                Item value = Registry.ITEM.byId(i);
+                ResourceLocation key = Registry.ITEM.getKey(value);
                 if (key.getPath().endsWith("planks")) {
                     ALL_PLANKS.add(key.toString());
                 }
             }
 
-            for (ResourceLocation key : Registry.ITEM.keySet()) {
-                Optional<Item> item = Registry.ITEM.getOptional(key);
-                item.ifPresent(value ->
-                        rootObject.add(key.toString(), getRemapItem(
-                                key.toString(), value, Block.byItem(value), value.getMaxStackSize())));
+            for (int i = 0; i < Registry.ITEM.size(); i++) {
+                Item value = Registry.ITEM.byId(i);
+                String key = Registry.ITEM.getKey(value).toString();
+                rootObject.add(key, getRemapItem(key, value, Block.byItem(value), value.getMaxStackSize()));
             }
 
             FileWriter writer = new FileWriter(mappings);
@@ -487,14 +488,13 @@ public class MappingsGenerator {
                     incompatibleEnchantments = null;
                 }
                 // Super inefficient, but I don't think there is a better way
-                for (ResourceLocation key : Registry.ITEM.keySet()) {
-                    Optional<Item> item = Registry.ITEM.getOptional(key);
-                    item.ifPresent(value -> {
-                        ItemStack itemStack = new ItemStack(value);
-                        if (enchantment.canEnchant(itemStack)) {
-                            validItems.add(key.getNamespace() + ":" + key.getPath());
-                        }
-                    });
+                for (int i = 0; i < Registry.ITEM.size(); i++) {
+                    Item value = Registry.ITEM.byId(i);
+                    ResourceLocation key = Registry.ITEM.getKey(value);
+                    ItemStack itemStack = new ItemStack(value);
+                    if (enchantment.canEnchant(itemStack)) {
+                        validItems.add(key.getNamespace() + ":" + key.getPath());
+                    }
                 }
                 enchantmentMap.put(entry.getKey().location().toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
             }
