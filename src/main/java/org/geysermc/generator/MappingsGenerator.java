@@ -807,7 +807,7 @@ public class MappingsGenerator {
             }
         }
 
-        if (trimmedIdentifier.equals("minecraft:glow_lichen")) {
+        if (trimmedIdentifier.equals("minecraft:glow_lichen") || trimmedIdentifier.equals("minecraft:sculk_vein")) {
             int bitset = 0;
             List<String> statesList = Arrays.asList(states);
             if (statesList.contains("down=true")) {
