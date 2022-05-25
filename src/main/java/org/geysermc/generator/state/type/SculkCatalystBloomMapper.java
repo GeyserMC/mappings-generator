@@ -5,9 +5,9 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
 @StateRemapper(value = "bloom", blockRegex = ".*sculk_catalyst$")
-public class SculkCatalystBloomMapper extends StateMapper<Integer> {
+public class SculkCatalystBloomMapper extends StateMapper<Boolean> {
     @Override
-    public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        return Pair.of("bloom", Boolean.parseBoolean(value) ? 1 : 0);
+    public Pair<String, Boolean> translateState(String fullIdentifier, String value) {
+        return Pair.of("bloom", Boolean.parseBoolean(value));
     }
 }

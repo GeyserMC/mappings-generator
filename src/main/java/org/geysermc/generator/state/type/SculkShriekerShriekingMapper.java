@@ -5,9 +5,9 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
 @StateRemapper(value = "shrieking", blockRegex = ".*sculk_shrieker$")
-public class SculkShriekerShriekingMapper extends StateMapper<Integer> {
+public class SculkShriekerShriekingMapper extends StateMapper<Boolean> {
     @Override
-    public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        return Pair.of("active", Boolean.parseBoolean(value) ? 1 : 0);
+    public Pair<String, Boolean> translateState(String fullIdentifier, String value) {
+        return Pair.of("active", Boolean.parseBoolean(value));
     }
 }

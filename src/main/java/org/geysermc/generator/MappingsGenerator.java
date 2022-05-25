@@ -60,7 +60,7 @@ public class MappingsGenerator {
             "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling",
             "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern",
             "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus",
-            "minecraft:crimson_roots", "minecraft:warped_roots", "minecraft:azalea", "minecraft:flowering_azalea");
+            "minecraft:crimson_roots", "minecraft:warped_roots", "minecraft:azalea", "minecraft:flowering_azalea", "minecraft:mangrove_propagule");
     // This ends up in collision.json
     // collision_index in blocks.json refers to this to prevent duplication
     // This helps to reduce file size
@@ -644,7 +644,7 @@ public class MappingsGenerator {
                 bedrockIdentifier = formatDoubleSlab(trimmedIdentifier);
             }
         } else if (trimmedIdentifier.endsWith("_leaves")) {
-            if (trimmedIdentifier.contains("oak") || trimmedIdentifier.contains("spruce") || trimmedIdentifier.contains("birch") || trimmedIdentifier.contains("jungle")) {
+            if (trimmedIdentifier.contains(":oak") || trimmedIdentifier.contains("spruce") || trimmedIdentifier.contains("birch") || trimmedIdentifier.contains("jungle")) {
                 bedrockIdentifier = "minecraft:leaves";
             } else if (trimmedIdentifier.contains("acacia") || trimmedIdentifier.contains("dark_oak")) {
                 bedrockIdentifier = "minecraft:leaves2";
@@ -889,7 +889,7 @@ public class MappingsGenerator {
         }
 
         if (bedrockIdentifier.startsWith("minecraft:leaves")) {
-            String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.indexOf("_"));
+            String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.lastIndexOf("_"));
             if (bedrockIdentifier.endsWith("2")) {
                 statesObject.addProperty("new_leaf_type", woodType);
             } else {
@@ -1084,7 +1084,7 @@ public class MappingsGenerator {
      * @return true if this wall can be treated normally and not stupidly
      */
     private static boolean isSensibleWall(String identifier) {
-        return identifier.contains("blackstone") || identifier.contains("deepslate");
+        return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick");
     }
 
     /**
