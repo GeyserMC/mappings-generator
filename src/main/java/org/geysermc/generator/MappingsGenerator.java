@@ -847,13 +847,13 @@ public class MappingsGenerator {
             if (statesList.contains("up=true")) {
                 bitset |= 1 << 1;
             }
-            if (statesList.contains("north=true")) {
+            if (statesList.contains("south=true")) {
                 bitset |= 1 << 2;
             }
-            if (statesList.contains("south=true")) {
+            if (statesList.contains("west=true")) {
                 bitset |= 1 << 3;
             }
-            if (statesList.contains("west=true")) {
+            if (statesList.contains("north=true")) {
                 bitset |= 1 << 4;
             }
             if (statesList.contains("east=true")) {
