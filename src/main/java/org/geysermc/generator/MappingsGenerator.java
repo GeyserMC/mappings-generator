@@ -643,6 +643,32 @@ public class MappingsGenerator {
             } else {
                 bedrockIdentifier = formatDoubleSlab(trimmedIdentifier);
             }
+        } else if (trimmedIdentifier.endsWith("_leaves")) {
+            if (trimmedIdentifier.contains("oak") || trimmedIdentifier.contains("spruce") || trimmedIdentifier.contains("birch") || trimmedIdentifier.contains("jungle")) {
+                bedrockIdentifier = "minecraft:leaves";
+            } else if (trimmedIdentifier.contains("acacia") || trimmedIdentifier.contains("dark_oak")) {
+                bedrockIdentifier = "minecraft:leaves2";
+            } else {
+                // Default to trimmed identifier, or the existing identifier
+                bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
+            }
+        } else if (trimmedIdentifier.equals("minecraft:mangrove_sign")) {
+            bedrockIdentifier = "minecraft:mangrove_standing_sign";
+        } else if (trimmedIdentifier.equals("minecraft:tripwire")) {
+            bedrockIdentifier = "minecraft:trip_wire";
+        } else if (trimmedIdentifier.startsWith("minecraft:potted")) {
+            // Pots are block entities on Bedrock
+            bedrockIdentifier = "minecraft:flower_pot";
+        } else if (trimmedIdentifier.endsWith("concrete_powder")) {
+            bedrockIdentifier = "minecraft:concrete_powder";
+        } else if (trimmedIdentifier.endsWith("piston_head")) {
+            if (identifier.contains("type=sticky")) {
+                bedrockIdentifier = "minecraft:sticky_piston_arm_collision";
+            } else {
+                bedrockIdentifier = "minecraft:piston_arm_collision";
+            }
+        } else if (trimmedIdentifier.endsWith("moving_piston")) {
+            bedrockIdentifier = "minecraft:moving_block";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -845,11 +871,26 @@ public class MappingsGenerator {
             if (!isHead) {
                 statesObject.addProperty("big_dripleaf_tilt", "none");
             }
+        } else if (trimmedIdentifier.equals("minecraft:mangrove_wood")) {
+            // Didn't seem to do anything
+            statesObject.addProperty("stripped_bit", false);
+        } else if (trimmedIdentifier.contains("azalea_leaves") || trimmedIdentifier.endsWith("mangrove_leaves")) {
+            statesObject.addProperty("update_bit", false);
         }
 
         String stateIdentifier = trimmedIdentifier;
         if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
             stateIdentifier = "minecraft:cobblestone_wall";
+        }
+
+        if (bedrockIdentifier.startsWith("minecraft:leaves")) {
+            String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.indexOf("_"));
+            if (bedrockIdentifier.endsWith("2")) {
+                statesObject.addProperty("new_leaf_type", woodType);
+            } else {
+                statesObject.addProperty("old_leaf_type", woodType);
+            }
+            statesObject.addProperty("update_bit", false);
         }
 
         List<String> stateKeys = STATES.get(stateIdentifier);
