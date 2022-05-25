@@ -673,6 +673,11 @@ public class MappingsGenerator {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
         }
+
+        if (bedrockIdentifier.contains(":stone_slab") || bedrockIdentifier.contains(":double_stone_slab")) {
+            bedrockIdentifier = bedrockIdentifier.replace("stone_slab", "stone_block_slab");
+        }
+
         object.addProperty("bedrock_identifier", bedrockIdentifier);
 
         object.addProperty("block_hardness", state.getDestroySpeed(null, null));
