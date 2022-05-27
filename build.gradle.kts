@@ -2,7 +2,7 @@ import java.net.URL
 import java.nio.channels.Channels
 
 val javaMinecraftVersion = "1.19-pre2"
-val bedrockResourcePackVersion = "1.18.0.27"
+val bedrockResourcePackVersion = "1.19.0.34"
 
 group = "org.geysermc.mappings-generator"
 version = "1.1.0"
@@ -23,7 +23,7 @@ dependencies {
     annotationProcessor("org.projectlombok", "lombok", "1.18.20")
 }
 
-configure<JavaPluginConvention> {
+configure<JavaPluginExtension> {
     sourceCompatibility = JavaVersion.VERSION_17
 }
 

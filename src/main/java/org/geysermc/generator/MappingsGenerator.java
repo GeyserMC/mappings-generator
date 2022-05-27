@@ -35,6 +35,7 @@ import org.reflections.Reflections;
 
 import java.awt.*;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -76,9 +77,9 @@ public class MappingsGenerator {
         Reflections ref = new Reflections("org.geysermc.generator.state.type");
         for (Class<?> clazz : ref.getTypesAnnotatedWith(StateRemapper.class)) {
             try {
-                StateMapper<?> stateMapper = (StateMapper<?>) clazz.newInstance();
+                StateMapper<?> stateMapper = (StateMapper<?>) clazz.getDeclaredConstructor().newInstance();
                 this.stateMappers.put(clazz.getAnnotation(StateRemapper.class).value(), stateMapper);
-            } catch (InstantiationException | IllegalAccessException e) {
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         }
@@ -263,49 +264,47 @@ public class MappingsGenerator {
             }
 
             Set<String> validBedrockSounds;
-            JsonParser parser = new JsonParser();
-
             FileSystem fileSystem = FileSystems.newFileSystem(Paths.get("bedrockresourcepack.zip"));
 
             try (InputStream stream = fileSystem.provider().newInputStream(fileSystem.getPath("sounds/sound_definitions.json"))) {
-                JsonObject json = parser.parse(new String(stream.readAllBytes())).getAsJsonObject();
+                JsonObject json = JsonParser.parseString(new String(stream.readAllBytes())).getAsJsonObject();
                 validBedrockSounds = new HashSet<>(json.getAsJsonObject("sound_definitions").keySet());
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
-            for (ResourceLocation key : Registry.SOUND_EVENT.keySet()) {
-                Optional<SoundEvent> sound = Registry.SOUND_EVENT.getOptional(key);
-                sound.ifPresent(soundEvent -> {
-                    SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
-                    String bedrockIdentifier;
-                    if (soundEntry == null) {
-                        soundEntry = new SoundEntry(key.getPath(), "", -1, null, false);
-                        bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
-                    } else {
+            for (int i = 0; i < Registry.SOUND_EVENT.size(); i++) {
+                SoundEvent soundEvent = Registry.SOUND_EVENT.byId(i);
+                ResourceLocation key = Registry.SOUND_EVENT.getKey(soundEvent);
+
+                SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
+                String bedrockIdentifier;
+                if (soundEntry == null) {
+                    soundEntry = new SoundEntry(key.getPath(), "", -1, null, false);
+                    bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
+                } else {
 //                        if (soundEntry.getPlaysoundMapping() == null || soundEntry.getPlaysoundMapping().isEmpty()) {
 //                            bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
 //                        } else {
-                            bedrockIdentifier = soundEntry.getPlaysoundMapping();
-                        //} To be uncommented when PlaySound mapping resumes
-                    }
-                    soundEntry.setPlaysoundMapping(bedrockIdentifier);
-                    JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
-                    if (soundEntry.getExtraData() <= 0 && !key.getPath().equals("block.note_block.harp")) {
-                        object.remove("extra_data");
-                    }
-                    if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
-                        object.remove("identifier");
-                    }
-                    if (!soundEntry.isLevelEvent()) {
-                        object.remove("level_event");
-                    }
-                    if (!validBedrockSounds.contains(bedrockIdentifier)) {
-                        System.out.println("No matching sound found for Bedrock! Bedrock: " + bedrockIdentifier + ", Java: " + key.getPath());
-                    }
-                    rootObject.add(key.getPath(), object);
-                });
+                        bedrockIdentifier = soundEntry.getPlaysoundMapping();
+                    //} To be uncommented when PlaySound mapping resumes
+                }
+                soundEntry.setPlaysoundMapping(bedrockIdentifier);
+                JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
+                if (soundEntry.getExtraData() <= 0 && !key.getPath().equals("block.note_block.harp")) {
+                    object.remove("extra_data");
+                }
+                if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
+                    object.remove("identifier");
+                }
+                if (!soundEntry.isLevelEvent()) {
+                    object.remove("level_event");
+                }
+                if (!validBedrockSounds.contains(bedrockIdentifier)) {
+                    System.out.println("No matching sound found for Bedrock! Bedrock: " + bedrockIdentifier + ", Java: " + key.getPath());
+                }
+                rootObject.add(key.getPath(), object);
             }
 
             FileWriter writer = new FileWriter(mappings);
@@ -474,15 +473,17 @@ public class MappingsGenerator {
     public void generateEnchantments() {
         try {
             Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
-            for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry : Registry.ENCHANTMENT.entrySet()) {
-                Enchantment enchantment = entry.getValue();
+            for (int id = 0; id < Registry.ENCHANTMENT.size(); id++) {
+                Enchantment enchantment = Registry.ENCHANTMENT.byId(id);
+
                 String rarity = enchantment.getRarity().toString().toLowerCase();
                 int maxLevel = enchantment.getMaxLevel();
                 List<String> incompatibleEnchantments = new ArrayList<>();
                 List<String> validItems = new ArrayList<>();
-                for (Map.Entry<ResourceKey<Enchantment>, Enchantment> entry2 : Registry.ENCHANTMENT.entrySet()) {
-                    if (enchantment != entry2.getValue() && !enchantment.isCompatibleWith(entry2.getValue())) {
-                        incompatibleEnchantments.add(entry2.getKey().location().toString());
+                for (int id2 = 0; id2 < Registry.ENCHANTMENT.size(); id2++) {
+                    Enchantment enchantment2 = Registry.ENCHANTMENT.byId(id2);
+                    if (enchantment != enchantment2 && !enchantment.isCompatibleWith(enchantment2)) {
+                        incompatibleEnchantments.add(Registry.ENCHANTMENT.getKey(enchantment2).toString());
                     }
                 }
                 if (incompatibleEnchantments.isEmpty()) {
@@ -497,7 +498,7 @@ public class MappingsGenerator {
                         validItems.add(key.getNamespace() + ":" + key.getPath());
                     }
                 }
-                enchantmentMap.put(entry.getKey().location().toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
+                enchantmentMap.put(Registry.ENCHANTMENT.getKey(enchantment).toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
