@@ -278,21 +278,37 @@ public class MappingsGenerator {
                 SoundEvent soundEvent = Registry.SOUND_EVENT.byId(i);
                 ResourceLocation key = Registry.SOUND_EVENT.getKey(soundEvent);
 
+                String path = key.getPath();
                 SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
                 String bedrockIdentifier;
                 if (soundEntry == null) {
-                    soundEntry = new SoundEntry(key.getPath(), "", -1, null, false);
-                    bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
+                    soundEntry = new SoundEntry(path, "", -1, null, false);
+                    bedrockIdentifier = assumeBedrockSoundIdentifier(path);
                 } else {
 //                        if (soundEntry.getPlaysoundMapping() == null || soundEntry.getPlaysoundMapping().isEmpty()) {
-//                            bedrockIdentifier = assumeBedrockSoundIdentifier(key.getPath());
+//                            bedrockIdentifier = assumeBedrockSoundIdentifier(path);
 //                        } else {
                         bedrockIdentifier = soundEntry.getPlaysoundMapping();
                     //} To be uncommented when PlaySound mapping resumes
                 }
+
+                // Auto map place block sounds
+                if (soundEntry.getBedrockMapping().isEmpty() && path.startsWith("block") && path.endsWith("place")) {
+                    if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
+                        Block block = Registry.BLOCK.get(new ResourceLocation("minecraft:" + path.split("\\.")[1]));
+                        soundEntry.setBedrockMapping("PLACE");
+                        if (block != Blocks.AIR) {
+                            soundEntry.setIdentifier(blockStateToString(block.defaultBlockState()));
+                        } else {
+                            System.out.println("Unable to auto map PLACE sound: " + path);
+                            soundEntry.setIdentifier("MANUALMAP");
+                        }
+                    }
+                }
+
                 soundEntry.setPlaysoundMapping(bedrockIdentifier);
                 JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
-                if (soundEntry.getExtraData() <= 0 && !key.getPath().equals("block.note_block.harp")) {
+                if (soundEntry.getExtraData() <= 0 && !path.equals("block.note_block.harp")) {
                     object.remove("extra_data");
                 }
                 if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
@@ -302,9 +318,9 @@ public class MappingsGenerator {
                     object.remove("level_event");
                 }
                 if (!validBedrockSounds.contains(bedrockIdentifier)) {
-                    System.out.println("No matching sound found for Bedrock! Bedrock: " + bedrockIdentifier + ", Java: " + key.getPath());
+                    System.out.println("No matching sound found for Bedrock! Bedrock: " + bedrockIdentifier + ", Java: " + path);
                 }
-                rootObject.add(key.getPath(), object);
+                rootObject.add(path, object);
             }
 
             FileWriter writer = new FileWriter(mappings);
@@ -312,6 +328,7 @@ public class MappingsGenerator {
             writer.close();
             fileSystem.close();
             System.out.println("Finished sound writing process!");
+            System.out.println("Some PLACE identifiers need to be manually mapped, please search for MANUALMAP in sounds.json, if there are no occurrences you do not need to do anything.");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
