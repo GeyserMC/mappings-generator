@@ -967,6 +967,9 @@ public class MappingsGenerator {
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
             bedrockIdentifier = bedrockIdentifier.replace("stone_slab", "stone_block_slab");
         }
+        if (bedrockIdentifier.startsWith("double_stone_block_slab")) {
+            bedrockIdentifier = bedrockIdentifier.replace("double_stone_block_slab", "stone_block_slab");
+        }
         object.addProperty("bedrock_identifier", "minecraft:" + bedrockIdentifier);
 
         if (!VALID_BEDROCK_ITEMS.contains("minecraft:" + bedrockIdentifier)) {
