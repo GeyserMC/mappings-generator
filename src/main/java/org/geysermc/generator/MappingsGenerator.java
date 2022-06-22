@@ -716,7 +716,8 @@ public class MappingsGenerator {
                 }
             } catch (Throwable e) {
                 // Ignore; this means the block has extended behavior we have to implement manually
-                // e.printStackTrace();
+                System.out.println("Failed to test interactions for " + blockStateToString(state) + " due to");
+                e.printStackTrace(System.out);
             }
         }
 
