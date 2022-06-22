@@ -728,7 +728,7 @@ public class MappingsGenerator {
         try {
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonWriter writer = new JsonWriter(new FileWriter(mappings));
-            writer.setIndent("\t"); // Tabs just to keep the diff nice for older mappings
+            writer.setIndent("\t");
             builder.create().toJson(new InteractionData(alwaysConsume, requiresMayBuild), InteractionData.class, writer);
             writer.close();
             System.out.println("Finished interaction writing process!");
