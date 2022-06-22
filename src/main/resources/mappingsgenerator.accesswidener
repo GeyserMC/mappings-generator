@@ -5,8 +5,7 @@ accessible field net/minecraft/world/level/material/MaterialColor MATERIAL_COLOR
 # Allow us to access the formatter used for each statistic
 accessible field net/minecraft/stats/Stat formatter Lnet/minecraft/stats/StatFormatter;
 
-
-# Allow us to set various field required  interaction data
+# Allows us to set various field required to generate interaction data
 mutable field net/minecraft/world/level/Level isClientSide Z
 mutable field net/minecraft/world/level/Level random Lnet/minecraft/util/RandomSource;
 accessible field net/minecraft/world/entity/Entity position Lnet/minecraft/world/phys/Vec3;
