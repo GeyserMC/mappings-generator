@@ -23,6 +23,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.MaterialColor;
@@ -202,7 +203,6 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg","minecraft:zombie_pigman_spawn_egg");
 
                 // Item replacements
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:globe_banner_pattern", "minecraft:banner_pattern");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trader_llama_spawn_egg", "minecraft:llama_spawn_egg");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
@@ -630,6 +630,8 @@ public class MappingsGenerator {
         } else if (trimmedIdentifier.contains("candle")) {
             // Resetting old identifiers
             bedrockIdentifier = trimmedIdentifier;
+        } else if (identifier.equals("minecraft:deepslate_redstone_ore[lit=true]")) {
+            bedrockIdentifier = "minecraft:lit_deepslate_redstone_ore";
         } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double")) {
             // Fixes 1.16 double slabs
             if (blockEntry != null) {
@@ -921,6 +923,10 @@ public class MappingsGenerator {
             if (firstStateId != lastStateId) {
                 object.addProperty("lastBlockRuntimeId", lastStateId);
             }
+
+            if (block instanceof FlowerBlock) {
+                object.addProperty("has_suspicious_stew_effect", true);
+            }
         }
         if (stackSize != 64) {
             object.addProperty("stack_size", stackSize);
@@ -980,6 +986,11 @@ public class MappingsGenerator {
                 object.add("repair_materials", repairMaterials);
             }
         }
+
+        if (item instanceof DyeItem dyeItem) {
+            object.addProperty("dye_color", dyeItem.getDyeColor().getId());
+        }
+
         return object;
     }
 
