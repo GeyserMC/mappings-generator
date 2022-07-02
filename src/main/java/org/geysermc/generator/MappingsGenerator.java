@@ -948,7 +948,6 @@ public class MappingsGenerator {
             Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[1]::equals).findAny();
             if (optToolType.isPresent()) {
                 object.addProperty("armor_type", optToolType.get());
-                object.addProperty("armor_tier", identifierSplit[0]);
             }
         } else {
             Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[0]::equals).findAny();
