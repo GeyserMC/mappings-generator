@@ -1,8 +1,8 @@
 import java.net.URL
 import java.nio.channels.Channels
 
-val javaMinecraftVersion = "1.19-pre3"
-val bedrockResourcePackVersion = "1.19.0.34"
+val javaMinecraftVersion = "1.19"
+val bedrockResourcePackVersion = "1.19.10.3"
 
 group = "org.geysermc.mappings-generator"
 version = "1.1.0"
