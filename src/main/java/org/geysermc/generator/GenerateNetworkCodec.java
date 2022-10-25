@@ -15,21 +15,21 @@ import java.io.IOException;
 
 public class GenerateNetworkCodec {
     public static void main(String[] args) {
-		Util.initialize();
+        Util.initialize();
         RegistryAccess.Frozen registryAccess = RegistryAccess.fromRegistryOfRegistries(BuiltinRegistries.REGISTRY).freeze();
 
-		DataResult<Tag> dataResult = RegistrySynchronization.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryAccess);
-		dataResult.error().ifPresent((action) -> {
-			throw new EncoderException("Failed to encode: " + action.message() + " " + registryAccess);
-		});
-		CompoundTag tag = (CompoundTag) dataResult.result().get();
+        DataResult<Tag> dataResult = RegistrySynchronization.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryAccess);
+        dataResult.error().ifPresent((action) -> {
+            throw new EncoderException("Failed to encode: " + action.message() + " " + registryAccess);
+        });
+        CompoundTag tag = (CompoundTag) dataResult.result().get();
 
-		try {
-			NbtIo.writeCompressed(tag, new File("./networkCodec.nbt"));
-			System.out.println("Finished writing networkCodec.nbt!");
-		} catch (IOException e) {
-			System.out.println("Failed to write networkCodec.nbt!");
-			e.printStackTrace();
-		}
-	}
+        try {
+            NbtIo.writeCompressed(tag, new File("./networkCodec.nbt"));
+            System.out.println("Finished writing networkCodec.nbt!");
+        } catch (IOException e) {
+            System.out.println("Failed to write networkCodec.nbt!");
+            e.printStackTrace();
+        }
+    }
 }
