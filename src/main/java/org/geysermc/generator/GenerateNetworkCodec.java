@@ -3,6 +3,8 @@ package org.geysermc.generator;
 import com.mojang.serialization.DataResult;
 import io.netty.handler.codec.EncoderException;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.RegistrySynchronization;
+import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
@@ -12,11 +14,11 @@ import java.io.File;
 import java.io.IOException;
 
 public class GenerateNetworkCodec {
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 		Util.initialize();
-		RegistryAccess.Frozen registryAccess = RegistryAccess.BUILTIN.get();
+        RegistryAccess.Frozen registryAccess = RegistryAccess.fromRegistryOfRegistries(BuiltinRegistries.REGISTRY).freeze();
 
-		DataResult<Tag> dataResult = RegistryAccess.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryAccess);
+		DataResult<Tag> dataResult = RegistrySynchronization.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryAccess);
 		dataResult.error().ifPresent((action) -> {
 			throw new EncoderException("Failed to encode: " + action.message() + " " + registryAccess);
 		});
