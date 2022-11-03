@@ -14,5 +14,6 @@ public class Main {
         generator.generateEnchantments();
         generator.generateParticles();
         generator.generateInteractionData();
+        generator.generateBlockBreakSpeeds();
     }
 }

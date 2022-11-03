@@ -20,7 +20,9 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.Main;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -44,6 +46,7 @@ import org.reflections.Reflections;
 
 import java.awt.*;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
@@ -738,6 +741,58 @@ public class MappingsGenerator {
         }
     }
 
+    public void generateBlockBreakSpeeds() {
+        try {
+            File mappings = new File("mappings/block_break_speeds.json");
+            if (!mappings.exists()) {
+                System.out.println("Could not find mappings submodule! Did you clone them?");
+                return;
+            }
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            JsonObject rootObject = new JsonObject();
+
+            for (int i = 0; i < Registry.ITEM.size(); i++) {
+                Item item = Registry.ITEM.byId(i);
+                String itemName = Registry.ITEM.getKey(item).getPath();
+
+                JsonElement breakSpeeds = getItemBreakableBlocks(item);
+                if (breakSpeeds == null) {
+                    continue;
+                }
+
+                if (itemName.equals("shears")) {
+                    rootObject.add("shears", breakSpeeds);
+                } else {
+                    String type = itemName.split("_")[1];
+                    JsonObject typeObject;
+                    if (rootObject.has(type)) {
+                        typeObject = rootObject.getAsJsonObject(type);
+                    } else {
+                        typeObject = new JsonObject();
+                    }
+
+                    String tier = itemName.split("_")[0];
+                    if (tier.equals("golden")) {
+                        tier = "gold";
+                    }
+                    if (typeObject.has(tier)) {
+                        throw new RuntimeException("There is only one possible item for " + itemName + "!");
+                    }
+                    typeObject.add(tier, breakSpeeds);
+                    rootObject.add(type, typeObject);
+                }
+            }
+
+            FileWriter writer = new FileWriter(mappings);
+            builder.create().toJson(rootObject, writer);
+            writer.close();
+            System.out.println("Finished block break speeds writing process!");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public JsonObject getRemapBlock(BlockState state, String identifier) {
         JsonObject object = new JsonObject();
         BlockEntry blockEntry = BLOCK_ENTRIES.get(identifier);
@@ -1142,6 +1197,14 @@ public class MappingsGenerator {
             Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[1]::equals).findAny();
             if (optToolType.isPresent()) {
                 object.addProperty("armor_type", optToolType.get());
+
+                String tier = identifierSplit[0];
+                if (tier.equals("golden")) {
+                    tier = "gold";
+                } else if (tier.equals("chainmail")) {
+                    tier = "chain";
+                }
+                object.addProperty("armor_tier", tier);
             }
         } else {
             Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[0]::equals).findAny();
@@ -1258,5 +1321,88 @@ public class MappingsGenerator {
             return identifier.replace("cut", "double_cut");
         }
         return identifier.replace("_slab", "_double_slab");
+    }
+
+    private JsonElement getItemBreakableBlocks(Item item) {
+        if (item instanceof SwordItem || item instanceof ShearsItem) {
+            Map<String, Float> breakableBlocks = new HashMap<>();
+
+            for (BlockState blockState : this.getAllStates()) {
+                float breakSpeed = item.getDestroySpeed(ItemStack.EMPTY, blockState);
+                if (breakSpeed > 1.0F) {
+                    breakableBlocks.put(Registry.BLOCK.getKey(blockState.getBlock()).toString(), breakSpeed);
+                }
+            }
+
+            if (breakableBlocks.size() > 0) {
+                return GSON.toJsonTree(breakableBlocks);
+            }
+        } else if (item instanceof DiggerItem diggerItem) { //This has to be separate from the sword and the shears because the digger item uses tags
+            try {
+                Field breakSpeedField = DiggerItem.class.getDeclaredField("speed");
+                breakSpeedField.setAccessible(true);
+                float breakSpeed = breakSpeedField.getFloat(diggerItem);
+
+                Field blocksField = DiggerItem.class.getDeclaredField("blocks");
+                blocksField.setAccessible(true);
+                TagKey<Block> blocks = (TagKey<Block>) blocksField.get(diggerItem);
+
+                Map<String, Float> breakableBlocks = new HashMap<>();
+                for (String id : this.readBlockTagList(blocks.location().getPath())) {
+                    breakableBlocks.put(id, breakSpeed);
+                }
+                int toolLevel = diggerItem.getTier().getLevel();
+
+                if (toolLevel < 1) {
+                    for (String id : this.readBlockTagList("needs_stone_tool")) {
+                        breakableBlocks.remove(id);
+                    }
+                }
+                if (toolLevel < 2) {
+                    for (String id : this.readBlockTagList("needs_iron_tool")) {
+                        breakableBlocks.remove(id);
+                    }
+                }
+                if (toolLevel < 3) {
+                    for (String id : this.readBlockTagList("needs_diamond_tool")) {
+                        breakableBlocks.remove(id);
+                    }
+                }
+
+                if (breakableBlocks.size() > 0) {
+                    return GSON.toJsonTree(breakableBlocks);
+                }
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+            }
+        }
+
+        return null;
+    }
+
+    private List<String> readBlockTagList(String path) {
+        List<String> minable = new ArrayList<>();
+
+        InputStream stream = Main.class.getClassLoader().getResourceAsStream("data/minecraft/tags/blocks/" + path + ".json");
+        if (stream == null) {
+            System.out.println("Unable to find " + path + ".json");
+            return minable;
+        }
+
+        try (InputStreamReader reader = new InputStreamReader(stream)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonArray values = json.getAsJsonArray("values");
+            for (JsonElement value : values) {
+                String tag = value.getAsString();
+                if (tag.startsWith("#")) {
+                    minable.addAll(this.readBlockTagList(tag.substring(11))); // Remove the #minecraft: part
+                } else {
+                    minable.add(tag);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return minable;
     }
 }
