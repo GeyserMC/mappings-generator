@@ -4,10 +4,10 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Lifecycle;
 import io.netty.handler.codec.EncoderException;
 import net.minecraft.core.MappedRegistry;
-import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.RegistrySynchronization;
 import net.minecraft.core.WritableRegistry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
@@ -24,12 +24,12 @@ import java.util.List;
 public class GenerateNetworkCodec {
     public static void main(String[] args) {
         Util.initialize();
-        WritableRegistry<ChatType> chatTypeRegistry = new MappedRegistry<>(Registry.CHAT_TYPE_REGISTRY, Lifecycle.experimental());
-        WritableRegistry<DimensionType> dimensionTypeRegistry = new MappedRegistry<>(Registry.DIMENSION_TYPE_REGISTRY, Lifecycle.experimental());
-        WritableRegistry<Biome> biomeRegistry = new MappedRegistry<>(Registry.BIOME_REGISTRY, Lifecycle.experimental());
-        VanillaRegistries.createLookup().lookup(Registry.CHAT_TYPE_REGISTRY).get().listElements().toList().forEach(chatType -> chatTypeRegistry.register(chatType.key(), chatType.value(), Lifecycle.experimental()));
-        VanillaRegistries.createLookup().lookup(Registry.DIMENSION_TYPE_REGISTRY).get().listElements().toList().forEach(dimensionType -> dimensionTypeRegistry.register(dimensionType.key(), dimensionType.value(), Lifecycle.experimental()));
-        VanillaRegistries.createLookup().lookup(Registry.BIOME_REGISTRY).get().listElements().toList().forEach(biome -> biomeRegistry.register(biome.key(), biome.value(), Lifecycle.experimental()));
+        WritableRegistry<ChatType> chatTypeRegistry = new MappedRegistry<>(Registries.CHAT_TYPE, Lifecycle.experimental());
+        WritableRegistry<DimensionType> dimensionTypeRegistry = new MappedRegistry<>(Registries.DIMENSION_TYPE, Lifecycle.experimental());
+        WritableRegistry<Biome> biomeRegistry = new MappedRegistry<>(Registries.BIOME, Lifecycle.experimental());
+        VanillaRegistries.createLookup().lookup(Registries.CHAT_TYPE).get().listElements().toList().forEach(chatType -> chatTypeRegistry.register(chatType.key(), chatType.value(), Lifecycle.experimental()));
+        VanillaRegistries.createLookup().lookup(Registries.DIMENSION_TYPE).get().listElements().toList().forEach(dimensionType -> dimensionTypeRegistry.register(dimensionType.key(), dimensionType.value(), Lifecycle.experimental()));
+        VanillaRegistries.createLookup().lookup(Registries.BIOME).get().listElements().toList().forEach(biome -> biomeRegistry.register(biome.key(), biome.value(), Lifecycle.experimental()));
         RegistryAccess registryAccess = new RegistryAccess.ImmutableRegistryAccess(List.of(chatTypeRegistry, dimensionTypeRegistry, biomeRegistry)).freeze();
 
         DataResult<Tag> dataResult = RegistrySynchronization.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryAccess);
