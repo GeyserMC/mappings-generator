@@ -742,12 +742,6 @@ public class MappingsGenerator {
         BlockEntry blockEntry = BLOCK_ENTRIES.get(identifier);
         String trimmedIdentifier = identifier.split("\\[")[0];
 
-        JsonElement bedrockStates = blockEntry != null ? blockEntry.getBedrockStates() : null;
-        if (bedrockStates == null) {
-            bedrockStates = new JsonObject();
-        }
-        JsonObject statesObject = bedrockStates.getAsJsonObject();
-
         String bedrockIdentifier;
         // All walls before 1.16 use the same identifier (cobblestone_wall)
         if (trimmedIdentifier.endsWith("_wall") && isSensibleWall(trimmedIdentifier)) {
@@ -932,7 +926,12 @@ public class MappingsGenerator {
             }
         }
 
+        JsonElement bedrockStates = blockEntry != null ? blockEntry.getBedrockStates() : null;
+        if (bedrockStates == null) {
+            bedrockStates = new JsonObject();
+        }
 
+        JsonObject statesObject = bedrockStates.getAsJsonObject();
         if (blockEntry != null && STATES.get(blockEntry.getBedrockIdentifier()) != null) {
             // Prevent ConcurrentModificationException
             List<String> toRemove = new ArrayList<>();
