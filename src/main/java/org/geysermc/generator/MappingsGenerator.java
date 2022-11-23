@@ -810,6 +810,8 @@ public class MappingsGenerator {
             }
         } else if (trimmedIdentifier.endsWith("moving_piston")) {
             bedrockIdentifier = "minecraft:moving_block";
+        } else if (trimmedIdentifier.endsWith("note_block")) {
+            bedrockIdentifier = "minecraft:noteblock";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
