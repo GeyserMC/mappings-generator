@@ -822,6 +822,8 @@ public class MappingsGenerator {
         } else if (trimmedIdentifier.endsWith("bamboo_mosaic")) {
             bedrockIdentifier = "minecraft:planks";
             statesObject.addProperty("wood_type", "oak");
+        } else if (trimmedIdentifier.endsWith("chiseled_bookshelf")) {
+            bedrockIdentifier = "minecraft:bookshelf";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -866,7 +868,9 @@ public class MappingsGenerator {
         }
 
         if (state.hasBlockEntity()) {
-            object.addProperty("has_block_entity", true);
+            if (!bedrockIdentifier.equals("minecraft:bookshelf")) {
+                object.addProperty("has_block_entity", true);
+            }
         }
 
         try {
