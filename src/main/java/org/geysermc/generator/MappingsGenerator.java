@@ -816,61 +816,6 @@ public class MappingsGenerator {
             }
         } else if (trimmedIdentifier.endsWith("moving_piston")) {
             bedrockIdentifier = "minecraft:moving_block";
-        } else if (trimmedIdentifier.endsWith("bamboo_planks")) {
-            bedrockIdentifier = "minecraft:planks";
-            statesObject.addProperty("wood_type", "oak");
-        } else if (trimmedIdentifier.endsWith("bamboo_mosaic")) {
-            bedrockIdentifier = "minecraft:planks";
-            statesObject.addProperty("wood_type", "oak");
-        } else if (trimmedIdentifier.endsWith("chiseled_bookshelf")) {
-            bedrockIdentifier = "minecraft:bookshelf";
-        } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
-            if (trimmedIdentifier.contains("_wall_")) {
-                bedrockIdentifier = trimmedIdentifier.replace("_wall_", "_");
-                bedrockIdentifier = bedrockIdentifier.replace("hanging", "wall");
-            } else {
-                bedrockIdentifier = trimmedIdentifier.replace("hanging", "standing");
-            }
-
-            if (bedrockIdentifier.contains("oak")) {
-                if (bedrockIdentifier.contains("dark")) {
-                    bedrockIdentifier = bedrockIdentifier.replace("dark_oak", "darkoak");
-                } else {
-                    bedrockIdentifier = bedrockIdentifier.replace("oak_", "");
-                }
-            } else if (trimmedIdentifier.contains("bamboo")) {
-                bedrockIdentifier = bedrockIdentifier.replace("bamboo_", ""); // just do oak instead
-            }
-
-            statesObject.addProperty("pick_item", bedrockIdentifier);
-        } else if (trimmedIdentifier.endsWith("bamboo_wall_sign")) {
-            bedrockIdentifier = "minecraft:wall_sign";
-        } else if (trimmedIdentifier.endsWith("bamboo_sign")) {
-            bedrockIdentifier = "minecraft:standing_sign";
-        } else if (trimmedIdentifier.endsWith("bamboo_pressure_plate")) {
-            bedrockIdentifier = "minecraft:wooden_pressure_plate";
-        } else if (trimmedIdentifier.endsWith("bamboo_trapdoor")) {
-            bedrockIdentifier = "minecraft:trapdoor";
-        } else if (trimmedIdentifier.endsWith("bamboo_button")) {
-            bedrockIdentifier = "minecraft:wooden_button";
-        } else if (trimmedIdentifier.endsWith("bamboo_fence")) {
-            bedrockIdentifier = "minecraft:fence";
-        } else if (trimmedIdentifier.endsWith("bamboo_fence_gate")) {
-            bedrockIdentifier = "minecraft:fence_gate";
-        } else if (trimmedIdentifier.endsWith("bamboo_door")) {
-            bedrockIdentifier = "minecraft:wooden_door";
-        } else if (trimmedIdentifier.endsWith("bamboo_slab")) {
-            bedrockIdentifier = "minecraft:wooden_slab";
-        } else if (trimmedIdentifier.endsWith("bamboo_mosaic_slab")) {
-            bedrockIdentifier = "minecraft:wooden_slab";
-        } else if (trimmedIdentifier.endsWith("bamboo_double_slab")) {
-            bedrockIdentifier = "minecraft:double_wooden_slab";
-        } else if (trimmedIdentifier.endsWith("bamboo_mosaic_double_slab")) {
-            bedrockIdentifier = "minecraft:double_wooden_slab";
-        } else if (trimmedIdentifier.endsWith("bamboo_mosaic_stairs")) {
-            bedrockIdentifier = "minecraft:oak_stairs";
-        } else if (trimmedIdentifier.endsWith("bamboo_stairs")) {
-            bedrockIdentifier = "minecraft:oak_stairs";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
