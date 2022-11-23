@@ -1,6 +1,6 @@
 package org.geysermc.generator;
 
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 
@@ -11,9 +11,9 @@ public class GenerateMCProtocolLibSoundEnum {
     public static void main(String[] args) {
         Util.initialize();
 
-        for (int i = 0; i < Registry.SOUND_EVENT.size(); i++) {
-            SoundEvent soundEvent = Registry.SOUND_EVENT.byId(i);
-            ResourceLocation resourceLocation = Registry.SOUND_EVENT.getKey(soundEvent);
+        for (int i = 0; i < BuiltInRegistries.SOUND_EVENT.size(); i++) {
+            SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.byId(i);
+            ResourceLocation resourceLocation = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent);
 
             String value = resourceLocation.getPath().replace("minecraft:", "");
             String enumName = value.replace(".", "_")

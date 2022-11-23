@@ -15,9 +15,8 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleType;
-import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -226,17 +225,17 @@ public class MappingsGenerator {
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
-            for (int i = 0; i < Registry.ITEM.size(); i++) {
-                Item value = Registry.ITEM.byId(i);
-                ResourceLocation key = Registry.ITEM.getKey(value);
+            for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
+                Item value = BuiltInRegistries.ITEM.byId(i);
+                ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
                 if (key.getPath().endsWith("planks")) {
                     ALL_PLANKS.add(key.toString());
                 }
             }
 
-            for (int i = 0; i < Registry.ITEM.size(); i++) {
-                Item value = Registry.ITEM.byId(i);
-                String key = Registry.ITEM.getKey(value).toString();
+            for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
+                Item value = BuiltInRegistries.ITEM.byId(i);
+                String key = BuiltInRegistries.ITEM.getKey(value).toString();
                 rootObject.add(key, getRemapItem(key, value, Block.byItem(value), value.getMaxStackSize()));
             }
 
@@ -287,9 +286,9 @@ public class MappingsGenerator {
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
-            for (int i = 0; i < Registry.SOUND_EVENT.size(); i++) {
-                SoundEvent soundEvent = Registry.SOUND_EVENT.byId(i);
-                ResourceLocation key = Registry.SOUND_EVENT.getKey(soundEvent);
+            for (int i = 0; i < BuiltInRegistries.SOUND_EVENT.size(); i++) {
+                SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.byId(i);
+                ResourceLocation key = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent);
 
                 String path = key.getPath();
                 SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
@@ -308,7 +307,7 @@ public class MappingsGenerator {
                 // Auto map place block sounds
                 if (soundEntry.getBedrockMapping().isEmpty() && path.startsWith("block") && path.endsWith("place")) {
                     if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
-                        Block block = Registry.BLOCK.get(new ResourceLocation("minecraft:" + path.split("\\.")[1]));
+                        Block block = BuiltInRegistries.BLOCK.get(new ResourceLocation("minecraft:" + path.split("\\.")[1]));
                         soundEntry.setBedrockMapping("PLACE");
                         if (block != Blocks.AIR) {
                             soundEntry.setIdentifier(blockStateToString(block.defaultBlockState()));
@@ -389,7 +388,7 @@ public class MappingsGenerator {
             JsonObject bedrockBiomes = JsonParser.parseReader(new FileReader(biomeIdMap)).getAsJsonObject();
 
             int i = -1;
-            for (Map.Entry<ResourceKey<Biome>, Biome> entry : BuiltinRegistries.BIOME.entrySet()) {
+            for (Map.Entry<ResourceKey<Biome>, Biome> entry : new HashMap<ResourceKey<Biome>, Biome>().entrySet()) {
                 i++;
                 JsonElement biomeId = bedrockBiomes.get(entry.getKey().location().getPath());
                 if (biomeId == null) {
@@ -503,32 +502,32 @@ public class MappingsGenerator {
     public void generateEnchantments() {
         try {
             Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
-            for (int id = 0; id < Registry.ENCHANTMENT.size(); id++) {
-                Enchantment enchantment = Registry.ENCHANTMENT.byId(id);
+            for (int id = 0; id < BuiltInRegistries.ENCHANTMENT.size(); id++) {
+                Enchantment enchantment = BuiltInRegistries.ENCHANTMENT.byId(id);
 
                 String rarity = enchantment.getRarity().toString().toLowerCase();
                 int maxLevel = enchantment.getMaxLevel();
                 List<String> incompatibleEnchantments = new ArrayList<>();
                 List<String> validItems = new ArrayList<>();
-                for (int id2 = 0; id2 < Registry.ENCHANTMENT.size(); id2++) {
-                    Enchantment enchantment2 = Registry.ENCHANTMENT.byId(id2);
+                for (int id2 = 0; id2 < BuiltInRegistries.ENCHANTMENT.size(); id2++) {
+                    Enchantment enchantment2 = BuiltInRegistries.ENCHANTMENT.byId(id2);
                     if (enchantment != enchantment2 && !enchantment.isCompatibleWith(enchantment2)) {
-                        incompatibleEnchantments.add(Registry.ENCHANTMENT.getKey(enchantment2).toString());
+                        incompatibleEnchantments.add(BuiltInRegistries.ENCHANTMENT.getKey(enchantment2).toString());
                     }
                 }
                 if (incompatibleEnchantments.isEmpty()) {
                     incompatibleEnchantments = null;
                 }
                 // Super inefficient, but I don't think there is a better way
-                for (int i = 0; i < Registry.ITEM.size(); i++) {
-                    Item value = Registry.ITEM.byId(i);
-                    ResourceLocation key = Registry.ITEM.getKey(value);
+                for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
+                    Item value = BuiltInRegistries.ITEM.byId(i);
+                    ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
                     ItemStack itemStack = new ItemStack(value);
                     if (enchantment.canEnchant(itemStack)) {
                         validItems.add(key.getNamespace() + ":" + key.getPath());
                     }
                 }
-                enchantmentMap.put(Registry.ENCHANTMENT.getKey(enchantment).toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
+                enchantmentMap.put(BuiltInRegistries.ENCHANTMENT.getKey(enchantment).toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
@@ -585,12 +584,12 @@ public class MappingsGenerator {
 
         for (Map.Entry<String, ParticleEntry> entry : particles.entrySet()) {
             ResourceLocation location = new ResourceLocation("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
-            if (Registry.PARTICLE_TYPE.get(location) == null) {
+            if (BuiltInRegistries.PARTICLE_TYPE.get(location) == null) {
                 System.out.println("Particle of type " + entry.getKey() + " does not exist in this jar! It will be removed.");
             }
         }
 
-        for (Map.Entry<ResourceKey<ParticleType<?>>, ParticleType<?>> entry : Registry.PARTICLE_TYPE.entrySet()) {
+        for (Map.Entry<ResourceKey<ParticleType<?>>, ParticleType<?>> entry : BuiltInRegistries.PARTICLE_TYPE.entrySet()) {
             String enumName = entry.getKey().location().getPath().toUpperCase(Locale.ROOT);
             ParticleEntry geyserParticle = particles.computeIfAbsent(enumName, ($) -> new ParticleEntry());
             if (geyserParticle.cloudburstLevelEventType != null) {
@@ -717,7 +716,7 @@ public class MappingsGenerator {
             } catch (Throwable e) {
                 // Ignore; this means the block has extended behavior we have to implement manually
                 System.out.println("Failed to test interactions for " + blockStateToString(state) + " due to");
-                e.printStackTrace(System.out);
+                //e.printStackTrace(System.out);
             }
         }
 
@@ -742,6 +741,12 @@ public class MappingsGenerator {
         JsonObject object = new JsonObject();
         BlockEntry blockEntry = BLOCK_ENTRIES.get(identifier);
         String trimmedIdentifier = identifier.split("\\[")[0];
+
+        JsonElement bedrockStates = blockEntry != null ? blockEntry.getBedrockStates() : null;
+        if (bedrockStates == null) {
+            bedrockStates = new JsonObject();
+        }
+        JsonObject statesObject = bedrockStates.getAsJsonObject();
 
         String bedrockIdentifier;
         // All walls before 1.16 use the same identifier (cobblestone_wall)
@@ -811,6 +816,12 @@ public class MappingsGenerator {
             }
         } else if (trimmedIdentifier.endsWith("moving_piston")) {
             bedrockIdentifier = "minecraft:moving_block";
+        } else if (trimmedIdentifier.endsWith("bamboo_planks")) {
+            bedrockIdentifier = "minecraft:planks";
+            statesObject.addProperty("wood_type", "oak");
+        } else if (trimmedIdentifier.endsWith("bamboo_mosaic")) {
+            bedrockIdentifier = "minecraft:planks";
+            statesObject.addProperty("wood_type", "oak");
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -863,7 +874,7 @@ public class MappingsGenerator {
             if (!trimmedIdentifier.equals("minecraft:water") && !trimmedIdentifier.equals("minecraft:lava") && !trimmedIdentifier.equals("minecraft:fire")) {
                 Block block = state.getBlock();
                 ItemStack pickStack = block.getCloneItemStack(null, null, state);
-                String pickStackIdentifier = Registry.ITEM.getKey(pickStack.getItem()).toString();
+                String pickStackIdentifier = BuiltInRegistries.ITEM.getKey(pickStack.getItem()).toString();
                 if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                     object.addProperty("pick_item", pickStackIdentifier);
                 }
@@ -923,12 +934,7 @@ public class MappingsGenerator {
             }
         }
 
-        JsonElement bedrockStates = blockEntry != null ? blockEntry.getBedrockStates() : null;
-        if (bedrockStates == null) {
-            bedrockStates = new JsonObject();
-        }
 
-        JsonObject statesObject = bedrockStates.getAsJsonObject();
         if (blockEntry != null && STATES.get(blockEntry.getBedrockIdentifier()) != null) {
             // Prevent ConcurrentModificationException
             List<String> toRemove = new ArrayList<>();
@@ -1172,7 +1178,7 @@ public class MappingsGenerator {
             }
             if (repairIngredient != null) {
                 for (ItemStack repairItem : repairIngredient.getItems()) {
-                    repairMaterials.add(Registry.ITEM.getKey(repairItem.getItem()).toString());
+                    repairMaterials.add(BuiltInRegistries.ITEM.getKey(repairItem.getItem()).toString());
                 }
             }
             if (repairMaterials.size() > 0) {
@@ -1189,13 +1195,13 @@ public class MappingsGenerator {
 
     public List<BlockState> getAllStates() {
         List<BlockState> states = new ArrayList<>();
-        Registry.BLOCK.forEach(block -> states.addAll(block.getStateDefinition().getPossibleStates()));
+        BuiltInRegistries.BLOCK.forEach(block -> states.addAll(block.getStateDefinition().getPossibleStates()));
         return states.stream().sorted(Comparator.comparingInt(Block::getId)).collect(Collectors.toList());
     }
 
     private String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(Registry.BLOCK.getKey(blockState.getBlock()).toString());
+        stringBuilder.append(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()).toString());
         if (!blockState.getValues().isEmpty()) {
             stringBuilder.append('[');
             stringBuilder.append(blockState.getValues().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
