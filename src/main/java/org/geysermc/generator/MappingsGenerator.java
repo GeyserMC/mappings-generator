@@ -715,7 +715,7 @@ public class MappingsGenerator {
                 }
             } catch (Throwable e) {
                 // Ignore; this means the block has extended behavior we have to implement manually
-                System.out.println("Failed to test interactions for " + blockStateToString(state) + " due to");
+                //System.out.println("Failed to test interactions for " + blockStateToString(state) + " due to");
                 //e.printStackTrace(System.out);
             }
         }
@@ -779,7 +779,7 @@ public class MappingsGenerator {
             bedrockIdentifier = trimmedIdentifier;
         } else if (identifier.equals("minecraft:deepslate_redstone_ore[lit=true]")) {
             bedrockIdentifier = "minecraft:lit_deepslate_redstone_ore";
-        } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double")) {
+        } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double") && !identifier.contains("bamboo")) {
             // Fixes 1.16 double slabs
             if (blockEntry != null) {
                 if (blockEntry.getBedrockIdentifier().contains("double") && !blockEntry.getBedrockIdentifier().contains("copper")) {
@@ -824,6 +824,53 @@ public class MappingsGenerator {
             statesObject.addProperty("wood_type", "oak");
         } else if (trimmedIdentifier.endsWith("chiseled_bookshelf")) {
             bedrockIdentifier = "minecraft:bookshelf";
+        } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
+            if (trimmedIdentifier.contains("_wall_")) {
+                bedrockIdentifier = trimmedIdentifier.replace("_wall_", "_");
+                bedrockIdentifier = bedrockIdentifier.replace("hanging", "wall");
+            } else {
+                bedrockIdentifier = trimmedIdentifier.replace("hanging", "standing");
+            }
+
+            if (bedrockIdentifier.contains("oak")) {
+                if (bedrockIdentifier.contains("dark")) {
+                    bedrockIdentifier = bedrockIdentifier.replace("dark_oak", "darkoak");
+                } else {
+                    bedrockIdentifier = bedrockIdentifier.replace("oak_", "");
+                }
+            } else if (trimmedIdentifier.contains("bamboo")) {
+                bedrockIdentifier = bedrockIdentifier.replace("bamboo_", ""); // just do oak instead
+            }
+
+            statesObject.addProperty("pick_item", bedrockIdentifier);
+        } else if (trimmedIdentifier.endsWith("bamboo_wall_sign")) {
+            bedrockIdentifier = "minecraft:wall_sign";
+        } else if (trimmedIdentifier.endsWith("bamboo_sign")) {
+            bedrockIdentifier = "minecraft:standing_sign";
+        } else if (trimmedIdentifier.endsWith("bamboo_pressure_plate")) {
+            bedrockIdentifier = "minecraft:wooden_pressure_plate";
+        } else if (trimmedIdentifier.endsWith("bamboo_trapdoor")) {
+            bedrockIdentifier = "minecraft:trapdoor";
+        } else if (trimmedIdentifier.endsWith("bamboo_button")) {
+            bedrockIdentifier = "minecraft:wooden_button";
+        } else if (trimmedIdentifier.endsWith("bamboo_fence")) {
+            bedrockIdentifier = "minecraft:fence";
+        } else if (trimmedIdentifier.endsWith("bamboo_fence_gate")) {
+            bedrockIdentifier = "minecraft:fence_gate";
+        } else if (trimmedIdentifier.endsWith("bamboo_door")) {
+            bedrockIdentifier = "minecraft:wooden_door";
+        } else if (trimmedIdentifier.endsWith("bamboo_slab")) {
+            bedrockIdentifier = "minecraft:wooden_slab";
+        } else if (trimmedIdentifier.endsWith("bamboo_mosaic_slab")) {
+            bedrockIdentifier = "minecraft:wooden_slab";
+        } else if (trimmedIdentifier.endsWith("bamboo_double_slab")) {
+            bedrockIdentifier = "minecraft:double_wooden_slab";
+        } else if (trimmedIdentifier.endsWith("bamboo_mosaic_double_slab")) {
+            bedrockIdentifier = "minecraft:double_wooden_slab";
+        } else if (trimmedIdentifier.endsWith("bamboo_mosaic_stairs")) {
+            bedrockIdentifier = "minecraft:oak_stairs";
+        } else if (trimmedIdentifier.endsWith("bamboo_stairs")) {
+            bedrockIdentifier = "minecraft:oak_stairs";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -879,7 +926,7 @@ public class MappingsGenerator {
                 Block block = state.getBlock();
                 ItemStack pickStack = block.getCloneItemStack(null, null, state);
                 String pickStackIdentifier = BuiltInRegistries.ITEM.getKey(pickStack.getItem()).toString();
-                if (!pickStackIdentifier.equals(trimmedIdentifier)) {
+                if (!pickStackIdentifier.equals(trimmedIdentifier) && !object.has("pick_item")) {
                     object.addProperty("pick_item", pickStackIdentifier);
                 }
             }
@@ -911,6 +958,8 @@ public class MappingsGenerator {
                 object.addProperty("variation", 4);
             } else if (trimmedIdentifier.contains("dragon")) {
                 object.addProperty("variation", 5);
+            } else if (trimmedIdentifier.contains("piglin")) {
+                object.addProperty("variation", 2);
             }
         } else if (trimmedIdentifier.contains("_banner")) {
             String woolid = trimmedIdentifier.replace("minecraft:", "");
