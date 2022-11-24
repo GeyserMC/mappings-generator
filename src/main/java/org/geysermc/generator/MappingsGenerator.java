@@ -224,6 +224,7 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:ender_dragon_spawn_egg", "minecraft:enderman_spawn_egg");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:camel_spawn_egg", "minecraft:llama_spawn_egg");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:snow_golem_spawn_egg", "minecraft:polar_bear_spawn_egg");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:iron_golem_spawn_egg", "minecraft:wolf_spawn_egg");
 
 
             } catch (FileNotFoundException ex) {
@@ -236,7 +237,7 @@ public class MappingsGenerator {
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                 Item value = BuiltInRegistries.ITEM.byId(i);
                 ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
-                if (key.getPath().endsWith("planks")) {
+                if (key.getPath().endsWith("planks") && !key.getPath().contains("bamboo")) {
                     ALL_PLANKS.add(key.toString());
                 }
             }
@@ -1079,16 +1080,22 @@ public class MappingsGenerator {
     }
 
     public JsonObject getRemapItem(String identifier, Item item, Block block, int stackSize) {
+        String trimmedIdentifier = identifier.replace("minecraft:", "");
         JsonObject object = new JsonObject();
         ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
         // Deal with items that we replace
-        String bedrockIdentifier = switch (identifier.replace("minecraft:", "")) {
+        String bedrockIdentifier = switch (trimmedIdentifier) {
             case "knowledge_book" -> "book";
             case "tipped_arrow", "spectral_arrow" -> "arrow";
             case "debug_stick" -> "stick";
             case "furnace_minecart" -> "hopper_minecart";
             default -> JAVA_TO_BEDROCK_ITEM_OVERRIDE.getOrDefault(identifier, itemEntry.getBedrockIdentifier()).replace("minecraft:", "");
         };
+
+        if (identifier.endsWith("_hanging_sign") && !identifier.contains("bamboo")) {
+            // Todo: remove/update when bedrock gets bamboo and hanging signs
+            bedrockIdentifier = trimmedIdentifier.substring(0, trimmedIdentifier.indexOf("_hanging")) + "_sign";
+        }
 
         if (identifier.endsWith("banner")) { // Don't include banner patterns
             bedrockIdentifier = "banner";
