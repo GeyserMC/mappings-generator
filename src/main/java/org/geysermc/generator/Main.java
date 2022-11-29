@@ -8,11 +8,11 @@ public class Main {
         MappingsGenerator generator = new MappingsGenerator();
         generator.generateItems();
         generator.generateBlocks();
-        generator.generateSounds();
-        generator.generateBiomes();
-        generator.generateMapColors();
-        generator.generateEnchantments();
-        generator.generateParticles();
-        generator.generateInteractionData();
+        //generator.generateSounds();
+        //generator.generateBiomes();
+        //generator.generateMapColors();
+        //generator.generateEnchantments();
+        //generator.generateParticles();
+        //generator.generateInteractionData();
     }
 }
