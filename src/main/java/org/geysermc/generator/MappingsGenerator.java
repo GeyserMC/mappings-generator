@@ -1204,6 +1204,10 @@ public class MappingsGenerator {
             object.addProperty("dye_color", dyeItem.getDyeColor().getId());
         }
 
+        if (item.isEdible()) {
+            object.addProperty("is_edible", true);
+        }
+
         return object;
     }
 
