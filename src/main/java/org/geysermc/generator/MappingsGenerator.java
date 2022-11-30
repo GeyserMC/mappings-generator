@@ -236,7 +236,7 @@ public class MappingsGenerator {
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                 Item value = BuiltInRegistries.ITEM.byId(i);
                 ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
-                if (key.getPath().endsWith("planks") && !key.getPath().contains("bamboo")) {
+                if (key.getPath().endsWith("planks")) {
                     ALL_PLANKS.add(key.toString());
                 }
             }
@@ -781,7 +781,7 @@ public class MappingsGenerator {
             bedrockIdentifier = trimmedIdentifier;
         } else if (identifier.equals("minecraft:deepslate_redstone_ore[lit=true]")) {
             bedrockIdentifier = "minecraft:lit_deepslate_redstone_ore";
-        } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double") && !identifier.contains("bamboo")) {
+        } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double")) {
             // Fixes 1.16 double slabs
             if (blockEntry != null) {
                 if (blockEntry.getBedrockIdentifier().contains("double") && !blockEntry.getBedrockIdentifier().contains("copper")) {
@@ -820,23 +820,7 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:moving_block";
         } else if (trimmedIdentifier.endsWith("note_block")) {
             bedrockIdentifier = "minecraft:noteblock";
-        } else if (trimmedIdentifier.endsWith("bamboo_sign")) {
-            bedrockIdentifier = "minecraft:bamboo_standing_sign";
-        } else if (trimmedIdentifier.endsWith("bamboo_fence")) {
-            bedrockIdentifier = "minecraft:bamboo_fence";
-        } else if (trimmedIdentifier.endsWith("bamboo_wall_sign")) {
-            bedrockIdentifier = "minecraft:bamboo_wall_sign";
-        } else if (trimmedIdentifier.endsWith("bamboo_button")) {
-            bedrockIdentifier = "minecraft:bamboo_button";
-        } else if (trimmedIdentifier.endsWith("bamboo_stairs")) {
-            bedrockIdentifier = "minecraft:bamboo_stairs";
-        } else if (trimmedIdentifier.endsWith("bamboo_door")) {
-            bedrockIdentifier = "minecraft:bamboo_door";
-        } else if (trimmedIdentifier.endsWith("bamboo_trapdoor")) {
-            bedrockIdentifier = "minecraft:bamboo_trapdoor";
-        }
-
-        else {
+        } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
         }
@@ -1116,8 +1100,6 @@ public class MappingsGenerator {
         } else if (identifier.endsWith("_shulker_box")) {
             // Colored shulker boxes only
             bedrockIdentifier = "shulker_box";
-        } else if (identifier.endsWith("bamboo_sign")) {
-            bedrockIdentifier = "bamboo_sign";
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
