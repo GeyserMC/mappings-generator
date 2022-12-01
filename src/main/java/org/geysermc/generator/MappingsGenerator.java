@@ -820,6 +820,8 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:moving_block";
         } else if (trimmedIdentifier.endsWith("note_block")) {
             bedrockIdentifier = "minecraft:noteblock";
+        } else if (trimmedIdentifier.endsWith("chiseled_bookshelf")) {
+            bedrockIdentifier = "minecraft:chiseled_bookshelf";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -864,9 +866,7 @@ public class MappingsGenerator {
         }
 
         if (state.hasBlockEntity()) {
-            if (!bedrockIdentifier.equals("minecraft:bookshelf")) {
-                object.addProperty("has_block_entity", true);
-            }
+            object.addProperty("has_block_entity", true);
         }
 
         try {
