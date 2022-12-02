@@ -875,7 +875,7 @@ public class MappingsGenerator {
                 Block block = state.getBlock();
                 ItemStack pickStack = block.getCloneItemStack(null, null, state);
                 String pickStackIdentifier = BuiltInRegistries.ITEM.getKey(pickStack.getItem()).toString();
-                if (!pickStackIdentifier.equals(trimmedIdentifier) && !object.has("pick_item")) {
+                if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                     object.addProperty("pick_item", pickStackIdentifier);
                 }
             }
