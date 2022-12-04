@@ -67,6 +67,7 @@ public class MappingsGenerator {
     public static final Map<String, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
     public static final Map<String, SoundEntry> SOUND_ENTRIES = new HashMap<>();
+    public static final Map<String, String> FALLBACK_BIOMES = new HashMap<>();
     public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
@@ -399,27 +400,37 @@ public class MappingsGenerator {
             // Used to know if a biome is valid or not for Bedrock
             JsonObject bedrockBiomes = JsonParser.parseReader(new FileReader(biomeIdMap)).getAsJsonObject();
 
-            Map<ResourceKey<Biome>, Biome> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).get()
-                .listElements().collect(Collectors.toMap(Holder.Reference::key, Holder.Reference::value));
+            Set<ResourceLocation> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).get()
+                .listElements().map(ref -> ref.key().location()).collect(Collectors.toSet());
+
+            setupFallbackBiomes();
+
+            // Check for outdated fallback biomes
+            Set<String> biomeNames = javaBiomes.stream().map(ResourceLocation::getPath).collect(Collectors.toSet());
+            for (String javaBiome : FALLBACK_BIOMES.keySet()) {
+                if (!biomeNames.contains(javaBiome)) {
+                    System.out.println("Fallback " + javaBiome + " -> " + FALLBACK_BIOMES.get(javaBiome) + " will never be used because the java biome doesn't actually exist.");
+                }
+            }
 
             int i = -1;
-            for (Map.Entry<ResourceKey<Biome>, Biome> entry : javaBiomes.entrySet()) {
+            for (ResourceLocation javaBiome : javaBiomes) {
                 i++;
-                JsonElement biomeId = bedrockBiomes.get(entry.getKey().location().getPath());
+                JsonElement biomeId = bedrockBiomes.get(javaBiome.getPath());
                 if (biomeId == null) {
-                    String replacementBiome = getReplacementBiome(entry.getKey());
+                    String replacementBiome = FALLBACK_BIOMES.get(javaBiome.getPath());
                     if (replacementBiome != null) {
                         biomeId = bedrockBiomes.get(replacementBiome);
                         if (biomeId == null) {
                             throw new IllegalStateException("Biome ID was null when explicitly replaced for " + replacementBiome);
                         }
                     } else {
-                        System.out.println("Replacement biome required for " + entry.getKey().location().getPath() + " (ID: " + i + ")");
+                        System.out.println("Replacement biome required for " + javaBiome.getPath() + " (ID: " + i + ")");
                         continue;
                     }
                 }
 
-                biomesMap.put(entry.getKey().location().toString(), new BiomeEntry(biomeId.getAsInt()));
+                biomesMap.put(javaBiome.toString(), new BiomeEntry(biomeId.getAsInt()));
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
@@ -432,54 +443,42 @@ public class MappingsGenerator {
         }
     }
 
-    public String getReplacementBiome(ResourceKey<Biome> javaBiomeKey) {
-        return switch (javaBiomeKey.location().getPath()) {
-            // Name changes - Java -> Bedrock
-            case "mountains" -> "extreme_hills";
-            case "swamp" -> "swampland";
-            case "nether_wastes" -> "hell";
-            case "snowy_tundra" -> "ice_plains";
-            case "snowy_mountains" -> "ice_mountains";
-            case "mushroom_fields" -> "mushroom_island";
-            case "mushroom_field_shore" -> "mushroom_island_shore";
-            case "wooded_hills" -> "forest_hills";
-            case "mountain_edge" -> "extreme_hills_edge";
-            case "stone_shore" -> "stone_beach";
-            case "snowy_beach" -> "cold_beach";
-            case "dark_forest" -> "roofed_forest";
-            case "snowy_taiga" -> "cold_taiga";
-            case "snowy_taiga_hills" -> "cold_taiga_hills";
-            case "giant_tree_taiga" -> "mega_taiga";
-            case "giant_tree_taiga_hills" -> "mega_taiga_hills";
-            case "wooded_mountains" -> "extreme_hills_plus_trees";
-            case "badlands" -> "mesa";
-            case "wooded_badlands_plateau" -> "mesa_plateau_stone"; // Blame the Minecraft wiki
-            case "badlands_plateau" ->  "mesa_plateau";
-            case "desert_lakes" -> "desert_mutated";
-            case "gravelly_mountains" -> "extreme_hills_mutated";
-            case "taiga_mountains" -> "taiga_mutated";
-            case "swamp_hills" -> "swampland_mutated";
-            case "ice_spikes" -> "ice_plains_spikes";
-            case "modified_jungle" -> "jungle_mutated";
-            case "modified_jungle_edge" -> "jungle_edge_mutated";
-            case "tall_birch_forest" -> "birch_forest_mutated";
-            case "tall_birch_hills" -> "birch_forest_hills_mutated";
-            case "dark_forest_hills" -> "roofed_forest_mutated";
-            case "snowy_taiga_mountains" -> "cold_taiga_mutated";
-            case "giant_spruce_taiga" -> "redwood_taiga_mutated";
-            case "giant_spruce_taiga_hills" -> "redwood_taiga_hills_mutated";
-            case "modified_gravelly_mountains" -> "extreme_hills_plus_trees_mutated"; // Blame the Minecraft wiki
-            case "shattered_savanna" -> "savanna_mutated";
-            case "shattered_savanna_plateau" -> "savanna_plateau_mutated";
-            case "eroded_badlands" -> "mesa_bryce";
-            case "modified_wooded_badlands_plateau" -> "mesa_plateau_stone_mutated"; // Blame the Minecraft wiki
-            case "modified_badlands_plateau" -> "mesa_plateau_mutated";
-            case "soul_sand_valley" -> "soulsand_valley";
+    public void setupFallbackBiomes() {
+        // Different names:
+        FALLBACK_BIOMES.put("badlands", "mesa");
+        FALLBACK_BIOMES.put("eroded_badlands", "mesa_bryce");
+        FALLBACK_BIOMES.put("wooded_badlands", "mesa_plateau_stone");
 
-            // Biomes that don't exist on Bedrock
-            case "small_end_islands", "end_midlands", "end_highlands", "end_barrens" -> "the_end";
-            default -> null;
-        };
+        FALLBACK_BIOMES.put("nether_wastes", "hell");
+        FALLBACK_BIOMES.put("soul_sand_valley", "soulsand_valley");
+
+        FALLBACK_BIOMES.put("old_growth_birch_forest", "birch_forest_mutated");
+        FALLBACK_BIOMES.put("old_growth_pine_taiga", "mega_taiga");
+        FALLBACK_BIOMES.put("old_growth_spruce_taiga", "redwood_taiga_mutated");
+
+        FALLBACK_BIOMES.put("snowy_beach", "cold_beach");
+        FALLBACK_BIOMES.put("snowy_plains", "ice_plains");
+        FALLBACK_BIOMES.put("snowy_taiga", "cold_taiga");
+
+        FALLBACK_BIOMES.put("windswept_forest", "extreme_hills_plus_trees");
+        FALLBACK_BIOMES.put("windswept_gravelly_hills", "extreme_hills_mutated");
+        FALLBACK_BIOMES.put("windswept_hills", "extreme_hills");
+        FALLBACK_BIOMES.put("windswept_savanna", "savanna_mutated");
+
+        FALLBACK_BIOMES.put("dark_forest", "roofed_forest");
+        FALLBACK_BIOMES.put("sparse_jungle", "jungle_edge");
+        FALLBACK_BIOMES.put("ice_spikes", "ice_plains_spikes");
+        FALLBACK_BIOMES.put("mushroom_fields", "mushroom_island");
+        FALLBACK_BIOMES.put("swamp", "swampland");
+        FALLBACK_BIOMES.put("stony_shore", "stone_beach");
+
+        // Doesn't exist on bedrock:
+        FALLBACK_BIOMES.put("end_barrens", "the_end");
+        FALLBACK_BIOMES.put("end_highlands", "the_end");
+        FALLBACK_BIOMES.put("end_midlands", "the_end");
+        FALLBACK_BIOMES.put("small_end_islands", "the_end");
+
+        FALLBACK_BIOMES.put("the_void", "river"); // rather similar colours
     }
 
     public void generateMapColors() {
