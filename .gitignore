@@ -212,6 +212,17 @@ nbdist/
 
 # End of https://www.gitignore.io/api/git,java,maven,eclipse,netbeans,jetbrains+all
 
+# VSCode
+.vscode/
+
 # Minecraft server jar and obfuscation maps
 1.*-mappings.txt
 1.*-server*.jar
+
+# gradle
+.gradle/
+
+# generator
+*.log.gz
+bedrockresourcepack.zip
+map_colors.txt
