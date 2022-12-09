@@ -1,6 +1,6 @@
 package org.geysermc.generator;
 
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.StatFormatter;
@@ -16,8 +16,8 @@ public class GenerateMCProtocolLibCustomStatisticEnum {
         Util.initialize();
 
         StringBuilder finalOutput = new StringBuilder();
-        for (int i = 0; i < Registry.CUSTOM_STAT.size(); i++) {
-            ResourceLocation location = Registry.CUSTOM_STAT.byId(i);
+        for (int i = 0; i < BuiltInRegistries.CUSTOM_STAT.size(); i++) {
+            ResourceLocation location = BuiltInRegistries.CUSTOM_STAT.byId(i);
             Stat<?> stat = Stats.CUSTOM.get(location);
 
             String format;
@@ -35,7 +35,7 @@ public class GenerateMCProtocolLibCustomStatisticEnum {
             if (!format.equals("INTEGER")) {
                 finalOutput.append("(StatisticFormat.").append(format).append(")");
             }
-            if (i != (Registry.CUSTOM_STAT.size() - 1)) {
+            if (i != (BuiltInRegistries.CUSTOM_STAT.size() - 1)) {
                 finalOutput.append(",\n");
             } else {
                 finalOutput.append(";");
