@@ -31,6 +31,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -648,7 +649,8 @@ public class MappingsGenerator {
     public void generateInteractionData() {
         ClientLevel mockClientLevel = mock(ClientLevel.class);
         mockClientLevel.isClientSide = true;
-        mockClientLevel.random = RandomSource.create(); // Used by cave_vines
+        mockClientLevel.random = RandomSource.create(); // Used by cave_vines and doors
+        when(mockClientLevel.getRandom()).thenReturn(mockClientLevel.random);
 
         when(mockClientLevel.getBlockState(any())).thenReturn(Blocks.AIR.defaultBlockState());
 
@@ -733,8 +735,8 @@ public class MappingsGenerator {
                 }
             } catch (Throwable e) {
                 // Ignore; this means the block has extended behavior we have to implement manually
-                //System.out.println("Failed to test interactions for " + blockStateToString(state) + " due to");
-                //e.printStackTrace(System.out);
+                System.out.println("Failed to test interactions for " + blockStateToString(state) + " due to");
+                e.printStackTrace(System.out);
             }
         }
 
