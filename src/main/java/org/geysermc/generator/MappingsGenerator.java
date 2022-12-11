@@ -1215,6 +1215,10 @@ public class MappingsGenerator {
             object.addProperty("dye_color", dyeItem.getDyeColor().getId());
         }
 
+        if (item instanceof SpawnEggItem || item instanceof MinecartItem || item instanceof FireworkRocketItem || item instanceof BoatItem) {
+            object.addProperty("is_entity_placer", true);
+        }
+
         if (item.isEdible()) {
             object.addProperty("is_edible", true);
         }
