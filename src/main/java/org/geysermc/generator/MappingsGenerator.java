@@ -15,7 +15,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -33,8 +32,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -771,9 +768,9 @@ public class MappingsGenerator {
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
-            for (int i = 0; i < Registry.ITEM.size(); i++) {
-                Item item = Registry.ITEM.byId(i);
-                String itemName = Registry.ITEM.getKey(item).getPath();
+            for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
+                Item item = BuiltInRegistries.ITEM.byId(i);
+                String itemName = BuiltInRegistries.ITEM.getKey(item).getPath();
 
                 JsonElement breakSpeeds = getItemBreakableBlocks(item);
                 if (breakSpeeds == null) {
@@ -1369,7 +1366,7 @@ public class MappingsGenerator {
             for (BlockState blockState : this.getAllStates()) {
                 float breakSpeed = item.getDestroySpeed(ItemStack.EMPTY, blockState);
                 if (breakSpeed > 1.0F) {
-                    breakableBlocks.put(Registry.BLOCK.getKey(blockState.getBlock()).toString(), breakSpeed);
+                    breakableBlocks.put(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()).toString(), breakSpeed);
                 }
             }
 

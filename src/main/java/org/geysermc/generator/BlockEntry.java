@@ -2,6 +2,7 @@ package org.geysermc.generator;
 
 import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
