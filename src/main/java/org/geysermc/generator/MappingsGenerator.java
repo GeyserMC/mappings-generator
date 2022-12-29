@@ -221,9 +221,6 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
 
-                // Item replacements
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trader_llama_spawn_egg", "minecraft:llama_spawn_egg");
-
                 // 1.19.3
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:wither_spawn_egg", "minecraft:wither_skeleton_spawn_egg");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:ender_dragon_spawn_egg", "minecraft:enderman_spawn_egg");
@@ -1153,9 +1150,6 @@ public class MappingsGenerator {
                 object.addProperty("has_suspicious_stew_effect", true);
             }
         }
-        if (stackSize != 64) {
-            object.addProperty("stack_size", stackSize);
-        }
         String[] toolTypes = {"sword", "shovel", "pickaxe", "axe", "shears", "hoe"};
         String[] identifierSplit = identifier.split(":")[1].split("_");
         if (identifierSplit.length > 1) {
@@ -1179,7 +1173,6 @@ public class MappingsGenerator {
             optToolType.ifPresent(s -> object.addProperty("armor_type", s));
         }
         if (item.getMaxDamage() > 0) {
-            object.addProperty("max_damage", item.getMaxDamage());
             Ingredient repairIngredient = null;
             JsonArray repairMaterials = new JsonArray();
             // Some repair ingredients use item tags which are not loaded
@@ -1209,10 +1202,6 @@ public class MappingsGenerator {
             if (repairMaterials.size() > 0) {
                 object.add("repair_materials", repairMaterials);
             }
-        }
-
-        if (item instanceof DyeItem dyeItem) {
-            object.addProperty("dye_color", dyeItem.getDyeColor().getId());
         }
 
         if (item instanceof SpawnEggItem || item instanceof MinecartItem || item instanceof FireworkRocketItem || item instanceof BoatItem) {
