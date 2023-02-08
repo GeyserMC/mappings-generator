@@ -20,13 +20,15 @@ public class GenerateItemsClass {
         classOverrides.put(Items.ARROW, "ArrowItem");
         classOverrides.put(Items.MAP, "MapItem");
         classOverrides.put(Items.FILLED_MAP, "FilledMapItem");
-        List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class, PotionItem.class);
+        classOverrides.put(Items.ELYTRA, "ElytraItem");
+        classOverrides.put(Items.SHIELD, "ShieldItem");
+        List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class, PotionItem.class,
+                ArmorItem.class);
 
         for (Item item : BuiltInRegistries.ITEM) {
             StringBuilder builder = new StringBuilder("public static final ");
             String clazz = null;
 
-            String tier = null;
             for (Class<? extends Item> aClass : mirroredClasses) {
                 if (aClass.isAssignableFrom(item.getClass())) { // Ensures ThrowablePotionItem extends from PotionItem
                     clazz = aClass.getSimpleName();
@@ -48,6 +50,23 @@ public class GenerateItemsClass {
                     .append("\", ");
             if (item instanceof DyeItem) {
                 builder.append(((DyeItem) item).getDyeColor().getId())
+                        .append(", ");
+            }
+            if (item instanceof TieredItem) {
+                String tier = ((Tiers) ((TieredItem) item).getTier()).name();
+                if ("GOLD".equals(tier)) {
+                    tier = "GOLDEN";
+                } else if ("WOOD".equals(tier)) {
+                    tier = "WOODEN";
+                }
+                builder.append("ToolTier.")
+                        .append(tier)
+                        .append(", ");
+            }
+            if (item instanceof ArmorItem) {
+                String tier = ((ArmorMaterials) ((ArmorItem) item).getMaterial()).name();
+                builder.append("ArmorMaterial.")
+                        .append(tier)
                         .append(", ");
             }
 
