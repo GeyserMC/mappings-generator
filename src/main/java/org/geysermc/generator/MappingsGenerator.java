@@ -1103,7 +1103,7 @@ public class MappingsGenerator {
             default -> JAVA_TO_BEDROCK_ITEM_OVERRIDE.getOrDefault(identifier, itemEntry.getBedrockIdentifier()).replace("minecraft:", "");
         };
 
-        if (identifier.endsWith("_hanging_sign") && !identifier.contains("bamboo")) {
+        if (identifier.endsWith("_hanging_sign") && !identifier.contains("bamboo") && !identifier.contains("cherry")) {
             // Todo: remove/update when bedrock gets bamboo and hanging signs
             bedrockIdentifier = trimmedIdentifier.substring(0, trimmedIdentifier.indexOf("_hanging")) + "_sign";
         }
