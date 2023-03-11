@@ -1112,8 +1112,11 @@ public class MappingsGenerator {
             bedrockIdentifier = "banner";
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
-        } else if (identifier.endsWith("_skull") || (identifier.endsWith("_head"))) {
-            bedrockIdentifier = "skull";
+        } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
+            if (!identifier.contains("pottery")) {
+                // because of pottery_shard_skull
+                bedrockIdentifier = "skull";
+            }
         } else if (identifier.endsWith("_shulker_box")) {
             // Colored shulker boxes only
             bedrockIdentifier = "shulker_box";
