@@ -793,7 +793,7 @@ public class MappingsGenerator {
             bedrockIdentifier = trimmedIdentifier;
         } else if (identifier.equals("minecraft:deepslate_redstone_ore[lit=true]")) {
             bedrockIdentifier = "minecraft:lit_deepslate_redstone_ore";
-        } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double") && !identifier.contains("bamboo")) {
+        } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double") && !identifier.contains("bamboo") && !identifier.contains("cherry")) {
             // Fixes 1.16 double slabs
             if (blockEntry != null) {
                 if (blockEntry.getBedrockIdentifier().contains("double") && !blockEntry.getBedrockIdentifier().contains("copper")) {
@@ -832,6 +832,32 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:moving_block";
         } else if (trimmedIdentifier.endsWith("note_block")) {
             bedrockIdentifier = "minecraft:noteblock";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_sign")) {
+            bedrockIdentifier = "minecraft:standing_sign";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_wall_sign")) {
+            bedrockIdentifier = "minecraft:wall_sign";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_hanging_sign")) {
+            bedrockIdentifier = "minecraft:standing_sign";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_wall_hanging_sign")) {
+            bedrockIdentifier = "minecraft:wall_sign";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_trapdoor")) {
+            bedrockIdentifier = "minecraft:trapdoor";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_button")) {
+            bedrockIdentifier = "minecraft:wooden_button";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_stairs")) {
+            bedrockIdentifier = "minecraft:oak_stairs";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_slab")) {
+            bedrockIdentifier = "minecraft:wooden_slab";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_fence_gate")) {
+            bedrockIdentifier = "minecraft:fence_gate";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_fence")) {
+            bedrockIdentifier = "minecraft:fence";
+        } else if (trimmedIdentifier.equals("minecraft:cherry_door")) {
+            bedrockIdentifier = "minecraft:wooden_door";
+        } else if (trimmedIdentifier.equals("minecraft:pink_petals")) {
+            bedrockIdentifier = "minecraft:nether_sprouts";
+        } else if (trimmedIdentifier.equals("minecraft:decorated_pot")) {
+            bedrockIdentifier = "minecraft:flower_pot";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
