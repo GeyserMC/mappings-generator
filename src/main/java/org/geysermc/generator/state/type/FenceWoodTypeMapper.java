@@ -9,7 +9,8 @@ public class FenceWoodTypeMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {
-        if (fullIdentifier.contains("bamboo")) {
+        if (fullIdentifier.contains("bamboo") || fullIdentifier.contains("cherry")) {
+            // todo: remove when 1.20 is released
             return Pair.of("wood_type", "oak");
         }
 

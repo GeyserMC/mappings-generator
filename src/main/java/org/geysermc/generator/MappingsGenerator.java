@@ -1081,7 +1081,8 @@ public class MappingsGenerator {
             stateIdentifier = "minecraft:cobblestone_wall";
         }
 
-        if (bedrockIdentifier.startsWith("minecraft:leaves")) {
+        // todo: maybe remove cherry case when bedrock gets it
+        if (bedrockIdentifier.startsWith("minecraft:leaves") && !trimmedIdentifier.contains("cherry")) {
             String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.lastIndexOf("_"));
             if (bedrockIdentifier.endsWith("2")) {
                 statesObject.addProperty("new_leaf_type", woodType);
