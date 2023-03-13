@@ -1,6 +1,7 @@
 package org.geysermc.generator.state.type;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.geysermc.generator.MappingsGenerator;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
@@ -9,7 +10,7 @@ public class FenceWoodTypeMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {
-        if (fullIdentifier.contains("bamboo") || fullIdentifier.contains("cherry")) {
+        if (MappingsGenerator.isExperimentalWood(fullIdentifier)) {
             // todo: remove when 1.20 is released
             return Pair.of("wood_type", "oak");
         }
