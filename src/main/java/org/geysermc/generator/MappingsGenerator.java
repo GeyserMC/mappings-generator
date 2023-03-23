@@ -15,7 +15,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -31,8 +30,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -69,8 +66,71 @@ public class MappingsGenerator {
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
     public static final Map<String, SoundEntry> SOUND_ENTRIES = new HashMap<>();
     public static final Map<String, String> FALLBACK_BIOMES = new HashMap<>();
-    public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
+
+    static {
+        // Different names:
+        FALLBACK_BIOMES.put("badlands", "mesa");
+        FALLBACK_BIOMES.put("eroded_badlands", "mesa_bryce");
+        FALLBACK_BIOMES.put("wooded_badlands", "mesa_plateau_stone");
+
+        FALLBACK_BIOMES.put("nether_wastes", "hell");
+        FALLBACK_BIOMES.put("soul_sand_valley", "soulsand_valley");
+
+        FALLBACK_BIOMES.put("old_growth_birch_forest", "birch_forest_mutated");
+        FALLBACK_BIOMES.put("old_growth_pine_taiga", "mega_taiga");
+        FALLBACK_BIOMES.put("old_growth_spruce_taiga", "redwood_taiga_mutated");
+
+        FALLBACK_BIOMES.put("snowy_beach", "cold_beach");
+        FALLBACK_BIOMES.put("snowy_plains", "ice_plains");
+        FALLBACK_BIOMES.put("snowy_taiga", "cold_taiga");
+
+        FALLBACK_BIOMES.put("windswept_forest", "extreme_hills_plus_trees");
+        FALLBACK_BIOMES.put("windswept_gravelly_hills", "extreme_hills_mutated");
+        FALLBACK_BIOMES.put("windswept_hills", "extreme_hills");
+        FALLBACK_BIOMES.put("windswept_savanna", "savanna_mutated");
+
+        FALLBACK_BIOMES.put("dark_forest", "roofed_forest");
+        FALLBACK_BIOMES.put("sparse_jungle", "jungle_edge");
+        FALLBACK_BIOMES.put("ice_spikes", "ice_plains_spikes");
+        FALLBACK_BIOMES.put("mushroom_fields", "mushroom_island");
+        FALLBACK_BIOMES.put("swamp", "swampland");
+        FALLBACK_BIOMES.put("stony_shore", "stone_beach");
+
+        // Doesn't exist on bedrock:
+        FALLBACK_BIOMES.put("end_barrens", "the_end");
+        FALLBACK_BIOMES.put("end_highlands", "the_end");
+        FALLBACK_BIOMES.put("end_midlands", "the_end");
+        FALLBACK_BIOMES.put("small_end_islands", "the_end");
+        FALLBACK_BIOMES.put("the_void", "river"); // Not related to the end. river has similar colours.
+    }
+
+
+    /**
+     * Java to Bedrock block identifier overrides
+     */
+    public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
+
+    static {
+        // Certain experimental blocks that should probably be changed when 1.20 is released
+        BLOCK_OVERRIDES.put("minecraft:bamboo_slab", "minecraft:wooden_slab");
+        BLOCK_OVERRIDES.put("minecraft:bamboo_mosaic_slab", "minecraft:wooden_slab");
+        BLOCK_OVERRIDES.put("minecraft:cherry_sign", "minecraft:standing_sign");
+        BLOCK_OVERRIDES.put("minecraft:cherry_wall_sign", "minecraft:wall_sign");
+        BLOCK_OVERRIDES.put("minecraft:cherry_hanging_sign", "minecraft:standing_sign");
+        BLOCK_OVERRIDES.put("minecraft:cherry_wall_hanging_sign", "minecraft:wall_sign");
+        BLOCK_OVERRIDES.put("minecraft:cherry_trapdoor", "minecraft:trapdoor");
+        BLOCK_OVERRIDES.put("minecraft:cherry_button", "minecraft:wooden_button");
+        BLOCK_OVERRIDES.put("minecraft:cherry_stairs", "minecraft:oak_stairs");
+        BLOCK_OVERRIDES.put("minecraft:cherry_slab", "minecraft:wooden_slab");
+        BLOCK_OVERRIDES.put("minecraft:cherry_fence_gate", "minecraft:fence_gate");
+        BLOCK_OVERRIDES.put("minecraft:cherry_fence", "minecraft:fence");
+        BLOCK_OVERRIDES.put("minecraft:cherry_door", "minecraft:wooden_door");
+        BLOCK_OVERRIDES.put("minecraft:pink_petals", "minecraft:nether_sprouts");
+        BLOCK_OVERRIDES.put("minecraft:decorated_pot", "minecraft:flower_pot");
+    }
+
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
+    public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy",
             "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip",
@@ -242,7 +302,7 @@ public class MappingsGenerator {
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                 Item value = BuiltInRegistries.ITEM.byId(i);
                 ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
-                if (key.getPath().endsWith("planks") && !key.getPath().contains("bamboo")) {
+                if (key.getPath().endsWith("planks")) {
                     ALL_PLANKS.add(key.toString());
                 }
             }
@@ -404,8 +464,6 @@ public class MappingsGenerator {
             Set<ResourceLocation> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).get()
                 .listElements().map(ref -> ref.key().location()).collect(Collectors.toSet());
 
-            setupFallbackBiomes();
-
             // Check for outdated fallback biomes
             Set<String> biomeNames = javaBiomes.stream().map(ResourceLocation::getPath).collect(Collectors.toSet());
             for (String javaBiome : FALLBACK_BIOMES.keySet()) {
@@ -442,44 +500,6 @@ public class MappingsGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public void setupFallbackBiomes() {
-        // Different names:
-        FALLBACK_BIOMES.put("badlands", "mesa");
-        FALLBACK_BIOMES.put("eroded_badlands", "mesa_bryce");
-        FALLBACK_BIOMES.put("wooded_badlands", "mesa_plateau_stone");
-
-        FALLBACK_BIOMES.put("nether_wastes", "hell");
-        FALLBACK_BIOMES.put("soul_sand_valley", "soulsand_valley");
-
-        FALLBACK_BIOMES.put("old_growth_birch_forest", "birch_forest_mutated");
-        FALLBACK_BIOMES.put("old_growth_pine_taiga", "mega_taiga");
-        FALLBACK_BIOMES.put("old_growth_spruce_taiga", "redwood_taiga_mutated");
-
-        FALLBACK_BIOMES.put("snowy_beach", "cold_beach");
-        FALLBACK_BIOMES.put("snowy_plains", "ice_plains");
-        FALLBACK_BIOMES.put("snowy_taiga", "cold_taiga");
-
-        FALLBACK_BIOMES.put("windswept_forest", "extreme_hills_plus_trees");
-        FALLBACK_BIOMES.put("windswept_gravelly_hills", "extreme_hills_mutated");
-        FALLBACK_BIOMES.put("windswept_hills", "extreme_hills");
-        FALLBACK_BIOMES.put("windswept_savanna", "savanna_mutated");
-
-        FALLBACK_BIOMES.put("dark_forest", "roofed_forest");
-        FALLBACK_BIOMES.put("sparse_jungle", "jungle_edge");
-        FALLBACK_BIOMES.put("ice_spikes", "ice_plains_spikes");
-        FALLBACK_BIOMES.put("mushroom_fields", "mushroom_island");
-        FALLBACK_BIOMES.put("swamp", "swampland");
-        FALLBACK_BIOMES.put("stony_shore", "stone_beach");
-
-        // Doesn't exist on bedrock:
-        FALLBACK_BIOMES.put("end_barrens", "the_end");
-        FALLBACK_BIOMES.put("end_highlands", "the_end");
-        FALLBACK_BIOMES.put("end_midlands", "the_end");
-        FALLBACK_BIOMES.put("small_end_islands", "the_end");
-
-        FALLBACK_BIOMES.put("the_void", "river"); // rather similar colours
     }
 
     public void generateMapColors() {
@@ -763,8 +783,11 @@ public class MappingsGenerator {
         String trimmedIdentifier = identifier.split("\\[")[0];
 
         String bedrockIdentifier;
-        // All walls before 1.16 use the same identifier (cobblestone_wall)
-        if (trimmedIdentifier.endsWith("_wall") && isSensibleWall(trimmedIdentifier)) {
+        if (BLOCK_OVERRIDES.containsKey(trimmedIdentifier)) {
+            // handle any special cases first
+            bedrockIdentifier = BLOCK_OVERRIDES.get(trimmedIdentifier);
+        } else if (trimmedIdentifier.endsWith("_wall") && isSensibleWall(trimmedIdentifier)) {
+            // All walls before 1.16 use the same identifier (cobblestone_wall)
             // Reset any existing mapping to cobblestone wall
             bedrockIdentifier = trimmedIdentifier;
         } else if (trimmedIdentifier.endsWith("_wall")) {
@@ -793,7 +816,7 @@ public class MappingsGenerator {
             bedrockIdentifier = trimmedIdentifier;
         } else if (identifier.equals("minecraft:deepslate_redstone_ore[lit=true]")) {
             bedrockIdentifier = "minecraft:lit_deepslate_redstone_ore";
-        } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double") && !identifier.contains("bamboo")) {
+        } else if (trimmedIdentifier.endsWith("_slab") && identifier.contains("type=double")) {
             // Fixes 1.16 double slabs
             if (blockEntry != null) {
                 if (blockEntry.getBedrockIdentifier().contains("double") && !blockEntry.getBedrockIdentifier().contains("copper")) {
@@ -1055,7 +1078,7 @@ public class MappingsGenerator {
             stateIdentifier = "minecraft:cobblestone_wall";
         }
 
-        if (bedrockIdentifier.startsWith("minecraft:leaves")) {
+        if (bedrockIdentifier.startsWith("minecraft:leaves") && !isExperimentalWood(trimmedIdentifier)) {
             String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.lastIndexOf("_"));
             if (bedrockIdentifier.endsWith("2")) {
                 statesObject.addProperty("new_leaf_type", woodType);
@@ -1103,8 +1126,7 @@ public class MappingsGenerator {
             default -> JAVA_TO_BEDROCK_ITEM_OVERRIDE.getOrDefault(identifier, itemEntry.getBedrockIdentifier()).replace("minecraft:", "");
         };
 
-        if (identifier.endsWith("_hanging_sign") && !identifier.contains("bamboo")) {
-            // Todo: remove/update when bedrock gets bamboo and hanging signs
+        if (identifier.endsWith("_hanging_sign") && !isExperimentalWood(identifier)) {
             bedrockIdentifier = trimmedIdentifier.substring(0, trimmedIdentifier.indexOf("_hanging")) + "_sign";
         }
 
@@ -1112,8 +1134,11 @@ public class MappingsGenerator {
             bedrockIdentifier = "banner";
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
-        } else if (identifier.endsWith("_skull") || (identifier.endsWith("_head"))) {
-            bedrockIdentifier = "skull";
+        } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
+            if (!identifier.contains("pottery")) {
+                // because of pottery_shard_skull
+                bedrockIdentifier = "skull";
+            }
         } else if (identifier.endsWith("_shulker_box")) {
             // Colored shulker boxes only
             bedrockIdentifier = "shulker_box";
@@ -1297,5 +1322,10 @@ public class MappingsGenerator {
             return identifier.replace("cut", "double_cut");
         }
         return identifier.replace("_slab", "_double_slab");
+    }
+
+    public static boolean isExperimentalWood(String identifier) {
+        // todo: temporary until 1.20 is released
+        return identifier.contains("bamboo") || identifier.contains("cherry");
     }
 }
