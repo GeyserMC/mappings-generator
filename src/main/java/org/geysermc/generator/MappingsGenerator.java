@@ -281,16 +281,8 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
 
-                // Item replacements
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trader_llama_spawn_egg", "minecraft:llama_spawn_egg");
-
                 // 1.19.3
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:wither_spawn_egg", "minecraft:wither_skeleton_spawn_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:ender_dragon_spawn_egg", "minecraft:enderman_spawn_egg");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:camel_spawn_egg", "minecraft:llama_spawn_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:snow_golem_spawn_egg", "minecraft:polar_bear_spawn_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:iron_golem_spawn_egg", "minecraft:wolf_spawn_egg");
-
 
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
