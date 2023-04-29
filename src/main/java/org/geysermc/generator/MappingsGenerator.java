@@ -27,6 +27,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -307,7 +308,7 @@ public class MappingsGenerator {
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                 Item value = BuiltInRegistries.ITEM.byId(i);
                 String key = BuiltInRegistries.ITEM.getKey(value).toString();
-                rootObject.add(key, getRemapItem(key, value, Block.byItem(value), value.getMaxStackSize()));
+                rootObject.add(key, getRemapItem(key, value, Block.byItem(value)));
             }
 
             FileWriter writer = new FileWriter(mappings);
@@ -696,6 +697,8 @@ public class MappingsGenerator {
             return item.get();
         });
         when(mockPlayer.getItemInHand(InteractionHand.OFF_HAND)).thenReturn(ItemStack.EMPTY);
+
+        when(mockClientLevel.enabledFeatures()).thenReturn(FeatureFlags.DEFAULT_FLAGS);
 
         BlockHitResult blockHitResult = new BlockHitResult(Vec3.ZERO, Direction.DOWN, BlockPos.ZERO, true);
 
@@ -1110,7 +1113,7 @@ public class MappingsGenerator {
         return object;
     }
 
-    public JsonObject getRemapItem(String identifier, Item item, Block block, int stackSize) {
+    public JsonObject getRemapItem(String identifier, Item item, Block block) {
         String trimmedIdentifier = identifier.replace("minecraft:", "");
         JsonObject object = new JsonObject();
         ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
@@ -1169,10 +1172,6 @@ public class MappingsGenerator {
             object.addProperty("firstBlockRuntimeId", firstStateId);
             if (firstStateId != lastStateId) {
                 object.addProperty("lastBlockRuntimeId", lastStateId);
-            }
-
-            if (block instanceof FlowerBlock) {
-                object.addProperty("has_suspicious_stew_effect", true);
             }
         }
         String[] toolTypes = {"sword", "shovel", "pickaxe", "axe", "shears", "hoe"};

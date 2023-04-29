@@ -2,6 +2,8 @@ package org.geysermc.generator;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
+import net.minecraft.world.level.block.FlowerBlock;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,8 +24,18 @@ public class GenerateItemsClass {
         classOverrides.put(Items.FILLED_MAP, "FilledMapItem");
         classOverrides.put(Items.ELYTRA, "ElytraItem");
         classOverrides.put(Items.SHIELD, "ShieldItem");
-        List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class, PotionItem.class,
-                ArmorItem.class);
+        classOverrides.put(Items.FISHING_ROD, "FishingRodItem");
+        classOverrides.put(Items.ENCHANTED_BOOK, "EnchantedBookItem");
+        classOverrides.put(Items.AXOLOTL_BUCKET, "AxolotlBucketItem");
+        classOverrides.put(Items.WRITABLE_BOOK, "ReadableBookItem"); //
+        classOverrides.put(Items.WRITTEN_BOOK, "ReadableBookItem"); //
+        classOverrides.put(Items.CROSSBOW, "CrossbowItem");
+        classOverrides.put(Items.FIREWORK_ROCKET, "FireworkRocketItem");
+        classOverrides.put(Items.FIREWORK_STAR, "FireworkStarItem");
+        classOverrides.put(Items.PLAYER_HEAD, "PlayerHeadItem");
+        classOverrides.put(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem");
+        List<Class<? extends Item>> mirroredClasses = List.of(DyeableArmorItem.class, TieredItem.class, DyeItem.class, SpawnEggItem.class,
+                PotionItem.class, ArmorItem.class, BannerItem.class, DyeableHorseArmorItem.class, BoatItem.class);
 
         for (Item item : BuiltInRegistries.ITEM) {
             StringBuilder builder = new StringBuilder("public static final ");
@@ -35,13 +47,19 @@ public class GenerateItemsClass {
                     break;
                 }
             }
+            if (item instanceof BlockItem blockItem) {
+                if (blockItem.getBlock() instanceof ShulkerBoxBlock) {
+                    clazz = "ShulkerBoxItem";
+                } else if (blockItem.getBlock() instanceof FlowerBlock) {
+                    clazz = "FlowerItem";
+                }
+            }
             if (clazz == null) {
-                clazz = classOverrides.getOrDefault(item, "Item");
+                clazz = classOverrides.getOrDefault(item, item instanceof BlockItem ? "BlockItem" : "Item");
             }
 
             String path = BuiltInRegistries.ITEM.getKey(item).getPath();
-            builder.append(clazz)
-                    .append(" ")
+            builder.append("Item ")
                     .append(path.toUpperCase(Locale.ROOT))
                     .append(" = register(new ")
                     .append(clazz)
