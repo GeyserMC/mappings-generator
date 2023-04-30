@@ -802,7 +802,7 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:azalea_leaves_flowered";
         } else if (trimmedIdentifier.equals("minecraft:rooted_dirt")) {
             bedrockIdentifier = "minecraft:dirt_with_roots";
-        } else if (trimmedIdentifier.contains("cauldron")) {
+        } else if (trimmedIdentifier.contains("powder_snow_cauldron") || trimmedIdentifier.contains("water_cauldron")) {
             bedrockIdentifier = "minecraft:cauldron";
         } else if (trimmedIdentifier.equals("minecraft:waxed_copper_block")) {
             bedrockIdentifier = "minecraft:waxed_copper";
