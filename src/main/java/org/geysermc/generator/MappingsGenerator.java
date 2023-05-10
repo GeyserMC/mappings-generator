@@ -17,6 +17,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -25,10 +27,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -64,8 +66,72 @@ public class MappingsGenerator {
     public static final Map<String, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
     public static final Map<String, ItemEntry> ITEM_ENTRIES = new HashMap<>();
     public static final Map<String, SoundEntry> SOUND_ENTRIES = new HashMap<>();
-    public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
+    public static final Map<String, String> FALLBACK_BIOMES = new HashMap<>();
+
+    static {
+        // Different names:
+        FALLBACK_BIOMES.put("badlands", "mesa");
+        FALLBACK_BIOMES.put("eroded_badlands", "mesa_bryce");
+        FALLBACK_BIOMES.put("wooded_badlands", "mesa_plateau_stone");
+
+        FALLBACK_BIOMES.put("nether_wastes", "hell");
+        FALLBACK_BIOMES.put("soul_sand_valley", "soulsand_valley");
+
+        FALLBACK_BIOMES.put("old_growth_birch_forest", "birch_forest_mutated");
+        FALLBACK_BIOMES.put("old_growth_pine_taiga", "mega_taiga");
+        FALLBACK_BIOMES.put("old_growth_spruce_taiga", "redwood_taiga_mutated");
+
+        FALLBACK_BIOMES.put("snowy_beach", "cold_beach");
+        FALLBACK_BIOMES.put("snowy_plains", "ice_plains");
+        FALLBACK_BIOMES.put("snowy_taiga", "cold_taiga");
+
+        FALLBACK_BIOMES.put("windswept_forest", "extreme_hills_plus_trees");
+        FALLBACK_BIOMES.put("windswept_gravelly_hills", "extreme_hills_mutated");
+        FALLBACK_BIOMES.put("windswept_hills", "extreme_hills");
+        FALLBACK_BIOMES.put("windswept_savanna", "savanna_mutated");
+
+        FALLBACK_BIOMES.put("dark_forest", "roofed_forest");
+        FALLBACK_BIOMES.put("sparse_jungle", "jungle_edge");
+        FALLBACK_BIOMES.put("ice_spikes", "ice_plains_spikes");
+        FALLBACK_BIOMES.put("mushroom_fields", "mushroom_island");
+        FALLBACK_BIOMES.put("swamp", "swampland");
+        FALLBACK_BIOMES.put("stony_shore", "stone_beach");
+
+        // Doesn't exist on bedrock:
+        FALLBACK_BIOMES.put("end_barrens", "the_end");
+        FALLBACK_BIOMES.put("end_highlands", "the_end");
+        FALLBACK_BIOMES.put("end_midlands", "the_end");
+        FALLBACK_BIOMES.put("small_end_islands", "the_end");
+        FALLBACK_BIOMES.put("the_void", "river"); // Not related to the end. river has similar colours.
+    }
+
+
+    /**
+     * Java to Bedrock block identifier overrides
+     */
+    public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
+
+    static {
+        // Certain experimental blocks that should probably be changed when 1.20 is released
+        BLOCK_OVERRIDES.put("minecraft:bamboo_slab", "minecraft:wooden_slab");
+        BLOCK_OVERRIDES.put("minecraft:bamboo_mosaic_slab", "minecraft:wooden_slab");
+        BLOCK_OVERRIDES.put("minecraft:cherry_sign", "minecraft:standing_sign");
+        BLOCK_OVERRIDES.put("minecraft:cherry_wall_sign", "minecraft:wall_sign");
+        BLOCK_OVERRIDES.put("minecraft:cherry_hanging_sign", "minecraft:standing_sign");
+        BLOCK_OVERRIDES.put("minecraft:cherry_wall_hanging_sign", "minecraft:wall_sign");
+        BLOCK_OVERRIDES.put("minecraft:cherry_trapdoor", "minecraft:trapdoor");
+        BLOCK_OVERRIDES.put("minecraft:cherry_button", "minecraft:wooden_button");
+        BLOCK_OVERRIDES.put("minecraft:cherry_stairs", "minecraft:oak_stairs");
+        BLOCK_OVERRIDES.put("minecraft:cherry_slab", "minecraft:wooden_slab");
+        BLOCK_OVERRIDES.put("minecraft:cherry_fence_gate", "minecraft:fence_gate");
+        BLOCK_OVERRIDES.put("minecraft:cherry_fence", "minecraft:fence");
+        BLOCK_OVERRIDES.put("minecraft:cherry_door", "minecraft:wooden_door");
+        BLOCK_OVERRIDES.put("minecraft:pink_petals", "minecraft:nether_sprouts");
+        BLOCK_OVERRIDES.put("minecraft:decorated_pot", "minecraft:flower_pot");
+    }
+
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
+    public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
     private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy",
             "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip",
@@ -216,9 +282,6 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
 
-                // Item replacements
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trader_llama_spawn_egg", "minecraft:llama_spawn_egg");
-
                 // 1.19.3
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:wither_spawn_egg", "minecraft:wither_skeleton_spawn_egg");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:ender_dragon_spawn_egg", "minecraft:enderman_spawn_egg");
@@ -244,7 +307,7 @@ public class MappingsGenerator {
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                 Item value = BuiltInRegistries.ITEM.byId(i);
                 String key = BuiltInRegistries.ITEM.getKey(value).toString();
-                rootObject.add(key, getRemapItem(key, value, Block.byItem(value), value.getMaxStackSize()));
+                rootObject.add(key, getRemapItem(key, value, Block.byItem(value)));
             }
 
             FileWriter writer = new FileWriter(mappings);
@@ -395,70 +458,35 @@ public class MappingsGenerator {
             // Used to know if a biome is valid or not for Bedrock
             JsonObject bedrockBiomes = JsonParser.parseReader(new FileReader(biomeIdMap)).getAsJsonObject();
 
-            int i = -1;
-            for (Map.Entry<ResourceKey<Biome>, Biome> entry : new HashMap<ResourceKey<Biome>, Biome>().entrySet()) {
-                i++;
-                JsonElement biomeId = bedrockBiomes.get(entry.getKey().location().getPath());
-                if (biomeId == null) {
-                    String replacementBiome = switch (entry.getKey().location().getPath()) {
-                        // Name changes - Java -> Bedrock
-                        case "mountains" -> "extreme_hills";
-                        case "swamp" -> "swampland";
-                        case "nether_wastes" -> "hell";
-                        case "snowy_tundra" -> "ice_plains";
-                        case "snowy_mountains" -> "ice_mountains";
-                        case "mushroom_fields" -> "mushroom_island";
-                        case "mushroom_field_shore" -> "mushroom_island_shore";
-                        case "wooded_hills" -> "forest_hills";
-                        case "mountain_edge" -> "extreme_hills_edge";
-                        case "stone_shore" -> "stone_beach";
-                        case "snowy_beach" -> "cold_beach";
-                        case "dark_forest" -> "roofed_forest";
-                        case "snowy_taiga" -> "cold_taiga";
-                        case "snowy_taiga_hills" -> "cold_taiga_hills";
-                        case "giant_tree_taiga" -> "mega_taiga";
-                        case "giant_tree_taiga_hills" -> "mega_taiga_hills";
-                        case "wooded_mountains" -> "extreme_hills_plus_trees";
-                        case "badlands" -> "mesa";
-                        case "wooded_badlands_plateau" -> "mesa_plateau_stone"; // Blame the Minecraft wiki
-                        case "badlands_plateau" ->  "mesa_plateau";
-                        case "desert_lakes" -> "desert_mutated";
-                        case "gravelly_mountains" -> "extreme_hills_mutated";
-                        case "taiga_mountains" -> "taiga_mutated";
-                        case "swamp_hills" -> "swampland_mutated";
-                        case "ice_spikes" -> "ice_plains_spikes";
-                        case "modified_jungle" -> "jungle_mutated";
-                        case "modified_jungle_edge" -> "jungle_edge_mutated";
-                        case "tall_birch_forest" -> "birch_forest_mutated";
-                        case "tall_birch_hills" -> "birch_forest_hills_mutated";
-                        case "dark_forest_hills" -> "roofed_forest_mutated";
-                        case "snowy_taiga_mountains" -> "cold_taiga_mutated";
-                        case "giant_spruce_taiga" -> "redwood_taiga_mutated";
-                        case "giant_spruce_taiga_hills" -> "redwood_taiga_hills_mutated";
-                        case "modified_gravelly_mountains" -> "extreme_hills_plus_trees_mutated"; // Blame the Minecraft wiki
-                        case "shattered_savanna" -> "savanna_mutated";
-                        case "shattered_savanna_plateau" -> "savanna_plateau_mutated";
-                        case "eroded_badlands" -> "mesa_bryce";
-                        case "modified_wooded_badlands_plateau" -> "mesa_plateau_stone_mutated"; // Blame the Minecraft wiki
-                        case "modified_badlands_plateau" -> "mesa_plateau_mutated";
-                        case "soul_sand_valley" -> "soulsand_valley";
+            Set<ResourceLocation> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).get()
+                .listElements().map(ref -> ref.key().location()).collect(Collectors.toSet());
 
-                        // Biomes that don't exist on Bedrock
-                        case "small_end_islands", "end_midlands", "end_highlands", "end_barrens" -> "the_end";
-                        default -> null;
-                    };
+            // Check for outdated fallback biomes
+            Set<String> biomeNames = javaBiomes.stream().map(ResourceLocation::getPath).collect(Collectors.toSet());
+            for (String javaBiome : FALLBACK_BIOMES.keySet()) {
+                if (!biomeNames.contains(javaBiome)) {
+                    System.out.println("Fallback " + javaBiome + " -> " + FALLBACK_BIOMES.get(javaBiome) + " will never be used because the java biome doesn't actually exist.");
+                }
+            }
+
+            int i = -1;
+            for (ResourceLocation javaBiome : javaBiomes) {
+                i++;
+                JsonElement biomeId = bedrockBiomes.get(javaBiome.getPath());
+                if (biomeId == null) {
+                    String replacementBiome = FALLBACK_BIOMES.get(javaBiome.getPath());
                     if (replacementBiome != null) {
                         biomeId = bedrockBiomes.get(replacementBiome);
                         if (biomeId == null) {
                             throw new IllegalStateException("Biome ID was null when explicitly replaced for " + replacementBiome);
                         }
                     } else {
-                        System.out.println("Replacement biome required for " + entry.getKey().location().getPath() + " (ID: " + i + ")");
+                        System.out.println("Replacement biome required for " + javaBiome.getPath() + " (ID: " + i + ")");
                         continue;
                     }
                 }
 
-                biomesMap.put(entry.getKey().location().toString(), new BiomeEntry(biomeId.getAsInt()));
+                biomesMap.put(javaBiome.toString(), new BiomeEntry(biomeId.getAsInt()));
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
@@ -638,7 +666,8 @@ public class MappingsGenerator {
     public void generateInteractionData() {
         ClientLevel mockClientLevel = mock(ClientLevel.class);
         mockClientLevel.isClientSide = true;
-        mockClientLevel.random = RandomSource.create(); // Used by cave_vines
+        mockClientLevel.random = RandomSource.create(); // Used by cave_vines and doors
+        when(mockClientLevel.getRandom()).thenReturn(mockClientLevel.random);
 
         when(mockClientLevel.getBlockState(any())).thenReturn(Blocks.AIR.defaultBlockState());
 
@@ -667,6 +696,8 @@ public class MappingsGenerator {
             return item.get();
         });
         when(mockPlayer.getItemInHand(InteractionHand.OFF_HAND)).thenReturn(ItemStack.EMPTY);
+
+        when(mockClientLevel.enabledFeatures()).thenReturn(FeatureFlags.DEFAULT_FLAGS);
 
         BlockHitResult blockHitResult = new BlockHitResult(Vec3.ZERO, Direction.DOWN, BlockPos.ZERO, true);
 
@@ -723,8 +754,8 @@ public class MappingsGenerator {
                 }
             } catch (Throwable e) {
                 // Ignore; this means the block has extended behavior we have to implement manually
-                //System.out.println("Failed to test interactions for " + blockStateToString(state) + " due to");
-                //e.printStackTrace(System.out);
+                System.out.println("Failed to test interactions for " + blockStateToString(state) + " due to");
+                e.printStackTrace(System.out);
             }
         }
 
@@ -751,8 +782,11 @@ public class MappingsGenerator {
         String trimmedIdentifier = identifier.split("\\[")[0];
 
         String bedrockIdentifier;
-        // All walls before 1.16 use the same identifier (cobblestone_wall)
-        if (trimmedIdentifier.endsWith("_wall") && isSensibleWall(trimmedIdentifier)) {
+        if (BLOCK_OVERRIDES.containsKey(trimmedIdentifier)) {
+            // handle any special cases first
+            bedrockIdentifier = BLOCK_OVERRIDES.get(trimmedIdentifier);
+        } else if (trimmedIdentifier.endsWith("_wall") && isSensibleWall(trimmedIdentifier)) {
+            // All walls before 1.16 use the same identifier (cobblestone_wall)
             // Reset any existing mapping to cobblestone wall
             bedrockIdentifier = trimmedIdentifier;
         } else if (trimmedIdentifier.endsWith("_wall")) {
@@ -772,7 +806,7 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:azalea_leaves_flowered";
         } else if (trimmedIdentifier.equals("minecraft:rooted_dirt")) {
             bedrockIdentifier = "minecraft:dirt_with_roots";
-        } else if (trimmedIdentifier.contains("cauldron")) {
+        } else if (trimmedIdentifier.contains("powder_snow_cauldron") || trimmedIdentifier.contains("water_cauldron")) {
             bedrockIdentifier = "minecraft:cauldron";
         } else if (trimmedIdentifier.equals("minecraft:waxed_copper_block")) {
             bedrockIdentifier = "minecraft:waxed_copper";
@@ -1043,7 +1077,7 @@ public class MappingsGenerator {
             stateIdentifier = "minecraft:cobblestone_wall";
         }
 
-        if (bedrockIdentifier.startsWith("minecraft:leaves")) {
+        if (bedrockIdentifier.startsWith("minecraft:leaves") && !isExperimentalWood(trimmedIdentifier)) {
             String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.lastIndexOf("_"));
             if (bedrockIdentifier.endsWith("2")) {
                 statesObject.addProperty("new_leaf_type", woodType);
@@ -1078,7 +1112,7 @@ public class MappingsGenerator {
         return object;
     }
 
-    public JsonObject getRemapItem(String identifier, Item item, Block block, int stackSize) {
+    public JsonObject getRemapItem(String identifier, Item item, Block block) {
         String trimmedIdentifier = identifier.replace("minecraft:", "");
         JsonObject object = new JsonObject();
         ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
@@ -1095,8 +1129,11 @@ public class MappingsGenerator {
             bedrockIdentifier = "banner";
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
-        } else if (identifier.endsWith("_skull") || (identifier.endsWith("_head"))) {
-            bedrockIdentifier = "skull";
+        } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
+            if (!identifier.contains("pottery")) {
+                // because of pottery_shard_skull
+                bedrockIdentifier = "skull";
+            }
         } else if (identifier.endsWith("_shulker_box")) {
             // Colored shulker boxes only
             bedrockIdentifier = "shulker_box";
@@ -1132,13 +1169,6 @@ public class MappingsGenerator {
             if (firstStateId != lastStateId) {
                 object.addProperty("lastBlockRuntimeId", lastStateId);
             }
-
-            if (block instanceof FlowerBlock) {
-                object.addProperty("has_suspicious_stew_effect", true);
-            }
-        }
-        if (stackSize != 64) {
-            object.addProperty("stack_size", stackSize);
         }
         String[] toolTypes = {"sword", "shovel", "pickaxe", "axe", "shears", "hoe"};
         String[] identifierSplit = identifier.split(":")[1].split("_");
@@ -1163,7 +1193,6 @@ public class MappingsGenerator {
             optToolType.ifPresent(s -> object.addProperty("armor_type", s));
         }
         if (item.getMaxDamage() > 0) {
-            object.addProperty("max_damage", item.getMaxDamage());
             Ingredient repairIngredient = null;
             JsonArray repairMaterials = new JsonArray();
             // Some repair ingredients use item tags which are not loaded
@@ -1195,8 +1224,8 @@ public class MappingsGenerator {
             }
         }
 
-        if (item instanceof DyeItem dyeItem) {
-            object.addProperty("dye_color", dyeItem.getDyeColor().getId());
+        if (item instanceof SpawnEggItem || item instanceof MinecartItem || item instanceof FireworkRocketItem || item instanceof BoatItem) {
+            object.addProperty("is_entity_placer", true);
         }
 
         if (item.isEdible()) {
@@ -1277,5 +1306,10 @@ public class MappingsGenerator {
             return identifier.replace("cut", "double_cut");
         }
         return identifier.replace("_slab", "_double_slab");
+    }
+
+    public static boolean isExperimentalWood(String identifier) {
+        // todo: temporary until 1.20 is released
+        return identifier.contains("bamboo") || identifier.contains("cherry");
     }
 }
