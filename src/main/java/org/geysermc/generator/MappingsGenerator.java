@@ -269,13 +269,6 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
 
-                // 1.19.3
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:wither_spawn_egg", "minecraft:wither_skeleton_spawn_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:ender_dragon_spawn_egg", "minecraft:enderman_spawn_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:snow_golem_spawn_egg", "minecraft:polar_bear_spawn_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:iron_golem_spawn_egg", "minecraft:wolf_spawn_egg");
-
-
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -841,12 +834,6 @@ public class MappingsGenerator {
             }
         } else if (trimmedIdentifier.equals("minecraft:mangrove_sign")) {
             bedrockIdentifier = "minecraft:mangrove_standing_sign";
-        } else if (trimmedIdentifier.equals("minecraft:cherry_hanging_sign")) {
-            bedrockIdentifier = "minecraft:cherry_hanging_sign";
-        } else if (trimmedIdentifier.equals("minecraft:cherry_sign")) {
-            bedrockIdentifier = "minecraft:cherry_standing_sign";
-        } else if (trimmedIdentifier.equals("minecraft:bamboo_sign")) {
-            bedrockIdentifier = "minecraft:bamboo_standing_sign";
         } else if (trimmedIdentifier.equals("minecraft:tripwire")) {
             bedrockIdentifier = "minecraft:trip_wire";
         } else if (trimmedIdentifier.startsWith("minecraft:potted")) {
@@ -864,8 +851,6 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:moving_block";
         } else if (trimmedIdentifier.endsWith("note_block")) {
             bedrockIdentifier = "minecraft:noteblock";
-        } else if (trimmedIdentifier.endsWith("chiseled_bookshelf")) {
-            bedrockIdentifier = "minecraft:chiseled_bookshelf";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
