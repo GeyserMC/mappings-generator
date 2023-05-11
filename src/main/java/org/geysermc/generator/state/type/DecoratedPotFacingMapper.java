@@ -4,8 +4,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
-@StateRemapper(value = "facing", blockRegex = "minecraft:pink_petals")
-public class PinkPetalsFacingMapper extends StateMapper<Integer> {
+@StateRemapper(value = "facing", blockRegex = "minecraft:decorated_pot")
+public class DecoratedPotFacingMapper extends StateMapper<Integer> {
 
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
