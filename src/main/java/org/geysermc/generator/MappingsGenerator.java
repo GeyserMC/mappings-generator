@@ -114,15 +114,7 @@ public class MappingsGenerator {
     public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
-        // Certain experimental blocks that should probably be changed when 1.20 is released
-        BLOCK_OVERRIDES.put("minecraft:cherry_trapdoor", "minecraft:cherry_trapdoor");
-        BLOCK_OVERRIDES.put("minecraft:cherry_button", "minecraft:cherry_button");
-        BLOCK_OVERRIDES.put("minecraft:cherry_stairs", "minecraft:cherry_stairs");
-        BLOCK_OVERRIDES.put("minecraft:cherry_slab", "minecraft:cherry_slab");
-        BLOCK_OVERRIDES.put("minecraft:cherry_fence_gate", "minecraft:cherry_fence_gate");
-        BLOCK_OVERRIDES.put("minecraft:cherry_fence", "minecraft:cherry_fence");
-        BLOCK_OVERRIDES.put("minecraft:cherry_door", "minecraft:cherry_door");
-        BLOCK_OVERRIDES.put("minecraft:pink_petals", "minecraft:pink_petals");
+        // todo: put block overrides here
     }
 
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
