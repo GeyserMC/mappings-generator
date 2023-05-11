@@ -114,7 +114,8 @@ public class MappingsGenerator {
     public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
-        // todo: put block overrides here
+        // because we are still supporting 1.19.80
+        BLOCK_OVERRIDES.put("minecraft:sniffer_egg", "minecraft:dragon_egg");
     }
 
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
@@ -268,6 +269,13 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
+
+                // todo: 1.20
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:pitcher_plant", "minecraft:chorus_flower");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:sniffer_egg", "minecraft:dragon_egg");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:sniffer_spawn_egg", "minecraft:sheep_spawn_egg");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:pitcher_pod", "minecraft:beetroot");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:music_disc_relic", "minecraft:music_disc_wait");
 
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
@@ -1125,13 +1133,12 @@ public class MappingsGenerator {
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
         } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
-            if (!identifier.contains("pottery")) {
-                // because of pottery_shard_skull
-                bedrockIdentifier = "skull";
-            }
+            bedrockIdentifier = "skull";
         } else if (identifier.endsWith("_shulker_box")) {
             // Colored shulker boxes only
             bedrockIdentifier = "shulker_box";
+        } else if (identifier.endsWith("_pottery_sherd")) {
+            bedrockIdentifier = "prismarine_shard"; // todo: 1.20
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
