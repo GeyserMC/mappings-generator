@@ -859,6 +859,11 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:moving_block";
         } else if (trimmedIdentifier.endsWith("note_block")) {
             bedrockIdentifier = "minecraft:noteblock";
+        } else if (trimmedIdentifier.endsWith("_wall_hanging_sign")) {
+            // "wall hanging" signs do not exist on BE. they are just hanging signs.
+            bedrockIdentifier = trimmedIdentifier.replace("_wall", "");
+        } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
+            bedrockIdentifier = trimmedIdentifier;
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
