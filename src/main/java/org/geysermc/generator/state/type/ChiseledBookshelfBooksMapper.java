@@ -11,7 +11,7 @@ public class ChiseledBookshelfBooksMapper extends StateMapper<Integer> {
         int totalBooks = 0;
         for (int i = 0; i < 6; i++) {
             String property = "slot_" + i + "_occupied";
-            totalBooks += "true".equals(getStateValue(fullIdentifier, property)) ? 1 : 0;
+            totalBooks += Boolean.parseBoolean(getStateValue(fullIdentifier, property)) ? 1 : 0;
         }
 
         return Pair.of("books_stored", totalBooks);
