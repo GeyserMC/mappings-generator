@@ -5,7 +5,7 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
 /**
- * Covers "hanging" for both wall signs and wall_hanging signs
+ * Covers "hanging" for both hanging and wall_hanging signs
  */
 @StateRemapper(value = "waterlogged", blockRegex = ".*(wall_)?hanging_sign.?$")
 public class HangingSignHangingMapper extends StateMapper<Boolean> {
