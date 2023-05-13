@@ -5,7 +5,8 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
 /**
- * Covers ground_sign_direction for wall_hanging signs
+ * Covers ground_sign_direction for wall_hanging signs. Theoretically, this state is not used for wall_hanging_signs,
+ * which face a cardinal direction (and use the "facing_direction" state), and have "hanging" false
  */
 @StateRemapper(value = "facing", blockRegex = ".*wall_hanging_sign.?$")
 public class WallHangingSignRotationMapper extends StateMapper<Integer> {

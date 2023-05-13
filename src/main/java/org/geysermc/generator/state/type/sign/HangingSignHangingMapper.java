@@ -9,8 +9,11 @@ import org.geysermc.generator.state.StateRemapper;
  */
 @StateRemapper(value = "waterlogged", blockRegex = ".*(wall_)?hanging_sign.?$")
 public class HangingSignHangingMapper extends StateMapper<Boolean> {
+
     @Override
     public Pair<String, Boolean> translateState(String fullIdentifier, String value) {
-        return Pair.of("hanging", true); // todo: what is this suppose to be?
+        // wall_hanging signs are "not hanging" on BE.
+        // BE only has one identifier for both wall_hanging and hanging signs, so it uses this state to distinguish
+        return Pair.of("hanging", !fullIdentifier.contains("wall"));
     }
 }

@@ -13,10 +13,10 @@
  * {@link org.geysermc.generator.state.type.sign.SignRotationMapper} (ground_sign_direction)
  *
  * Wall_hanging signs are covered by
- * {@link org.geysermc.generator.state.type.sign.HangingSignHangingMapper} (hanging)
- * {@link org.geysermc.generator.state.type.sign.WallHangingSignAttachedMapper} (attached_bit)
- * {@link org.geysermc.generator.state.type.sign.WallHangingSignRotationMapper} (ground_sign_direction)
+ * {@link org.geysermc.generator.state.type.sign.HangingSignAttachedMapper} (attached_bit)
  * {@link org.geysermc.generator.state.type.sign.WallSignFacingMapper} (facing_direction)
+ * {@link org.geysermc.generator.state.type.sign.HangingSignHangingMapper} (hanging)
+ * {@link org.geysermc.generator.state.type.sign.WallHangingSignRotationMapper} (ground_sign_direction)
  *
  */
 package org.geysermc.generator.state.type.sign;
