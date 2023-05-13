@@ -272,8 +272,7 @@ public class MappingsGenerator {
 
                 // todo: 1.20
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:pitcher_plant", "minecraft:chorus_flower");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:sniffer_egg", "minecraft:dragon_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:sniffer_spawn_egg", "minecraft:sheep_spawn_egg");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:sniffer_egg", "minecraft:sniffer_spawn_egg");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:pitcher_pod", "minecraft:beetroot");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:music_disc_relic", "minecraft:music_disc_wait");
 
@@ -1144,6 +1143,8 @@ public class MappingsGenerator {
             bedrockIdentifier = "shulker_box";
         } else if (identifier.endsWith("_pottery_sherd")) {
             bedrockIdentifier = "prismarine_shard"; // todo: 1.20
+        } else if (identifier.endsWith("_smithing_template")) {
+            bedrockIdentifier = trimmedIdentifier;
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
