@@ -25,6 +25,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlags;
@@ -34,7 +35,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.material.MaterialColor;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -45,6 +46,7 @@ import org.reflections.Reflections;
 
 import java.awt.*;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
@@ -112,22 +114,8 @@ public class MappingsGenerator {
     public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
-        // Certain experimental blocks that should probably be changed when 1.20 is released
-        BLOCK_OVERRIDES.put("minecraft:bamboo_slab", "minecraft:wooden_slab");
-        BLOCK_OVERRIDES.put("minecraft:bamboo_mosaic_slab", "minecraft:wooden_slab");
-        BLOCK_OVERRIDES.put("minecraft:cherry_sign", "minecraft:standing_sign");
-        BLOCK_OVERRIDES.put("minecraft:cherry_wall_sign", "minecraft:wall_sign");
-        BLOCK_OVERRIDES.put("minecraft:cherry_hanging_sign", "minecraft:standing_sign");
-        BLOCK_OVERRIDES.put("minecraft:cherry_wall_hanging_sign", "minecraft:wall_sign");
-        BLOCK_OVERRIDES.put("minecraft:cherry_trapdoor", "minecraft:trapdoor");
-        BLOCK_OVERRIDES.put("minecraft:cherry_button", "minecraft:wooden_button");
-        BLOCK_OVERRIDES.put("minecraft:cherry_stairs", "minecraft:oak_stairs");
-        BLOCK_OVERRIDES.put("minecraft:cherry_slab", "minecraft:wooden_slab");
-        BLOCK_OVERRIDES.put("minecraft:cherry_fence_gate", "minecraft:fence_gate");
-        BLOCK_OVERRIDES.put("minecraft:cherry_fence", "minecraft:fence");
-        BLOCK_OVERRIDES.put("minecraft:cherry_door", "minecraft:wooden_door");
-        BLOCK_OVERRIDES.put("minecraft:pink_petals", "minecraft:nether_sprouts");
-        BLOCK_OVERRIDES.put("minecraft:decorated_pot", "minecraft:flower_pot");
+        // because we are still supporting 1.19.80
+        BLOCK_OVERRIDES.put("minecraft:sniffer_egg", "minecraft:dragon_egg");
     }
 
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
@@ -282,8 +270,11 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
 
-                // 1.19.3
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:camel_spawn_egg", "minecraft:llama_spawn_egg");
+                // todo: 1.20
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:pitcher_plant", "minecraft:chorus_flower");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:sniffer_egg", "minecraft:sniffer_spawn_egg");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:pitcher_pod", "minecraft:beetroot");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:music_disc_relic", "minecraft:music_disc_wait");
 
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
@@ -496,13 +487,23 @@ public class MappingsGenerator {
     }
 
     public void generateMapColors() {
+        MapColor[] minecraftColors;
+        try {
+            Field materialColors = MapColor.class.getDeclaredField("MATERIAL_COLORS");
+            materialColors.setAccessible(true);
+            minecraftColors = (MapColor[]) materialColors.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            return;
+        }
+
         List<Color> mapColors = new ArrayList<>();
-        for (MaterialColor color : MaterialColor.MATERIAL_COLORS) {
+        for (MapColor color : minecraftColors) {
             if (color == null) {
                 continue;
             }
 
-            for (MaterialColor.Brightness brightness : MaterialColor.Brightness.values()) {
+            for (MapColor.Brightness brightness : MapColor.Brightness.values()) {
                 int rgb = color.calculateRGBColor(brightness);
                 mapColors.add(new Color(rgb, true));
             }
@@ -673,7 +674,14 @@ public class MappingsGenerator {
         LocalPlayer mockPlayer = mock(LocalPlayer.class);
 
         // Used by bee_hive
-        mockPlayer.level = mockClientLevel;
+
+        try {
+            Field levelField = Entity.class.getDeclaredField("level");
+            levelField.setAccessible(true);
+            levelField.set(mockPlayer, mockClientLevel);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         mockPlayer.position = Vec3.ZERO;
         when(mockPlayer.getInventory()).thenReturn(new Inventory(mockPlayer));
 
@@ -850,6 +858,11 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:moving_block";
         } else if (trimmedIdentifier.endsWith("note_block")) {
             bedrockIdentifier = "minecraft:noteblock";
+        } else if (trimmedIdentifier.endsWith("_wall_hanging_sign")) {
+            // "wall hanging" signs do not exist on BE. they are just hanging signs.
+            bedrockIdentifier = trimmedIdentifier.replace("_wall", "");
+        } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
+            bedrockIdentifier = trimmedIdentifier;
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -894,9 +907,7 @@ public class MappingsGenerator {
         }
 
         if (state.hasBlockEntity()) {
-            if (!bedrockIdentifier.equals("minecraft:bookshelf")) {
-                object.addProperty("has_block_entity", true);
-            }
+            object.addProperty("has_block_entity", true);
         }
 
         try {
@@ -905,7 +916,7 @@ public class MappingsGenerator {
                 Block block = state.getBlock();
                 ItemStack pickStack = block.getCloneItemStack(null, null, state);
                 String pickStackIdentifier = BuiltInRegistries.ITEM.getKey(pickStack.getItem()).toString();
-                if (!pickStackIdentifier.equals(trimmedIdentifier) && !object.has("pick_item")) {
+                if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                     object.addProperty("pick_item", pickStackIdentifier);
                 }
             }
@@ -1073,7 +1084,7 @@ public class MappingsGenerator {
             stateIdentifier = "minecraft:cobblestone_wall";
         }
 
-        if (bedrockIdentifier.startsWith("minecraft:leaves") && !isExperimentalWood(trimmedIdentifier)) {
+        if (bedrockIdentifier.startsWith("minecraft:leaves")) {
             String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.lastIndexOf("_"));
             if (bedrockIdentifier.endsWith("2")) {
                 statesObject.addProperty("new_leaf_type", woodType);
@@ -1121,23 +1132,21 @@ public class MappingsGenerator {
             default -> JAVA_TO_BEDROCK_ITEM_OVERRIDE.getOrDefault(identifier, itemEntry.getBedrockIdentifier()).replace("minecraft:", "");
         };
 
-        if (identifier.endsWith("_hanging_sign") && !isExperimentalWood(identifier)) {
-            bedrockIdentifier = trimmedIdentifier.substring(0, trimmedIdentifier.indexOf("_hanging")) + "_sign";
-        }
-
         if (identifier.endsWith("banner")) { // Don't include banner patterns
             bedrockIdentifier = "banner";
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
         } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
-            if (!identifier.contains("pottery")) {
-                // because of pottery_shard_skull
-                bedrockIdentifier = "skull";
-            }
+            bedrockIdentifier = "skull";
         } else if (identifier.endsWith("_shulker_box")) {
             // Colored shulker boxes only
             bedrockIdentifier = "shulker_box";
+        } else if (identifier.endsWith("_pottery_sherd")) {
+            bedrockIdentifier = "prismarine_shard"; // todo: 1.20
+        } else if (identifier.endsWith("_smithing_template")) {
+            bedrockIdentifier = trimmedIdentifier;
         }
+
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
             bedrockIdentifier = bedrockIdentifier.replace("stone_slab", "stone_block_slab");
         }
@@ -1305,10 +1314,5 @@ public class MappingsGenerator {
             return identifier.replace("cut", "double_cut");
         }
         return identifier.replace("_slab", "_double_slab");
-    }
-
-    public static boolean isExperimentalWood(String identifier) {
-        // todo: temporary until 1.20 is released
-        return identifier.contains("bamboo") || identifier.contains("cherry");
     }
 }

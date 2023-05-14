@@ -1,14 +1,15 @@
 package org.geysermc.generator;
 
-import com.mojang.serialization.DataResult;
 import io.netty.handler.codec.EncoderException;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.RegistrySynchronization;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.RegistryDataLoader;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.ServerPacksSource;
@@ -27,14 +28,12 @@ public class GenerateNetworkCodec {
         RegistryAccess.Frozen worldGenAccess = RegistryLayer.createRegistryAccess().getAccessForLoading(RegistryLayer.WORLDGEN);
         RegistryAccess.Frozen registryAccess = RegistryDataLoader.load(resourceManager, worldGenAccess, RegistryDataLoader.WORLDGEN_REGISTRIES);
 
-        DataResult<Tag> dataResult = RegistrySynchronization.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryAccess);
-        dataResult.error().ifPresent((action) -> {
-            throw new EncoderException("Failed to encode: " + action.message() + " " + registryAccess);
+        Tag tag = net.minecraft.Util.getOrThrow(RegistrySynchronization.NETWORK_CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY)), registryAccess), error -> {
+            return new EncoderException("Failed to encode: " + error + " " + registryAccess);
         });
-        CompoundTag tag = (CompoundTag) dataResult.result().get();
 
         try {
-            NbtIo.writeCompressed(tag, new File("./networkCodec.nbt"));
+            NbtIo.writeCompressed((CompoundTag) tag, new File("./networkCodec.nbt"));
             System.out.println("Finished writing networkCodec.nbt!");
         } catch (IOException e) {
             System.out.println("Failed to write networkCodec.nbt!");

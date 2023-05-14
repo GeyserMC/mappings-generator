@@ -1,9 +1,12 @@
-package org.geysermc.generator.state.type;
+package org.geysermc.generator.state.type.sign;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
+/**
+ * Covers facing_direction for wall signs and wall_hanging signs
+ */
 @StateRemapper(value = "facing", blockRegex = ".*wall_(hanging_)?sign.?$")
 public class WallSignFacingMapper extends StateMapper<Integer> {
 
