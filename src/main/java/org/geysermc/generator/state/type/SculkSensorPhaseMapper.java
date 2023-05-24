@@ -14,7 +14,7 @@ public class SculkSensorPhaseMapper extends StateMapper<Integer> {
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
         return Pair.of("sculk_sensor_phase", switch (value) {
             case "inactive" -> 0;
-            case "active" -> 1; // todo: these are just guesses lol
+            case "active" -> 1;
             case "cooldown" -> 2;
             default -> throw new IllegalArgumentException("Unknown sculk sensor phase: " + value);
         });
