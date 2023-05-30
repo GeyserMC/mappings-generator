@@ -239,3 +239,4 @@ nbdist/
 bedrockresourcepack.zip
 logs/**
 map_colors.txt
+networkCodec.nbt
