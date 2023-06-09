@@ -8,12 +8,15 @@ import org.geysermc.generator.state.StateRemapper;
 public class ChiseledBookshelfBooksMapper extends StateMapper<Integer> {
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        int totalBooks = 0;
+        // bedrock stores the book occupancy list as a bitmask.
+        int mask = 0;
         for (int i = 0; i < 6; i++) {
             String property = "slot_" + i + "_occupied";
-            totalBooks += Boolean.parseBoolean(getStateValue(fullIdentifier, property)) ? 1 : 0;
+            if ("true".equals(getStateValue(fullIdentifier, property))) {
+                mask |= (1 << i);
+            }
         }
 
-        return Pair.of("books_stored", totalBooks);
+        return Pair.of("books_stored", mask);
     }
 }
