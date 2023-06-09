@@ -9,11 +9,12 @@ public class DecoratedPotFacingMapper extends StateMapper<Integer> {
 
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
+        // north/south and east/west are switched here compared to other blocks that use "facing"
         int direction = switch (value) {
-            case "south" -> 0;
-            case "west" -> 1;
-            case "north" -> 2;
-            case "east" -> 3;
+            case "north" -> 0;
+            case "east" -> 1;
+            case "south" -> 2;
+            case "west" -> 3;
             default -> throw new IllegalArgumentException("Got " + value + " instead of a cardinal direction");
         };
         return Pair.of("direction", direction);

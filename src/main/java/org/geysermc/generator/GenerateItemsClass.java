@@ -2,6 +2,7 @@ package org.geysermc.generator;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
+import net.minecraft.world.level.block.DecoratedPotBlock;
 import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 
@@ -52,6 +53,8 @@ public class GenerateItemsClass {
                     clazz = "ShulkerBoxItem";
                 } else if (blockItem.getBlock() instanceof FlowerBlock) {
                     clazz = "FlowerItem";
+                } else if (blockItem.getBlock() instanceof DecoratedPotBlock) {
+                    clazz = "DecoratedPotItem";
                 }
             }
             if (clazz == null) {
