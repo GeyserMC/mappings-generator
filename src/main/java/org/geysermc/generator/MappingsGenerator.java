@@ -479,18 +479,8 @@ public class MappingsGenerator {
     }
 
     public void generateMapColors() {
-        MapColor[] minecraftColors;
-        try {
-            Field materialColors = MapColor.class.getDeclaredField("MATERIAL_COLORS");
-            materialColors.setAccessible(true);
-            minecraftColors = (MapColor[]) materialColors.get(null);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-            return;
-        }
-
         List<Color> mapColors = new ArrayList<>();
-        for (MapColor color : minecraftColors) {
+        for (MapColor color : MapColor.MATERIAL_COLORS) {
             if (color == null) {
                 continue;
             }
@@ -666,14 +656,7 @@ public class MappingsGenerator {
         LocalPlayer mockPlayer = mock(LocalPlayer.class);
 
         // Used by bee_hive
-
-        try {
-            Field levelField = Entity.class.getDeclaredField("level");
-            levelField.setAccessible(true);
-            levelField.set(mockPlayer, mockClientLevel);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mockPlayer.level = mockClientLevel;
         mockPlayer.position = Vec3.ZERO;
         when(mockPlayer.getInventory()).thenReturn(new Inventory(mockPlayer));
 
