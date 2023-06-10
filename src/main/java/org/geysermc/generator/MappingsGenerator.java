@@ -6,11 +6,6 @@ import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
-import com.nukkitx.nbt.NBTInputStream;
-import com.nukkitx.nbt.NbtList;
-import com.nukkitx.nbt.NbtMap;
-import com.nukkitx.nbt.NbtType;
-import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -39,6 +34,11 @@ import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.tuple.Pair;
+import org.cloudburstmc.nbt.NBTInputStream;
+import org.cloudburstmc.nbt.NbtList;
+import org.cloudburstmc.nbt.NbtMap;
+import org.cloudburstmc.nbt.NbtType;
+import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 import org.reflections.Reflections;
@@ -607,10 +607,16 @@ public class MappingsGenerator {
             ParticleEntry geyserParticle = particles.computeIfAbsent(enumName, ($) -> new ParticleEntry());
             if (geyserParticle.cloudburstLevelEventType != null) {
                 try {
-                    LevelEventType.valueOf(geyserParticle.cloudburstLevelEventType);
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Particle type " + geyserParticle.cloudburstLevelEventType + " does not exist in the Cloudburst Protocol!");
-                    geyserParticle.cloudburstLevelEventType = null;
+                    // Check if we have a particle type mapping
+                    org.cloudburstmc.protocol.bedrock.data.ParticleType.valueOf(geyserParticle.cloudburstLevelEventType);
+                } catch (IllegalArgumentException ignored) {
+                    // No particle type; try level event
+                    try {
+                        LevelEvent.valueOf(geyserParticle.cloudburstLevelEventType);
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Particle type " + geyserParticle.cloudburstLevelEventType + " does not exist in the Cloudburst Protocol!");
+                        geyserParticle.cloudburstLevelEventType = null;
+                    }
                 }
             }
             if (geyserParticle.bedrockId != null && !geyserParticle.bedrockId.startsWith("geyseropt:")) {

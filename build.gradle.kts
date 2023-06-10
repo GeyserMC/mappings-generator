@@ -19,8 +19,8 @@ dependencies {
     implementation("org.mockito", "mockito-core", "3.+")
 
     implementation("org.reflections", "reflections", "0.9.12")
-    implementation("com.nukkitx", "nbt", "2.0.2")
-    implementation("com.nukkitx.protocol", "bedrock-common", "2.9.4-SNAPSHOT")
+
+    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta1-SNAPSHOT")
 
     annotationProcessor("org.projectlombok", "lombok", "1.18.20")
 }
