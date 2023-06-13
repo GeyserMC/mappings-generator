@@ -345,17 +345,11 @@ public class MappingsGenerator {
                     entry = new SoundEntry(null, null, -1, null, false);
                 }
 
-                if (isBlank(entry.getPlaySound())) {
-                    if (validBedrockSounds.contains(path)) {
-                        // found the exact same identifier on bedrock
-                        entry.setPlaySound(path);
-                    } else {
-                        String prediction = assumeBedrockSoundIdentifier(path);
-                        if (validBedrockSounds.contains(prediction)) {
-                            entry.setPlaySound(prediction);
-                        }
-                    }
-                } else if (!validBedrockSounds.contains(entry.getPlaySound())) {
+                // update the playsound, only if a valid bedrock mapping is found
+                updatePlaySound(entry, path, validBedrockSounds);
+
+                if (!isBlank(entry.getPlaySound()) && !validBedrockSounds.contains(entry.getPlaySound())) {
+                    // warn if a mapping is present but its invalid
                     System.out.printf("Invalid bedrock playsound for mapping: %50s -> %s%n", path, entry.getPlaySound());
                 }
 
@@ -427,7 +421,12 @@ public class MappingsGenerator {
         return s == null || s.isBlank();
     }
 
-    private String assumeBedrockSoundIdentifier(String javaIdentifier) {
+    private boolean updatePlaySound(SoundEntry entry, String javaIdentifier, Set<String> bedrockSounds) {
+        if (bedrockSounds.contains(javaIdentifier)) {
+            entry.setPlaySound(javaIdentifier);
+            return true;
+        }
+
         String bedrockIdentifer = javaIdentifier.replace("entity.", "mob.");
         if (bedrockIdentifer.startsWith("block.")) {
             bedrockIdentifer = bedrockIdentifer.substring("block.".length());
@@ -436,7 +435,12 @@ public class MappingsGenerator {
                 bedrockIdentifer = parts[1] + "." + parts[0];
             }
         }
-        return bedrockIdentifer;
+
+        if (bedrockSounds.contains(bedrockIdentifer)) {
+            entry.setPlaySound(bedrockIdentifer);
+            return true;
+        }
+        return false;
     }
 
     public void generateBiomes() {
