@@ -41,6 +41,7 @@ import org.cloudburstmc.nbt.NbtType;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
+import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 
 import java.awt.*;
@@ -334,51 +335,79 @@ public class MappingsGenerator {
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
-            for (int i = 0; i < BuiltInRegistries.SOUND_EVENT.size(); i++) {
-                SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.byId(i);
+            for (SoundEvent soundEvent : BuiltInRegistries.SOUND_EVENT) { // use iterable?
                 ResourceLocation key = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent);
 
                 String path = key.getPath();
-                SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
-                String bedrockIdentifier;
-                if (soundEntry == null) {
-                    soundEntry = new SoundEntry(path, "", -1, null, false);
-                    bedrockIdentifier = assumeBedrockSoundIdentifier(path);
-                } else {
-//                        if (soundEntry.getPlaysoundMapping() == null || soundEntry.getPlaysoundMapping().isEmpty()) {
-//                            bedrockIdentifier = assumeBedrockSoundIdentifier(path);
-//                        } else {
-                        bedrockIdentifier = soundEntry.getPlaysoundMapping();
-                    //} To be uncommented when PlaySound mapping resumes
+                SoundEntry entry = SOUND_ENTRIES.get(key.getPath());
+
+                if (entry == null) {
+                    entry = new SoundEntry(null, null, -1, null, false);
+                }
+
+                if (isBlank(entry.getPlaySound())) {
+                    if (validBedrockSounds.contains(path)) {
+                        // found the exact same identifier on bedrock
+                        entry.setPlaySound(path);
+                    } else {
+                        String prediction = assumeBedrockSoundIdentifier(path);
+                        if (validBedrockSounds.contains(prediction)) {
+                            entry.setPlaySound(prediction);
+                        }
+                    }
+                } else if (!validBedrockSounds.contains(entry.getPlaySound())) {
+                    System.out.printf("Invalid bedrock playsound for mapping: %50s -> %s%n", path, entry.getPlaySound());
                 }
 
                 // Auto map place block sounds
-                if (soundEntry.getBedrockMapping().isEmpty() && path.startsWith("block") && path.endsWith("place")) {
-                    if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
+                if (isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
+                    if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
                         Block block = BuiltInRegistries.BLOCK.get(new ResourceLocation("minecraft:" + path.split("\\.")[1]));
-                        soundEntry.setBedrockMapping("PLACE");
+                        entry.setEventSound("PLACE");
                         if (block != Blocks.AIR) {
-                            soundEntry.setIdentifier(blockStateToString(block.defaultBlockState()));
+                            entry.setIdentifier(blockStateToString(block.defaultBlockState()));
                         } else {
                             System.out.println("Unable to auto map PLACE sound: " + path);
-                            soundEntry.setIdentifier("MANUALMAP");
+                            entry.setIdentifier("MANUALMAP");
                         }
                     }
                 }
 
-                soundEntry.setPlaysoundMapping(bedrockIdentifier);
-                JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
-                if (soundEntry.getExtraData() <= 0 && !path.equals("block.note_block.harp")) {
+                if (entry.isLevelEvent()) {
+                    try {
+                        LevelEvent.valueOf(entry.getEventSound());
+                    } catch (Exception ignored) {
+                        System.out.println("Invalid LevelEvent " + entry.getEventSound() + " for java sound " + path);
+                    }
+                } else if (!isBlank(entry.getEventSound())) {
+                    try {
+                        org.cloudburstmc.protocol.bedrock.data.SoundEvent.valueOf(entry.getEventSound());
+                    } catch (Exception ignored) {
+                        System.out.println("Invalid SoundEvent " + entry.getEventSound() + " for java sound " + path);
+                    }
+                }
+
+                if (isBlank(entry.getPlaySound()) && isBlank(entry.getEventSound())) {
+                    System.out.println("No mapping for java sound: " + path);
+                }
+
+                JsonObject object = (JsonObject) GSON.toJsonTree(entry);
+                /*
+                if (isBlank(playSound)) {
+                    object.remove("playsound_mapping");
+                } // this causes a lot of diff, only apply it once everything is fixed
+                if (isBlank(eventSound)) {
+                    object.remove("bedrock_mapping");
+                }
+                 */
+                if (entry.getExtraData() <= 0 && !path.equals("block.note_block.harp")) {
                     object.remove("extra_data");
                 }
-                if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
+                if (isBlank(entry.getIdentifier())) {
                     object.remove("identifier");
                 }
-                if (!soundEntry.isLevelEvent()) {
+                if (!entry.isLevelEvent()) {
                     object.remove("level_event");
-                }
-                if (!validBedrockSounds.contains(bedrockIdentifier)) {
-                    System.out.println("No matching sound found for Bedrock! Bedrock: " + bedrockIdentifier + ", Java: " + path);
                 }
                 rootObject.add(path, object);
             }
@@ -392,6 +421,10 @@ public class MappingsGenerator {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private boolean isBlank(@Nullable String s) {
+        return s == null || s.isBlank();
     }
 
     private String assumeBedrockSoundIdentifier(String javaIdentifier) {
