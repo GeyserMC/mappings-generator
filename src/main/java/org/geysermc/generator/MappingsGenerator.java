@@ -348,13 +348,16 @@ public class MappingsGenerator {
                 // update the playsound, only if a valid bedrock mapping is found
                 updatePlaySound(entry, path, validBedrockSounds);
 
-                if (!isBlank(entry.getPlaySound()) && !validBedrockSounds.contains(entry.getPlaySound())) {
-                    // warn if a mapping is present but its invalid
+                boolean validPlaySound = true;
+                if (isBlank(entry.getPlaySound())) {
+                    validPlaySound = false;
+                } else if (!validBedrockSounds.contains(entry.getPlaySound())) {
                     System.out.printf("Invalid bedrock playsound for mapping: %50s -> %s%n", path, entry.getPlaySound());
+                    validPlaySound = false;
                 }
 
                 // Auto map place block sounds
-                if (isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
+                if (!validPlaySound && isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
                     if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
                         Block block = BuiltInRegistries.BLOCK.get(new ResourceLocation("minecraft:" + path.split("\\.")[1]));
                         entry.setEventSound("PLACE");
