@@ -52,10 +52,10 @@ val samplesTask = tasks.register<DownloadFileTask>("downloadBedrockSamples") {
     destination.set(bedrockSamples)
 }
 val resourcePackTask = tasks.register<CreateResourcePackTask>("resourcePack") {
+    dependsOn(samplesTask)
     bedrockSamples.set(samplesTask.get().destination)
     packFile.set(resourcePack)
 }
-resourcePackTask.get().dependsOn(samplesTask)
 
 abstract class CreateResourcePackTask : DefaultTask() {
 

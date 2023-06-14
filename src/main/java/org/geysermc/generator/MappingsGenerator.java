@@ -335,7 +335,7 @@ public class MappingsGenerator {
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
-            for (SoundEvent soundEvent : BuiltInRegistries.SOUND_EVENT) { // use iterable?
+            for (SoundEvent soundEvent : BuiltInRegistries.SOUND_EVENT) {
                 ResourceLocation key = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent);
 
                 String path = key.getPath();
@@ -678,6 +678,7 @@ public class MappingsGenerator {
             if (geyserParticle.cloudburstLevelEventType != null) {
                 if (!isBedrockParticleType(geyserParticle.cloudburstLevelEventType)) {
                     System.out.println("Particle type " + geyserParticle.cloudburstLevelEventType + " does not exist in the Cloudburst Protocol!");
+                    geyserParticle.cloudburstLevelEventType = null;
                 }
             }
             if (geyserParticle.bedrockId != null && !geyserParticle.bedrockId.startsWith("geyseropt:")) {
