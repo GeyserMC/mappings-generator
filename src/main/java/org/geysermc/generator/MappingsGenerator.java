@@ -428,7 +428,12 @@ public class MappingsGenerator {
         }
 
         String identifier = javaIdentifier;
-        if (identifier.startsWith("block.")) {
+        if (identifier.startsWith("block.note_block")) {
+            identifier = "note" + identifier.substring(identifier.lastIndexOf('.'));
+        } else if (identifier.startsWith("block.")) {
+            identifier = identifier.replace("weeping_vines", "roots");
+            identifier = identifier.replace("block.gilded_blackstone.", "block.stone.");
+            identifier = identifier.replace("block.metal.", "block.stone.");
             identifier = identifier.replace("block.vine", "block.vines");
             identifier = identifier.replace("small_dripleaf", "big_dripleaf");
             identifier = identifier.replace("rooted_dirt", "dirt_with_roots");
@@ -446,19 +451,31 @@ public class MappingsGenerator {
             String[] parts = identifier.split("\\.");
             if (parts.length > 1) {
                 identifier = parts[1] + "." + parts[0];
+            }
+        } else if (identifier.startsWith("item.brush")) {
+            String[] parts = identifier.split("\\.");
+            identifier = "brush.suspicious_" + parts[3];
+        } else if (identifier.startsWith("music.")) {
+            // a lot of the bedrock names use "game" instead of overworld or nether
+            String[] parts = identifier.split("\\.", 3);
+            if (parts.length == 3) {
+                identifier = "music.game." + parts[2];
+            }
+        } else if (identifier.startsWith("entity.")) {
+            identifier = identifier.replace("entity.", "mob.");
 
-                /*
-                if (!bedrockSounds.contains(identifier)) {
-                    String fallback = "dig." + parts[0];
-                    if (bedrockSounds.contains(fallback)) {
-                        identifier = fallback;
-                    }
+            if (identifier.contains("donkey")) {
+                identifier = identifier.replace("donkey", "horse.donkey");
+            } else if (identifier.contains("goat.screaming")) {
+                identifier = identifier.replace(".screaming", "");
+
+                String screamer = identifier + ".screamer";
+                if (bedrockSounds.contains(screamer)) {
+                    identifier = screamer; // specific screamer sound
                 }
-                 */
+                // otherwise uses normal goat sound
             }
         } else {
-            identifier = identifier.replace("entity.", "mob.");
-            identifier = identifier.replace("mob.donkey", "mob.horse.donkey");
             identifier = identifier.replace("item.armor", "armor");
         }
 
