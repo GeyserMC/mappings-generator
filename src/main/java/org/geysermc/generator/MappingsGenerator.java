@@ -668,18 +668,16 @@ public class MappingsGenerator {
         for (Map.Entry<ResourceKey<ParticleType<?>>, ParticleType<?>> entry : BuiltInRegistries.PARTICLE_TYPE.entrySet()) {
             String enumName = entry.getKey().location().getPath().toUpperCase(Locale.ROOT);
             ParticleEntry geyserParticle = particles.computeIfAbsent(enumName, ($) -> new ParticleEntry());
+
+            if (geyserParticle.cloudburstLevelEventType == null) {
+                if (isBedrockParticleType(enumName)) {
+                    geyserParticle.cloudburstLevelEventType = enumName; // parity
+                }
+            }
+
             if (geyserParticle.cloudburstLevelEventType != null) {
-                try {
-                    // Check if we have a particle type mapping
-                    org.cloudburstmc.protocol.bedrock.data.ParticleType.valueOf(geyserParticle.cloudburstLevelEventType);
-                } catch (IllegalArgumentException ignored) {
-                    // No particle type; try level event
-                    try {
-                        LevelEvent.valueOf(geyserParticle.cloudburstLevelEventType);
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Particle type " + geyserParticle.cloudburstLevelEventType + " does not exist in the Cloudburst Protocol!");
-                        geyserParticle.cloudburstLevelEventType = null;
-                    }
+                if (!isBedrockParticleType(geyserParticle.cloudburstLevelEventType)) {
+                    System.out.println("Particle type " + geyserParticle.cloudburstLevelEventType + " does not exist in the Cloudburst Protocol!");
                 }
             }
             if (geyserParticle.bedrockId != null && !geyserParticle.bedrockId.startsWith("geyseropt:")) {
@@ -707,6 +705,21 @@ public class MappingsGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isBedrockParticleType(String enumName) {
+        try {
+            // Check if we have a particle type mapping
+            org.cloudburstmc.protocol.bedrock.data.ParticleType.valueOf(enumName);
+        } catch (IllegalArgumentException ignored) {
+            // No particle type; try level event
+            try {
+                LevelEvent.valueOf(enumName);
+            } catch (IllegalArgumentException ignoredAgain) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void generateInteractionData() {
