@@ -427,17 +427,43 @@ public class MappingsGenerator {
             return true;
         }
 
-        String bedrockIdentifer = javaIdentifier.replace("entity.", "mob.");
-        if (bedrockIdentifer.startsWith("block.")) {
-            bedrockIdentifer = bedrockIdentifer.substring("block.".length());
-            String[] parts = bedrockIdentifer.split("\\.");
+        String identifier = javaIdentifier;
+        if (identifier.startsWith("block.")) {
+            identifier = identifier.replace("block.vine", "block.vines");
+            identifier = identifier.replace("small_dripleaf", "big_dripleaf");
+            identifier = identifier.replace("rooted_dirt", "dirt_with_roots");
+            identifier = identifier.replace("nether_ore", "nether_gold_ore"); // ??? mojang
+            identifier = identifier.replace("netherite_block", "netherite");
+            identifier = identifier.replace("polished_deepslate", "deepslate");
+            identifier = identifier.replace("deepslate_tiles", "deepslate_bricks");
+            identifier = identifier.replace("flowering_azalea", "azalea");
+            identifier = identifier.replace("frogspawn", "frog_spawn");
+            identifier = identifier.replace("moss_carpet", "moss");
+            identifier = identifier.replace("nether_bricks", "nether_brick");
+            identifier = identifier.replace("wart_block", "nether_wart");
+
+            identifier = identifier.substring("block.".length());
+            String[] parts = identifier.split("\\.");
             if (parts.length > 1) {
-                bedrockIdentifer = parts[1] + "." + parts[0];
+                identifier = parts[1] + "." + parts[0];
+
+                /*
+                if (!bedrockSounds.contains(identifier)) {
+                    String fallback = "dig." + parts[0];
+                    if (bedrockSounds.contains(fallback)) {
+                        identifier = fallback;
+                    }
+                }
+                 */
             }
+        } else {
+            identifier = identifier.replace("entity.", "mob.");
+            identifier = identifier.replace("mob.donkey", "mob.horse.donkey");
+            identifier = identifier.replace("item.armor", "armor");
         }
 
-        if (bedrockSounds.contains(bedrockIdentifer)) {
-            entry.setPlaySound(bedrockIdentifer);
+        if (bedrockSounds.contains(identifier)) {
+            entry.setPlaySound(identifier);
             return true;
         }
         return false;
