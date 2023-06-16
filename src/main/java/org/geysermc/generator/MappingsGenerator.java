@@ -119,13 +119,19 @@ public class MappingsGenerator {
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
     public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
-    private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy",
-            "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip",
-            "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley",
-            "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling",
-            "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern",
-            "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus",
-            "minecraft:crimson_roots", "minecraft:warped_roots", "minecraft:azalea", "minecraft:flowering_azalea", "minecraft:mangrove_propagule");
+    private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = new ArrayList<>();
+
+    static {
+        for (Block block : BuiltInRegistries.BLOCK) {
+            if (block instanceof FlowerPotBlock flowerPot) {
+                Block plant = flowerPot.getContent();
+                if (plant != Blocks.AIR) {
+                    POTTABLE_BLOCK_IDENTIFIERS.add(BuiltInRegistries.BLOCK.getKey(plant).toString());
+                }
+            }
+        }
+    }
+
     // This ends up in collision.json
     // collision_index in blocks.json refers to this to prevent duplication
     // This helps to reduce file size
