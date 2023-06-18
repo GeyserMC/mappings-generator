@@ -27,8 +27,8 @@ public class GenerateItemsClass {
         classOverrides.put(Items.FISHING_ROD, "FishingRodItem");
         classOverrides.put(Items.ENCHANTED_BOOK, "EnchantedBookItem");
         classOverrides.put(Items.AXOLOTL_BUCKET, "AxolotlBucketItem");
-        classOverrides.put(Items.WRITABLE_BOOK, "ReadableBookItem"); //
-        classOverrides.put(Items.WRITTEN_BOOK, "ReadableBookItem"); //
+        classOverrides.put(Items.WRITABLE_BOOK, "WritableBookItem");
+        classOverrides.put(Items.WRITTEN_BOOK, "WrittenBookItem");
         classOverrides.put(Items.CROSSBOW, "CrossbowItem");
         classOverrides.put(Items.FIREWORK_ROCKET, "FireworkRocketItem");
         classOverrides.put(Items.FIREWORK_STAR, "FireworkStarItem");
