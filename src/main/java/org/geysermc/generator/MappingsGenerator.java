@@ -1031,7 +1031,7 @@ public class MappingsGenerator {
             } else if (trimmedIdentifier.contains("dragon")) {
                 object.addProperty("variation", 5);
             } else if (trimmedIdentifier.contains("piglin")) {
-                object.addProperty("variation", 2);
+                object.addProperty("variation", 6);
             }
         } else if (trimmedIdentifier.contains("_banner")) {
             String woolid = trimmedIdentifier.replace("minecraft:", "");
