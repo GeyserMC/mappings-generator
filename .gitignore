@@ -237,5 +237,7 @@ nbdist/
 # Custom to mappings-generator
 *.log.gz
 bedrockresourcepack.zip
+bedrock-samples.zip
 logs/**
 map_colors.txt
+networkCodec.nbt

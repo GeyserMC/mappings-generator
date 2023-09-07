@@ -1,8 +1,13 @@
 import java.net.URL
 import java.nio.channels.Channels
+import java.nio.file.Files
+import java.nio.file.FileSystems
+import java.nio.file.StandardCopyOption
 
-val javaMinecraftVersion = "1.19.4"
-val bedrockResourcePackVersion = "1.19.0.34"
+val javaMinecraftVersion = "1.20.1"
+val bedrockResourcePackVersion = "1.20.0.1"
+val resourcePack = file("bedrockresourcepack.zip")
+val bedrockSamples = file("bedrock-samples.zip")
 
 group = "org.geysermc.mappings-generator"
 version = "1.1.0"
@@ -19,8 +24,8 @@ dependencies {
     implementation("org.mockito", "mockito-core", "3.+")
 
     implementation("org.reflections", "reflections", "0.9.12")
-    implementation("com.nukkitx", "nbt", "2.0.2")
-    implementation("com.nukkitx.protocol", "bedrock-common", "2.9.4-SNAPSHOT")
+
+    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta1-SNAPSHOT")
 
     annotationProcessor("org.projectlombok", "lombok", "1.18.20")
 }
@@ -42,29 +47,80 @@ minecraft {
         }
 }
 
-val downloadResourcePack = tasks.register<DownloadFileTask>("downloadResourcePack") {
-    url = "https://void.bedrock.dev/resources/${bedrockResourcePackVersion}.zip"
-    fileLocation = "bedrockresourcepack.zip"
+val samplesTask = tasks.register<DownloadFileTask>("downloadBedrockSamples") {
+    url.set("https://github.com/Mojang/bedrock-samples/archive/refs/tags/v${bedrockResourcePackVersion}.zip")
+    destination.set(bedrockSamples)
+}
+val resourcePackTask = tasks.register<CreateResourcePackTask>("resourcePack") {
+    dependsOn(samplesTask)
+    bedrockSamples.set(samplesTask.get().destination)
+    packFile.set(resourcePack)
 }
 
-open class DownloadFileTask : DefaultTask() {
+abstract class CreateResourcePackTask : DefaultTask() {
 
-    @Internal var url: String? = null
-    @Internal var fileLocation: String? = null
+    @get:InputFile
+    abstract val bedrockSamples: RegularFileProperty
+
+    @get:OutputFile
+    abstract val packFile: RegularFileProperty
 
     @TaskAction
     fun greet() {
-        val file = File(fileLocation!!)
-        if (!file.exists()) {
-            println("Downloading file ${fileLocation}...")
+        val samples = bedrockSamples.get().asFile.toPath()
+        val output = packFile.get().asFile.toPath()
+        Files.copy(samples, output, StandardCopyOption.REPLACE_EXISTING)
 
-            val url = URL(url)
-            val channel = Channels.newChannel(url.openStream())
+        FileSystems.newFileSystem(output)
+            .use { fileSystem ->
+                val root = fileSystem.rootDirectories.first()!!
 
-            val outputStream = file.outputStream()
-            outputStream.channel.transferFrom(channel, 0, Long.MAX_VALUE)
+                // the root just has one folder, eg "bedrock-samples-1.19.80.2"
+                val subFolder = Files.walk(root, 1)
+                    .filter { e -> e.toString().contains("bedrock-samples") }
+                    .findFirst().get()
 
-            println("Download of $fileLocation complete!")
+                val pack = subFolder.resolve("resource_pack")
+
+                // move the resource pack contents to the root
+                Files.walk(pack).use { stream ->
+                    stream.filter { e -> e != pack }
+                        .forEach { e ->
+                            // order is important here so that empty destination directories are created first
+                            Files.move(e, root.resolve(pack.relativize(e)))
+                        }
+                }
+
+                // delete everything in the old folder, including itself
+                Files.walk(subFolder).use { stream ->
+                    stream.sorted(Comparator.reverseOrder()) // delete files before their parent directories
+                        .forEach(Files::delete)
+                }
+            }
+    }
+}
+
+abstract class DownloadFileTask : DefaultTask() {
+
+    @get:Input
+    abstract val url: Property<String>
+
+    @get:OutputFile
+    abstract val destination: RegularFileProperty
+
+    @TaskAction
+    fun greet() {
+        val file = destination.asFile.get()
+        val url = URL(this.url.get())
+
+        println("Downloading $url to $file")
+
+        Channels.newChannel(url.openStream()).use { channel ->
+            file.outputStream().use { outputStream ->
+                outputStream.channel.transferFrom(channel, 0, Long.MAX_VALUE)
+            }
         }
+
+        println("Download of $url complete!")
     }
 }

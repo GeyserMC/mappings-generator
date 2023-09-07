@@ -19,6 +19,7 @@ public class GenerateMCProtocolLibBlockValues {
         format("END_GATEWAY", Blocks.END_GATEWAY);
         format("SHULKER_BOX_LOWER", Blocks.SHULKER_BOX);
         format("SHULKER_BOX_HIGHER", Blocks.BLACK_SHULKER_BOX);
+        format("BELL", Blocks.BELL);
     }
 
     private static void format(String name, Block block) {

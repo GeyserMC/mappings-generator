@@ -6,11 +6,6 @@ import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
-import com.nukkitx.nbt.NBTInputStream;
-import com.nukkitx.nbt.NbtList;
-import com.nukkitx.nbt.NbtMap;
-import com.nukkitx.nbt.NbtType;
-import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -34,13 +29,19 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.material.MaterialColor;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.tuple.Pair;
+import org.cloudburstmc.nbt.NBTInputStream;
+import org.cloudburstmc.nbt.NbtList;
+import org.cloudburstmc.nbt.NbtMap;
+import org.cloudburstmc.nbt.NbtType;
+import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
+import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 
 import java.awt.*;
@@ -112,34 +113,25 @@ public class MappingsGenerator {
     public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
-        // Certain experimental blocks that should probably be changed when 1.20 is released
-        BLOCK_OVERRIDES.put("minecraft:bamboo_slab", "minecraft:wooden_slab");
-        BLOCK_OVERRIDES.put("minecraft:bamboo_mosaic_slab", "minecraft:wooden_slab");
-        BLOCK_OVERRIDES.put("minecraft:cherry_sign", "minecraft:standing_sign");
-        BLOCK_OVERRIDES.put("minecraft:cherry_wall_sign", "minecraft:wall_sign");
-        BLOCK_OVERRIDES.put("minecraft:cherry_hanging_sign", "minecraft:standing_sign");
-        BLOCK_OVERRIDES.put("minecraft:cherry_wall_hanging_sign", "minecraft:wall_sign");
-        BLOCK_OVERRIDES.put("minecraft:cherry_trapdoor", "minecraft:trapdoor");
-        BLOCK_OVERRIDES.put("minecraft:cherry_button", "minecraft:wooden_button");
-        BLOCK_OVERRIDES.put("minecraft:cherry_stairs", "minecraft:oak_stairs");
-        BLOCK_OVERRIDES.put("minecraft:cherry_slab", "minecraft:wooden_slab");
-        BLOCK_OVERRIDES.put("minecraft:cherry_fence_gate", "minecraft:fence_gate");
-        BLOCK_OVERRIDES.put("minecraft:cherry_fence", "minecraft:fence");
-        BLOCK_OVERRIDES.put("minecraft:cherry_door", "minecraft:wooden_door");
-        BLOCK_OVERRIDES.put("minecraft:pink_petals", "minecraft:nether_sprouts");
-        BLOCK_OVERRIDES.put("minecraft:decorated_pot", "minecraft:flower_pot");
+        // put block overrides here
     }
 
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
     public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
     public static final Map<String, List<String>> STATES = new HashMap<>();
-    private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = Arrays.asList("minecraft:dandelion", "minecraft:poppy",
-            "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip",
-            "minecraft:white_tulip", "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley",
-            "minecraft:wither_rose", "minecraft:oak_sapling", "minecraft:spruce_sapling", "minecraft:birch_sapling", "minecraft:jungle_sapling",
-            "minecraft:acacia_sapling", "minecraft:dark_oak_sapling", "minecraft:red_mushroom", "minecraft:brown_mushroom", "minecraft:fern",
-            "minecraft:dead_bush", "minecraft:cactus", "minecraft:bamboo", "minecraft:crimson_fungus", "minecraft:warped_fungus",
-            "minecraft:crimson_roots", "minecraft:warped_roots", "minecraft:azalea", "minecraft:flowering_azalea", "minecraft:mangrove_propagule");
+    private static final List<String> POTTABLE_BLOCK_IDENTIFIERS = new ArrayList<>();
+
+    static {
+        for (Block block : BuiltInRegistries.BLOCK) {
+            if (block instanceof FlowerPotBlock flowerPot) {
+                Block plant = flowerPot.getContent();
+                if (plant != Blocks.AIR) {
+                    POTTABLE_BLOCK_IDENTIFIERS.add(BuiltInRegistries.BLOCK.getKey(plant).toString());
+                }
+            }
+        }
+    }
+
     // This ends up in collision.json
     // collision_index in blocks.json refers to this to prevent duplication
     // This helps to reduce file size
@@ -281,10 +273,6 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
-
-                // 1.19.3
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:camel_spawn_egg", "minecraft:llama_spawn_egg");
-
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -353,51 +341,76 @@ public class MappingsGenerator {
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
 
-            for (int i = 0; i < BuiltInRegistries.SOUND_EVENT.size(); i++) {
-                SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.byId(i);
+            for (SoundEvent soundEvent : BuiltInRegistries.SOUND_EVENT) {
                 ResourceLocation key = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent);
 
                 String path = key.getPath();
-                SoundEntry soundEntry = SOUND_ENTRIES.get(key.getPath());
-                String bedrockIdentifier;
-                if (soundEntry == null) {
-                    soundEntry = new SoundEntry(path, "", -1, null, false);
-                    bedrockIdentifier = assumeBedrockSoundIdentifier(path);
-                } else {
-//                        if (soundEntry.getPlaysoundMapping() == null || soundEntry.getPlaysoundMapping().isEmpty()) {
-//                            bedrockIdentifier = assumeBedrockSoundIdentifier(path);
-//                        } else {
-                        bedrockIdentifier = soundEntry.getPlaysoundMapping();
-                    //} To be uncommented when PlaySound mapping resumes
+                SoundEntry entry = SOUND_ENTRIES.get(key.getPath());
+
+                if (entry == null) {
+                    entry = new SoundEntry(null, null, -1, null, false);
+                }
+
+                // update the playsound, only if a valid bedrock mapping is found
+                updatePlaySound(entry, path, validBedrockSounds);
+
+                boolean validPlaySound = true;
+                if (isBlank(entry.getPlaySound())) {
+                    validPlaySound = false;
+                } else if (!validBedrockSounds.contains(entry.getPlaySound())) {
+                    System.out.printf("Invalid bedrock playsound for mapping: %50s -> %s%n", path, entry.getPlaySound());
+                    validPlaySound = false;
                 }
 
                 // Auto map place block sounds
-                if (soundEntry.getBedrockMapping().isEmpty() && path.startsWith("block") && path.endsWith("place")) {
-                    if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
+                if (!validPlaySound && isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
+                    if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
                         Block block = BuiltInRegistries.BLOCK.get(new ResourceLocation("minecraft:" + path.split("\\.")[1]));
-                        soundEntry.setBedrockMapping("PLACE");
+                        entry.setEventSound("PLACE");
                         if (block != Blocks.AIR) {
-                            soundEntry.setIdentifier(blockStateToString(block.defaultBlockState()));
+                            entry.setIdentifier(blockStateToString(block.defaultBlockState()));
                         } else {
                             System.out.println("Unable to auto map PLACE sound: " + path);
-                            soundEntry.setIdentifier("MANUALMAP");
+                            entry.setIdentifier("MANUALMAP");
                         }
                     }
                 }
 
-                soundEntry.setPlaysoundMapping(bedrockIdentifier);
-                JsonObject object = (JsonObject) GSON.toJsonTree(soundEntry);
-                if (soundEntry.getExtraData() <= 0 && !path.equals("block.note_block.harp")) {
+                if (entry.isLevelEvent()) {
+                    try {
+                        LevelEvent.valueOf(entry.getEventSound());
+                    } catch (Exception ignored) {
+                        System.out.println("Invalid LevelEvent " + entry.getEventSound() + " for java sound " + path);
+                    }
+                } else if (!isBlank(entry.getEventSound())) {
+                    try {
+                        org.cloudburstmc.protocol.bedrock.data.SoundEvent.valueOf(entry.getEventSound());
+                    } catch (Exception ignored) {
+                        System.out.println("Invalid SoundEvent " + entry.getEventSound() + " for java sound " + path);
+                    }
+                }
+
+                if (isBlank(entry.getPlaySound()) && isBlank(entry.getEventSound())) {
+                    System.out.println("No mapping for java sound: " + path);
+                }
+
+                JsonObject object = (JsonObject) GSON.toJsonTree(entry);
+                /*
+                if (isBlank(playSound)) {
+                    object.remove("playsound_mapping");
+                } // this causes a lot of diff, only apply it once everything is fixed
+                if (isBlank(eventSound)) {
+                    object.remove("bedrock_mapping");
+                }
+                 */
+                if (entry.getExtraData() <= 0 && !path.equals("block.note_block.harp")) {
                     object.remove("extra_data");
                 }
-                if (soundEntry.getIdentifier() == null || soundEntry.getIdentifier().isEmpty()) {
+                if (isBlank(entry.getIdentifier())) {
                     object.remove("identifier");
                 }
-                if (!soundEntry.isLevelEvent()) {
+                if (!entry.isLevelEvent()) {
                     object.remove("level_event");
-                }
-                if (!validBedrockSounds.contains(bedrockIdentifier)) {
-                    System.out.println("No matching sound found for Bedrock! Bedrock: " + bedrockIdentifier + ", Java: " + path);
                 }
                 rootObject.add(path, object);
             }
@@ -413,16 +426,73 @@ public class MappingsGenerator {
         }
     }
 
-    private String assumeBedrockSoundIdentifier(String javaIdentifier) {
-        String bedrockIdentifer = javaIdentifier.replace("entity.", "mob.");
-        if (bedrockIdentifer.startsWith("block.")) {
-            bedrockIdentifer = bedrockIdentifer.substring("block.".length());
-            String[] parts = bedrockIdentifer.split("\\.");
-            if (parts.length > 1) {
-                bedrockIdentifer = parts[1] + "." + parts[0];
-            }
+    private boolean isBlank(@Nullable String s) {
+        return s == null || s.isBlank();
+    }
+
+    private boolean updatePlaySound(SoundEntry entry, String javaIdentifier, Set<String> bedrockSounds) {
+        if (bedrockSounds.contains(javaIdentifier)) {
+            entry.setPlaySound(javaIdentifier);
+            return true;
         }
-        return bedrockIdentifer;
+
+        String identifier = javaIdentifier;
+        if (identifier.startsWith("block.note_block")) {
+            identifier = "note" + identifier.substring(identifier.lastIndexOf('.'));
+        } else if (identifier.startsWith("block.")) {
+            identifier = identifier.replace("weeping_vines", "roots");
+            identifier = identifier.replace("block.gilded_blackstone.", "block.stone.");
+            identifier = identifier.replace("block.metal.", "block.stone.");
+            identifier = identifier.replace("block.vine", "block.vines");
+            identifier = identifier.replace("small_dripleaf", "big_dripleaf");
+            identifier = identifier.replace("rooted_dirt", "dirt_with_roots");
+            identifier = identifier.replace("nether_ore", "nether_gold_ore"); // ??? mojang
+            identifier = identifier.replace("netherite_block", "netherite");
+            identifier = identifier.replace("polished_deepslate", "deepslate");
+            identifier = identifier.replace("deepslate_tiles", "deepslate_bricks");
+            identifier = identifier.replace("flowering_azalea", "azalea");
+            identifier = identifier.replace("frogspawn", "frog_spawn");
+            identifier = identifier.replace("moss_carpet", "moss");
+            identifier = identifier.replace("nether_bricks", "nether_brick");
+            identifier = identifier.replace("wart_block", "nether_wart");
+
+            identifier = identifier.substring("block.".length());
+            String[] parts = identifier.split("\\.");
+            if (parts.length > 1) {
+                identifier = parts[1] + "." + parts[0];
+            }
+        } else if (identifier.startsWith("item.brush")) {
+            String[] parts = identifier.split("\\.");
+            identifier = "brush.suspicious_" + parts[3];
+        } else if (identifier.startsWith("music.")) {
+            // a lot of the bedrock names use "game" instead of overworld or nether
+            String[] parts = identifier.split("\\.", 3);
+            if (parts.length == 3) {
+                identifier = "music.game." + parts[2];
+            }
+        } else if (identifier.startsWith("entity.")) {
+            identifier = identifier.replace("entity.", "mob.");
+
+            if (identifier.contains("donkey")) {
+                identifier = identifier.replace("donkey", "horse.donkey");
+            } else if (identifier.contains("goat.screaming")) {
+                identifier = identifier.replace(".screaming", "");
+
+                String screamer = identifier + ".screamer";
+                if (bedrockSounds.contains(screamer)) {
+                    identifier = screamer; // specific screamer sound
+                }
+                // otherwise uses normal goat sound
+            }
+        } else {
+            identifier = identifier.replace("item.armor", "armor");
+        }
+
+        if (bedrockSounds.contains(identifier)) {
+            entry.setPlaySound(identifier);
+            return true;
+        }
+        return false;
     }
 
     public void generateBiomes() {
@@ -497,12 +567,12 @@ public class MappingsGenerator {
 
     public void generateMapColors() {
         List<Color> mapColors = new ArrayList<>();
-        for (MaterialColor color : MaterialColor.MATERIAL_COLORS) {
+        for (MapColor color : MapColor.MATERIAL_COLORS) {
             if (color == null) {
                 continue;
             }
 
-            for (MaterialColor.Brightness brightness : MaterialColor.Brightness.values()) {
+            for (MapColor.Brightness brightness : MapColor.Brightness.values()) {
                 int rgb = color.calculateRGBColor(brightness);
                 mapColors.add(new Color(rgb, true));
             }
@@ -624,10 +694,15 @@ public class MappingsGenerator {
         for (Map.Entry<ResourceKey<ParticleType<?>>, ParticleType<?>> entry : BuiltInRegistries.PARTICLE_TYPE.entrySet()) {
             String enumName = entry.getKey().location().getPath().toUpperCase(Locale.ROOT);
             ParticleEntry geyserParticle = particles.computeIfAbsent(enumName, ($) -> new ParticleEntry());
+
+            if (geyserParticle.cloudburstLevelEventType == null) {
+                if (isBedrockParticleType(enumName)) {
+                    geyserParticle.cloudburstLevelEventType = enumName; // parity
+                }
+            }
+
             if (geyserParticle.cloudburstLevelEventType != null) {
-                try {
-                    LevelEventType.valueOf(geyserParticle.cloudburstLevelEventType);
-                } catch (IllegalArgumentException e) {
+                if (!isBedrockParticleType(geyserParticle.cloudburstLevelEventType)) {
                     System.out.println("Particle type " + geyserParticle.cloudburstLevelEventType + " does not exist in the Cloudburst Protocol!");
                     geyserParticle.cloudburstLevelEventType = null;
                 }
@@ -657,6 +732,21 @@ public class MappingsGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isBedrockParticleType(String enumName) {
+        try {
+            // Check if we have a particle type mapping
+            org.cloudburstmc.protocol.bedrock.data.ParticleType.valueOf(enumName);
+        } catch (IllegalArgumentException ignored) {
+            // No particle type; try level event
+            try {
+                LevelEvent.valueOf(enumName);
+            } catch (IllegalArgumentException ignoredAgain) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void generateInteractionData() {
@@ -850,6 +940,11 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:moving_block";
         } else if (trimmedIdentifier.endsWith("note_block")) {
             bedrockIdentifier = "minecraft:noteblock";
+        } else if (trimmedIdentifier.endsWith("_wall_hanging_sign")) {
+            // "wall hanging" signs do not exist on BE. they are just hanging signs.
+            bedrockIdentifier = trimmedIdentifier.replace("_wall", "");
+        } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
+            bedrockIdentifier = trimmedIdentifier;
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -894,9 +989,7 @@ public class MappingsGenerator {
         }
 
         if (state.hasBlockEntity()) {
-            if (!bedrockIdentifier.equals("minecraft:bookshelf")) {
-                object.addProperty("has_block_entity", true);
-            }
+            object.addProperty("has_block_entity", true);
         }
 
         try {
@@ -905,7 +998,7 @@ public class MappingsGenerator {
                 Block block = state.getBlock();
                 ItemStack pickStack = block.getCloneItemStack(null, null, state);
                 String pickStackIdentifier = BuiltInRegistries.ITEM.getKey(pickStack.getItem()).toString();
-                if (!pickStackIdentifier.equals(trimmedIdentifier) && !object.has("pick_item")) {
+                if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                     object.addProperty("pick_item", pickStackIdentifier);
                 }
             }
@@ -938,7 +1031,7 @@ public class MappingsGenerator {
             } else if (trimmedIdentifier.contains("dragon")) {
                 object.addProperty("variation", 5);
             } else if (trimmedIdentifier.contains("piglin")) {
-                object.addProperty("variation", 2);
+                object.addProperty("variation", 6);
             }
         } else if (trimmedIdentifier.contains("_banner")) {
             String woolid = trimmedIdentifier.replace("minecraft:", "");
@@ -1068,12 +1161,14 @@ public class MappingsGenerator {
             statesObject.addProperty("update_bit", false);
         }
 
-        String stateIdentifier = trimmedIdentifier;
+        String stateIdentifier;
         if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
             stateIdentifier = "minecraft:cobblestone_wall";
+        } else {
+            stateIdentifier = bedrockIdentifier;
         }
 
-        if (bedrockIdentifier.startsWith("minecraft:leaves") && !isExperimentalWood(trimmedIdentifier)) {
+        if (bedrockIdentifier.startsWith("minecraft:leaves")) {
             String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.lastIndexOf("_"));
             if (bedrockIdentifier.endsWith("2")) {
                 statesObject.addProperty("new_leaf_type", woodType);
@@ -1121,23 +1216,17 @@ public class MappingsGenerator {
             default -> JAVA_TO_BEDROCK_ITEM_OVERRIDE.getOrDefault(identifier, itemEntry.getBedrockIdentifier()).replace("minecraft:", "");
         };
 
-        if (identifier.endsWith("_hanging_sign") && !isExperimentalWood(identifier)) {
-            bedrockIdentifier = trimmedIdentifier.substring(0, trimmedIdentifier.indexOf("_hanging")) + "_sign";
-        }
-
         if (identifier.endsWith("banner")) { // Don't include banner patterns
             bedrockIdentifier = "banner";
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
         } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
-            if (!identifier.contains("pottery")) {
-                // because of pottery_shard_skull
-                bedrockIdentifier = "skull";
-            }
+            bedrockIdentifier = "skull";
         } else if (identifier.endsWith("_shulker_box")) {
             // Colored shulker boxes only
             bedrockIdentifier = "shulker_box";
         }
+
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
             bedrockIdentifier = bedrockIdentifier.replace("stone_slab", "stone_block_slab");
         }
@@ -1305,10 +1394,5 @@ public class MappingsGenerator {
             return identifier.replace("cut", "double_cut");
         }
         return identifier.replace("_slab", "_double_slab");
-    }
-
-    public static boolean isExperimentalWood(String identifier) {
-        // todo: temporary until 1.20 is released
-        return identifier.contains("bamboo") || identifier.contains("cherry");
     }
 }
