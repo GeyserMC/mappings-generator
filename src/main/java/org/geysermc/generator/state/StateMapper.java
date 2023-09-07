@@ -21,14 +21,19 @@ public abstract class StateMapper<T> {
         throw new IllegalArgumentException("Mapping type " + pair.getValue().getClass().getSimpleName() + " cannot be cast to " + type.getSimpleName());
     }
 
-    protected String getStateValue(String fullIdentifier, String property) {
-        String[] states = fullIdentifier.substring(fullIdentifier.lastIndexOf("[") + 1).replace("]", "").split(",");
-        for (String state : states) {
+    public static String getStateValue(String fullIdentifier, String property) {
+        for (String state : getStates(fullIdentifier)) {
             String key = state.split("=")[0];
             if (property.equals(key)) {
                 return state.split("=")[1];
             }
         }
         return null;
+    }
+
+    public static String[] getStates(String identifier) {
+        return identifier.substring(identifier.lastIndexOf("[") + 1)
+                .replace("]", "")
+                .split(",");
     }
 }

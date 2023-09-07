@@ -24,7 +24,7 @@ public class GenerateNetworkCodec {
     public static void main(String[] args) {
         Util.initialize();
 
-        CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, Collections.singletonList(new ServerPacksSource().getVanillaPack()));
+        CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, Collections.singletonList(ServerPacksSource.createVanillaPackSource()));
         RegistryAccess.Frozen worldGenAccess = RegistryLayer.createRegistryAccess().getAccessForLoading(RegistryLayer.WORLDGEN);
         RegistryAccess.Frozen registryAccess = RegistryDataLoader.load(resourceManager, worldGenAccess, RegistryDataLoader.WORLDGEN_REGISTRIES);
 
