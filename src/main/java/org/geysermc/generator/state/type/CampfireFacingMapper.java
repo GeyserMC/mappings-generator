@@ -10,10 +10,10 @@ public class CampfireFacingMapper extends StateMapper<Integer> {
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
         int direction = switch (value) {
-            case "north" -> 2;
-            case "west" -> 1;
-            case "east" -> 3;
-            default -> 0;
+            case "north" -> 0;
+            case "east" -> 1;
+            case "west" -> 3;
+            default -> 2;
         };
         return Pair.of("direction", direction);
     }
