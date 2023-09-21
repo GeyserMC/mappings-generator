@@ -945,6 +945,8 @@ public class MappingsGenerator {
             bedrockIdentifier = trimmedIdentifier.replace("_wall", "");
         } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
             bedrockIdentifier = trimmedIdentifier;
+        } else if (isSkull(trimmedIdentifier)) {
+            bedrockIdentifier = "minecraft:skull";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -1013,9 +1015,9 @@ public class MappingsGenerator {
             String woolid = trimmedIdentifier.replace("minecraft:", "");
             woolid = woolid.split("_bed")[0].toUpperCase();
             object.addProperty("bed_color", DyeColor.valueOf(woolid).getId());
-        } else if (trimmedIdentifier.contains("head") && !trimmedIdentifier.contains("piston") || trimmedIdentifier.contains("skull")) {
+        } else if (isSkull(trimmedIdentifier)) {
             if (!trimmedIdentifier.contains("wall")) {
-                int rotationId = Integer.parseInt(identifier.substring(identifier.indexOf("rotation=") + 9, identifier.indexOf("]")));
+                int rotationId = Integer.parseInt(Objects.requireNonNull(StateMapper.getStateValue(identifier, "rotation")));
                 object.addProperty("skull_rotation", rotationId);
             }
             if (trimmedIdentifier.contains("wither_skeleton")) {
@@ -1084,7 +1086,7 @@ public class MappingsGenerator {
         } else {
             System.out.println("Block entry for " + blockStateToString(state) + " is null?");
         }
-        String[] states = identifier.contains("[") ? identifier.substring(identifier.lastIndexOf("[") + 1).replace("]", "").split(",") : new String[0];
+        String[] states = StateMapper.getStates(identifier);
         for (String javaState : states) {
             String key = javaState.split("=")[0];
             if (!this.stateMappers.containsKey(key)) {
@@ -1331,7 +1333,7 @@ public class MappingsGenerator {
 
     private String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()).toString());
+        stringBuilder.append(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()));
         if (!blockState.getValues().isEmpty()) {
             stringBuilder.append('[');
             stringBuilder.append(blockState.getValues().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
@@ -1380,6 +1382,10 @@ public class MappingsGenerator {
      */
     private static boolean isSensibleWall(String identifier) {
         return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick");
+    }
+
+    private static boolean isSkull(String identifier) {
+        return identifier.contains("skull") || (identifier.contains("head") && !identifier.contains("piston"));
     }
 
     /**

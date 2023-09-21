@@ -9,7 +9,7 @@ public class ButtonFaceMapper extends StateMapper<Integer> {
 
     @Override
     public Pair<String, Integer> translateState(String fullIdentifier, String value) {
-        String facing = this.getStateValue(fullIdentifier, "facing");
+        String facing = getStateValue(fullIdentifier, "facing");
         int facingDirection = switch (value) {
             case "floor" -> 1;
             case "wall" -> switch (facing) {
