@@ -27,6 +27,8 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.MapColor;
@@ -60,6 +62,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class MappingsGenerator {
@@ -994,6 +997,12 @@ public class MappingsGenerator {
             object.addProperty("has_block_entity", true);
         }
 
+        String bedrockBlockEnity = getBedrockTileEntity(state, bedrockIdentifier);
+
+        if (bedrockBlockEnity != null) {
+            object.addProperty("bedrock_block_entity", bedrockBlockEnity);
+        }
+
         try {
             // Ignore water, lava, and fire because players can't pick them
             if (!trimmedIdentifier.equals("minecraft:water") && !trimmedIdentifier.equals("minecraft:lava") && !trimmedIdentifier.equals("minecraft:fire")) {
@@ -1400,5 +1409,66 @@ public class MappingsGenerator {
             return identifier.replace("cut", "double_cut");
         }
         return identifier.replace("_slab", "_double_slab");
+    }
+
+    private static String getBedrockTileEntity(BlockState state, String bedrockIdentifier) {
+        // Bedrock exclusive tile entities
+        String bedrockName = bedrockIdentifier.replace("minecraft:", "");
+        switch (bedrockName) {
+            case "cauldron", "flower_pot", "lodestone", "noteblock" -> { return formatDefaultTileName(bedrockName); }
+        }
+
+        String javaPath = null;
+
+        if (!state.hasBlockEntity()) {
+            return null;
+        }
+
+        BlockEntity blockEntity = ((EntityBlock) state.getBlock()).newBlockEntity(BlockPos.ZERO, state);
+
+        if (blockEntity == null) {
+            return null;
+        }
+
+        BlockEntityType<?> blockEntityType = blockEntity.getType();
+        ResourceLocation blockEntityId = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntityType);
+
+        if (blockEntityId == null) {
+            return null;
+        }
+
+        javaPath = blockEntityId.getPath();
+
+        if (javaPath == null) {
+            return null;
+        }
+
+        switch (javaPath) {
+            // these aren't tiles on Bedrock
+            case "daylight_detector", "end_portal", "end_gateway" -> { return null; }
+            // these have different names on Bedrock
+            case "enchanting_table" -> { return "EnchantTable"; }
+            case "jigsaw" -> { return "JigsawBlock"; }
+            case "piston" -> { return "PistonArm"; }
+            case "trapped_chest" -> { return "Chest"; }
+            // default is Pascal case of the Java name
+            default -> { return formatDefaultTileName(javaPath); }
+        }
+    }
+
+    private static String formatDefaultTileName(String identifier) {
+        StringBuilder result = new StringBuilder();
+        boolean shouldCapitalize = true;
+        for (char c : identifier.toCharArray()) {
+            if (c == '_') {
+                shouldCapitalize = true;
+            } else if (shouldCapitalize) {
+                result.append(Character.toUpperCase(c));
+                shouldCapitalize = false;
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 }
