@@ -1416,6 +1416,7 @@ public class MappingsGenerator {
         String bedrockName = bedrockIdentifier.replace("minecraft:", "");
         switch (bedrockName) {
             case "cauldron", "flower_pot", "lodestone", "noteblock" -> { return formatDefaultTileName(bedrockName); }
+            case "piston_arm_collision", "sticky_piston_arm_collision" -> { return "PistonArm"; }
         }
 
         String javaPath = null;
