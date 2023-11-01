@@ -1446,7 +1446,7 @@ public class MappingsGenerator {
 
         switch (javaPath) {
             // these aren't tiles on Bedrock
-            case "daylight_detector", "end_portal", "end_gateway" -> { return null; }
+            case "daylight_detector", "end_portal" -> { return null; }
             // these have different names on Bedrock
             case "enchanting_table" -> { return "EnchantTable"; }
             case "jigsaw" -> { return "JigsawBlock"; }
