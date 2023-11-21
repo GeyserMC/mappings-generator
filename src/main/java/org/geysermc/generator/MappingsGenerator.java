@@ -124,7 +124,7 @@ public class MappingsGenerator {
     static {
         for (Block block : BuiltInRegistries.BLOCK) {
             if (block instanceof FlowerPotBlock flowerPot) {
-                Block plant = flowerPot.getContent();
+                Block plant = flowerPot.getPotted();
                 if (plant != Blocks.AIR) {
                     POTTABLE_BLOCK_IDENTIFIERS.add(BuiltInRegistries.BLOCK.getKey(plant).toString());
                 }

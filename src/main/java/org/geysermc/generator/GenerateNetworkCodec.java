@@ -16,8 +16,8 @@ import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.CloseableResourceManager;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 
 public class GenerateNetworkCodec {
@@ -33,7 +33,7 @@ public class GenerateNetworkCodec {
         });
 
         try {
-            NbtIo.writeCompressed((CompoundTag) tag, new File("./networkCodec.nbt"));
+            NbtIo.writeCompressed((CompoundTag) tag, Path.of("./networkCodec.nbt"));
             System.out.println("Finished writing networkCodec.nbt!");
         } catch (IOException e) {
             System.out.println("Failed to write networkCodec.nbt!");
