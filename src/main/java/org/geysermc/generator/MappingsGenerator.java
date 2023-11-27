@@ -113,7 +113,7 @@ public class MappingsGenerator {
     public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
-        // put block overrides here
+        BLOCK_OVERRIDES.put("minecraft:trial_spawner", "minecraft:mob_spawner");
     }
 
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
@@ -252,7 +252,6 @@ public class MappingsGenerator {
                 // Fix some discrepancies - key is the Java string and value is the Bedrock string
 
                 // Conflicts
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:grass", "minecraft:tallgrass"); // Conflicts with grass block
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:grass_block", "minecraft:grass");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:map", "minecraft:empty_map"); // Conflicts with filled map
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:melon", "minecraft:melon_block"); // Conflicts with melon slice
@@ -265,6 +264,7 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:stonecutter", "minecraft:stonecutter_block"); // Conflicts with, surprisingly, the OLD MCPE stonecutter
 
                 // Changed names
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:short_grass", "minecraft:tallgrass");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:frogspawn", "minecraft:frog_spawn");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:glow_item_frame", "minecraft:glow_frame");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:item_frame", "minecraft:frame");
@@ -273,6 +273,11 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
+
+                // 1.20.3 experimental
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trial_key", "minecraft:echo_shard");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:breeze_spawn_egg", "minecraft:blaze_spawn_egg");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trial_spawner", "minecraft:mob_spawner");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -1381,7 +1386,7 @@ public class MappingsGenerator {
      * @return true if this wall can be treated normally and not stupidly
      */
     private static boolean isSensibleWall(String identifier) {
-        return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick");
+        return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick") || identifier.contains("tuff");
     }
 
     private static boolean isSkull(String identifier) {
