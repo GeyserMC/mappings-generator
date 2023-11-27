@@ -26,6 +26,7 @@ import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -529,7 +530,7 @@ public class MappingsGenerator {
             // Used to know if a biome is valid or not for Bedrock
             JsonObject bedrockBiomes = JsonParser.parseReader(new FileReader(biomeIdMap)).getAsJsonObject();
 
-            Set<ResourceLocation> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).get()
+            Set<ResourceLocation> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).orElseThrow()
                 .listElements().map(ref -> ref.key().location()).collect(Collectors.toSet());
 
             // Check for outdated fallback biomes
@@ -609,15 +610,13 @@ public class MappingsGenerator {
     public void generateEnchantments() {
         try {
             Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
-            for (int id = 0; id < BuiltInRegistries.ENCHANTMENT.size(); id++) {
-                Enchantment enchantment = BuiltInRegistries.ENCHANTMENT.byId(id);
+            for (Enchantment enchantment : BuiltInRegistries.ENCHANTMENT) {
 
                 String rarity = enchantment.getRarity().toString().toLowerCase();
                 int maxLevel = enchantment.getMaxLevel();
                 List<String> incompatibleEnchantments = new ArrayList<>();
                 List<String> validItems = new ArrayList<>();
-                for (int id2 = 0; id2 < BuiltInRegistries.ENCHANTMENT.size(); id2++) {
-                    Enchantment enchantment2 = BuiltInRegistries.ENCHANTMENT.byId(id2);
+                for (Enchantment enchantment2 : BuiltInRegistries.ENCHANTMENT) {
                     if (enchantment != enchantment2 && !enchantment.isCompatibleWith(enchantment2)) {
                         incompatibleEnchantments.add(BuiltInRegistries.ENCHANTMENT.getKey(enchantment2).toString());
                     }
@@ -966,10 +965,10 @@ public class MappingsGenerator {
 
         object.addProperty("bedrock_identifier", bedrockIdentifier);
 
-        object.addProperty("block_hardness", state.getDestroySpeed(null, null));
+        object.addProperty("block_hardness", state.getDestroySpeed(EmptyBlockGetter.INSTANCE, BlockPos.ZERO));
         List<List<Double>> collisionBoxes = Lists.newArrayList();
         try {
-            state.getCollisionShape(null, null).toAabbs().forEach(item -> {
+            state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO).toAabbs().forEach(item -> {
                 List<Double> coordinateList = Lists.newArrayList();
                 // Convert Box class to an array of coordinates
                 // They need to be converted from min/max coordinates to centres and sizes
@@ -983,8 +982,9 @@ public class MappingsGenerator {
 
                 collisionBoxes.add(coordinateList);
             });
-        } catch (NullPointerException e) {
-            // Fallback to empty collision when the position is needed to calculate it
+        } catch (Exception e) {
+            System.out.println("Failed to get collision for " + state);
+            e.printStackTrace();
         }
 
         if (!COLLISION_LIST.contains(collisionBoxes)) {
@@ -1006,15 +1006,15 @@ public class MappingsGenerator {
             // Ignore water, lava, and fire because players can't pick them
             if (!trimmedIdentifier.equals("minecraft:water") && !trimmedIdentifier.equals("minecraft:lava") && !trimmedIdentifier.equals("minecraft:fire")) {
                 Block block = state.getBlock();
-                ItemStack pickStack = block.getCloneItemStack(null, null, state);
+                ItemStack pickStack = block.getCloneItemStack(EmptyLevelReader.INSTANCE, BlockPos.ZERO, state);
                 String pickStackIdentifier = BuiltInRegistries.ITEM.getKey(pickStack.getItem()).toString();
                 if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                     object.addProperty("pick_item", pickStackIdentifier);
                 }
             }
-        } catch (NullPointerException e) {
-            // The block's pick item depends on a block entity.
-            // Banners and Shulker Boxes both depend on the block entity.
+        } catch (Exception e) {
+            System.out.println("Failed to get clone item stack for " + state);
+            e.printStackTrace();
         }
         object.addProperty("can_break_with_hand", !state.requiresCorrectToolForDrops());
         // Removes nbt tags from identifier
@@ -1105,11 +1105,9 @@ public class MappingsGenerator {
             stateLoop:
             for (StateMapper<?> stateMapper : stateMappers) {
                 String[] blockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).blockRegex();
-                if (blockRegex.length != 0) {
-                    for (String regex : blockRegex) {
-                        if (!trimmedIdentifier.matches(regex)) {
-                            continue stateLoop;
-                        }
+                for (String regex : blockRegex) {
+                    if (!trimmedIdentifier.matches(regex)) {
+                        continue stateLoop;
                     }
                 }
                 String value = javaState.split("=")[1];
@@ -1203,7 +1201,7 @@ public class MappingsGenerator {
             object.addProperty("pottable", true);
         }
 
-        if (statesObject.entrySet().size() != 0) {
+        if (!statesObject.entrySet().isEmpty()) {
             if (statesObject.has("wall_block_type") && isSensibleWall(trimmedIdentifier)) {
                 statesObject.getAsJsonObject().remove("wall_block_type");
             }
@@ -1265,28 +1263,22 @@ public class MappingsGenerator {
                 object.addProperty("lastBlockRuntimeId", lastStateId);
             }
         }
-        String[] toolTypes = {"sword", "shovel", "pickaxe", "axe", "shears", "hoe"};
+
         String[] identifierSplit = identifier.split(":")[1].split("_");
-        if (identifierSplit.length > 1) {
-            Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[1]::equals).findAny();
-            if (optToolType.isPresent()) {
-                object.addProperty("tool_type", optToolType.get());
+        String armorOrToolType = identifierSplit[identifierSplit.length > 1 ? 1 : 0];
+
+        List<String> toolTypes = List.of("sword", "shovel", "pickaxe", "axe", "shears", "hoe");
+        if (toolTypes.contains(armorOrToolType)) {
+            object.addProperty("tool_type", armorOrToolType);
+            if (identifierSplit.length > 1) {
                 object.addProperty("tool_tier", identifierSplit[0]);
             }
-        } else {
-            Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[0]::equals).findAny();
-            optToolType.ifPresent(s -> object.addProperty("tool_type", s));
         }
-        String[] armorTypes = {"helmet", "leggings", "chestplate", "boots"};
-        if (identifierSplit.length > 1) {
-            Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[1]::equals).findAny();
-            if (optToolType.isPresent()) {
-                object.addProperty("armor_type", optToolType.get());
-            }
-        } else {
-            Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[0]::equals).findAny();
-            optToolType.ifPresent(s -> object.addProperty("armor_type", s));
+        List<String> armorTypes = List.of("helmet", "leggings", "chestplate", "boots");
+        if (armorTypes.contains(armorOrToolType)) {
+            object.addProperty("armor_type", armorOrToolType);
         }
+
         if (item.getMaxDamage() > 0) {
             Ingredient repairIngredient = null;
             JsonArray repairMaterials = new JsonArray();
@@ -1314,7 +1306,7 @@ public class MappingsGenerator {
                     repairMaterials.add(BuiltInRegistries.ITEM.getKey(repairItem.getItem()).toString());
                 }
             }
-            if (repairMaterials.size() > 0) {
+            if (!repairMaterials.isEmpty()) {
                 object.add("repair_materials", repairMaterials);
             }
         }
@@ -1359,6 +1351,7 @@ public class MappingsGenerator {
         }
 
         private <T extends Comparable<T>> String nameValue(Property<T> arg, Comparable<?> comparable) {
+            //noinspection unchecked
             return arg.getName((T) comparable);
         }
     };
