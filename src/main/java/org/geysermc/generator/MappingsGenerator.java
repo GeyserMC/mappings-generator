@@ -948,6 +948,8 @@ public class MappingsGenerator {
             bedrockIdentifier = trimmedIdentifier;
         } else if (isSkull(trimmedIdentifier)) {
             bedrockIdentifier = "minecraft:skull";
+        } else if (trimmedIdentifier.endsWith("light_gray_glazed_terracotta")) {
+            bedrockIdentifier = "minecraft:silver_glazed_terracotta";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;

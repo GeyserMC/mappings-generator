@@ -5,16 +5,16 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
 @StateRemapper(value = "facing", blockRegex = "^minecraft:small_dripleaf")
-public class SmallDripLeafDirectionMapper extends StateMapper<Integer> {
+public class SmallDripLeafDirectionMapper extends StateMapper<String> {
 
     @Override
-    public Pair<String, Integer> translateState(String fullIdentifier, String value) {
+    public Pair<String, String> translateState(String fullIdentifier, String value) {
         // Bedrock's small drip leaves are rotated clockwise once for the same direction, so these values are shifted around
-        return Pair.of("direction", switch (value) {
-            case "south" -> 3;
-            case "west" -> 0;
-            case "north" -> 1;
-            case "east" -> 2;
+        return Pair.of("minecraft:cardinal_direction", switch (value) {
+            case "south" -> "east";
+            case "west" -> "south";
+            case "north" -> "west";
+            case "east" -> "north";
             default -> throw new RuntimeException("Could not determine small dripleaf direction!");
         });
     }
