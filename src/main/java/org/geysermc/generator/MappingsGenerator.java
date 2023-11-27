@@ -811,6 +811,9 @@ public class MappingsGenerator {
                 } else if (state.getBlock() instanceof SignBlock) {
                     alwaysConsume.add(blockStateToString(state)); // Contains checks for item, but will always consume the action
                     continue;
+                } else if (state.getBlock() instanceof RespawnAnchorBlock) {
+                    // depends on the dimension (only works in the nether)
+                    continue;
                 }
 
                 requiresAbilities.set(false);
@@ -928,8 +931,6 @@ public class MappingsGenerator {
         } else if (trimmedIdentifier.startsWith("minecraft:potted")) {
             // Pots are block entities on Bedrock
             bedrockIdentifier = "minecraft:flower_pot";
-        } else if (trimmedIdentifier.endsWith("concrete_powder")) {
-            bedrockIdentifier = "minecraft:concrete_powder";
         } else if (trimmedIdentifier.endsWith("piston_head")) {
             if (identifier.contains("type=sticky")) {
                 bedrockIdentifier = "minecraft:sticky_piston_arm_collision";
@@ -1224,9 +1225,6 @@ public class MappingsGenerator {
             bedrockIdentifier = "bed";
         } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
             bedrockIdentifier = "skull";
-        } else if (identifier.endsWith("_shulker_box")) {
-            // Colored shulker boxes only
-            bedrockIdentifier = "shulker_box";
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
