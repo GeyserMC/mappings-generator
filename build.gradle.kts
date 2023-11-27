@@ -25,7 +25,8 @@ dependencies {
 
     implementation("org.reflections", "reflections", "0.9.12")
 
-    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta1-SNAPSHOT")
+    implementation("org.cloudburstmc.protocol", "bedrock-codec", "3.0.0.Beta1-20231107.190703-113")
+    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta1-20231107.190703-112")
 
     annotationProcessor("org.projectlombok", "lombok", "1.18.20")
 }
