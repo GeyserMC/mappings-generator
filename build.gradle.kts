@@ -59,7 +59,7 @@ val resourcePackTask = tasks.register<CreateResourcePackTask>("resourcePack") {
 
 val blockPaletteTask = tasks.register<DownloadFileTask>("downloadBlockPalette") {
     url.set("https://raw.githubusercontent.com/CloudburstMC/Data/master/block_palette.nbt")
-    destination.set(file("palettes/block_palette.nbt"))
+    destination.set(file("palettes/blockpalette.nbt"))
 }
 
 val runtimeItemStatesTask = tasks.register<DownloadFileTask>("downloadRuntimeItemStates") {
