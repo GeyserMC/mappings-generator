@@ -60,6 +60,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class MappingsGenerator {
@@ -124,7 +125,7 @@ public class MappingsGenerator {
     static {
         for (Block block : BuiltInRegistries.BLOCK) {
             if (block instanceof FlowerPotBlock flowerPot) {
-                Block plant = flowerPot.getContent();
+                Block plant = flowerPot.getPotted();
                 if (plant != Blocks.AIR) {
                     POTTABLE_BLOCK_IDENTIFIERS.add(BuiltInRegistries.BLOCK.getKey(plant).toString());
                 }
@@ -194,6 +195,7 @@ public class MappingsGenerator {
                     List<String> stateKeys = new ArrayList<>(states.keySet());
                     // ignore some useless keys
                     stateKeys.remove("stone_slab_type");
+                    stateKeys.remove("stone_type"); // added to minecraft:stone
                     STATES.put(identifier, stateKeys);
                 }
             }
@@ -269,6 +271,7 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:glow_item_frame", "minecraft:glow_frame");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:item_frame", "minecraft:frame");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:oak_door", "minecraft:wooden_door");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:scute", "minecraft:turtle_scute");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:shulker_box", "minecraft:undyed_shulker_box");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
@@ -1224,9 +1227,6 @@ public class MappingsGenerator {
             bedrockIdentifier = "bed";
         } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
             bedrockIdentifier = "skull";
-        } else if (identifier.endsWith("_shulker_box")) {
-            // Colored shulker boxes only
-            bedrockIdentifier = "shulker_box";
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
@@ -1381,7 +1381,7 @@ public class MappingsGenerator {
      * @return true if this wall can be treated normally and not stupidly
      */
     private static boolean isSensibleWall(String identifier) {
-        return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick");
+        return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick") || identifier.contains("tuff");
     }
 
     private static boolean isSkull(String identifier) {

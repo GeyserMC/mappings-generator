@@ -5,10 +5,10 @@ import org.geysermc.generator.state.StateMapper;
 import org.geysermc.generator.state.StateRemapper;
 
 @StateRemapper(value = "type", blockRegex = ".*slab.?$")
-public class SlabTypeMapper extends StateMapper<Boolean> {
+public class SlabTypeMapper extends StateMapper<String> {
 
     @Override
-    public Pair<String, Boolean> translateState(String fullIdentifier, String value) {
-        return Pair.of("top_slot_bit", value.equals("top"));
+    public Pair<String, String> translateState(String fullIdentifier, String value) {
+        return Pair.of("minecraft:vertical_half", value.equals("top") ? "top" : "bottom");
     }
 }

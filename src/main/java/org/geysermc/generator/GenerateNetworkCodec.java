@@ -33,7 +33,7 @@ public class GenerateNetworkCodec {
         });
 
         try {
-            NbtIo.writeCompressed((CompoundTag) tag, new File("./networkCodec.nbt"));
+            NbtIo.writeCompressed((CompoundTag) tag, new File("./networkCodec.nbt").toPath());
             System.out.println("Finished writing networkCodec.nbt!");
         } catch (IOException e) {
             System.out.println("Failed to write networkCodec.nbt!");
