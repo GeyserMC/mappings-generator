@@ -9,6 +9,7 @@ public class SlabTypeMapper extends StateMapper<String> {
 
     @Override
     public Pair<String, String> translateState(String fullIdentifier, String value) {
+        // java has "top", "bottom, "double". double slabs in bedrock have a value of "bottom"...
         return Pair.of("minecraft:vertical_half", value.equals("top") ? "top" : "bottom");
     }
 }
