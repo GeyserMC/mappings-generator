@@ -115,7 +115,7 @@ public class MappingsGenerator {
     public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
-        BLOCK_OVERRIDES.put("minecraft:trial_spawner", "minecraft:mob_spawner");
+        // Register BLOCK_OVERRIDES here
     }
 
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
@@ -281,7 +281,6 @@ public class MappingsGenerator {
                 // 1.20.3 experimental
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trial_key", "minecraft:echo_shard");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:breeze_spawn_egg", "minecraft:blaze_spawn_egg");
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trial_spawner", "minecraft:mob_spawner");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
