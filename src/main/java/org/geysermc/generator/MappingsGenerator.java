@@ -886,6 +886,8 @@ public class MappingsGenerator {
             bedrockIdentifier = "minecraft:light_block";
         } else if (trimmedIdentifier.equals("minecraft:dirt_path")) {
             bedrockIdentifier = "minecraft:grass_path";
+        } else if (trimmedIdentifier.equals("minecraft:grass_block")) {
+            bedrockIdentifier = trimmedIdentifier; // For 1.20.70, can be removed in next update
         } else if (trimmedIdentifier.equals("minecraft:small_dripleaf")) {
             bedrockIdentifier = "minecraft:small_dripleaf_block";
         } else if (trimmedIdentifier.equals("minecraft:big_dripleaf_stem")) {
@@ -916,14 +918,7 @@ public class MappingsGenerator {
                 bedrockIdentifier = formatDoubleSlab(trimmedIdentifier);
             }
         } else if (trimmedIdentifier.endsWith("_leaves")) {
-            if (trimmedIdentifier.contains(":oak") || trimmedIdentifier.contains("spruce") || trimmedIdentifier.contains("birch") || trimmedIdentifier.contains("jungle")) {
-                bedrockIdentifier = "minecraft:leaves";
-            } else if (trimmedIdentifier.contains("acacia") || trimmedIdentifier.contains("dark_oak")) {
-                bedrockIdentifier = "minecraft:leaves2";
-            } else {
-                // Default to trimmed identifier, or the existing identifier
-                bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
-            }
+            bedrockIdentifier = trimmedIdentifier; // For 1.20.70, can be removed in next update
         } else if (trimmedIdentifier.equals("minecraft:mangrove_sign")) {
             bedrockIdentifier = "minecraft:mangrove_standing_sign";
         } else if (trimmedIdentifier.equals("minecraft:tripwire")) {
@@ -950,6 +945,8 @@ public class MappingsGenerator {
             bedrockIdentifier = trimmedIdentifier;
         } else if (isSkull(trimmedIdentifier)) {
             bedrockIdentifier = "minecraft:skull";
+        } else if (trimmedIdentifier.endsWith("_wood")) {
+            bedrockIdentifier = trimmedIdentifier; // For 1.20.70, can be removed in next update
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -957,6 +954,16 @@ public class MappingsGenerator {
 
         if (bedrockIdentifier.contains(":stone_slab") || bedrockIdentifier.contains(":double_stone_slab")) {
             bedrockIdentifier = bedrockIdentifier.replace("stone_slab", "stone_block_slab");
+        }
+
+        // For 1.20.70, can be removed in next update
+        if (bedrockIdentifier.equals("minecraft:wooden_slab")) {
+            bedrockIdentifier = trimmedIdentifier;
+        }
+
+        // For 1.20.70, can be removed in next update
+        if (bedrockIdentifier.equals("minecraft:double_wooden_slab")) {
+            bedrockIdentifier = trimmedIdentifier.replace("_slab", "") + "_double_slab";
         }
 
         object.addProperty("bedrock_identifier", bedrockIdentifier);
@@ -1159,7 +1166,7 @@ public class MappingsGenerator {
             if (!isHead) {
                 statesObject.addProperty("big_dripleaf_tilt", "none");
             }
-        } else if (trimmedIdentifier.equals("minecraft:mangrove_wood")) {
+        } else if (trimmedIdentifier.equals("minecraft:mangrove_wood") || trimmedIdentifier.equals(("minecraft:cherry_wood"))) {
             // Didn't seem to do anything
             statesObject.addProperty("stripped_bit", false);
         } else if (trimmedIdentifier.contains("azalea_leaves") || trimmedIdentifier.endsWith("mangrove_leaves")) {
@@ -1173,14 +1180,21 @@ public class MappingsGenerator {
             stateIdentifier = bedrockIdentifier;
         }
 
-        if (bedrockIdentifier.startsWith("minecraft:leaves")) {
-            String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.lastIndexOf("_"));
-            if (bedrockIdentifier.endsWith("2")) {
-                statesObject.addProperty("new_leaf_type", woodType);
-            } else {
-                statesObject.addProperty("old_leaf_type", woodType);
-            }
-            statesObject.addProperty("update_bit", false);
+        // For 1.20.70, can be removed in next update
+        if (bedrockIdentifier.endsWith("_leaves")) {
+            statesObject.remove("old_leaf_type");
+            statesObject.remove("new_leaf_type");
+        }
+
+        // For 1.20.70, can be removed in next update
+        if (bedrockIdentifier.endsWith("_wood") && !(bedrockIdentifier.contains("mangrove") || bedrockIdentifier.contains("cherry"))) {
+            statesObject.remove("wood_type");
+            statesObject.remove("stripped_bit");
+        }
+
+        // For 1.20.70, can be removed in next update
+        if (bedrockIdentifier.endsWith("_slab")) {
+            statesObject.remove("wood_type");
         }
 
         List<String> stateKeys = STATES.get(stateIdentifier);
