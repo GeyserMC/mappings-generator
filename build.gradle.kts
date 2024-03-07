@@ -4,8 +4,8 @@ import java.nio.file.Files
 import java.nio.file.FileSystems
 import java.nio.file.StandardCopyOption
 
-val javaMinecraftVersion = "1.20.2"
-val bedrockResourcePackVersion = "1.20.0.1"
+val javaMinecraftVersion = "1.20.4"
+val bedrockResourcePackVersion = "1.20.70.25-preview"
 val resourcePack = file("bedrockresourcepack.zip")
 val bedrockSamples = file("bedrock-samples.zip")
 
@@ -55,6 +55,20 @@ val resourcePackTask = tasks.register<CreateResourcePackTask>("resourcePack") {
     dependsOn(samplesTask)
     bedrockSamples.set(samplesTask.get().destination)
     packFile.set(resourcePack)
+}
+
+val blockPaletteTask = tasks.register<DownloadFileTask>("downloadBlockPalette") {
+    url.set("https://raw.githubusercontent.com/CloudburstMC/Data/master/block_palette.nbt")
+    destination.set(file("palettes/blockpalette.nbt"))
+}
+
+val runtimeItemStatesTask = tasks.register<DownloadFileTask>("downloadRuntimeItemStates") {
+    url.set("https://raw.githubusercontent.com/CloudburstMC/Data/master/runtime_item_states.json")
+    destination.set(file("palettes/runtime_item_states.json"))
+}
+
+val downloadAll = tasks.register("downloadAll") {
+    dependsOn(resourcePackTask, blockPaletteTask, runtimeItemStatesTask)
 }
 
 abstract class CreateResourcePackTask : DefaultTask() {
