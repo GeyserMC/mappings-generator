@@ -279,7 +279,6 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
 
                 // 1.20.3 experimental
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:trial_key", "minecraft:echo_shard");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:breeze_spawn_egg", "minecraft:blaze_spawn_egg");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
