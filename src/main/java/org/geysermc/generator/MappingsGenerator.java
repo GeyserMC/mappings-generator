@@ -26,6 +26,7 @@ import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -60,6 +61,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class MappingsGenerator {
@@ -113,7 +115,7 @@ public class MappingsGenerator {
     public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
-        // put block overrides here
+        // Register BLOCK_OVERRIDES here
     }
 
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
@@ -124,7 +126,7 @@ public class MappingsGenerator {
     static {
         for (Block block : BuiltInRegistries.BLOCK) {
             if (block instanceof FlowerPotBlock flowerPot) {
-                Block plant = flowerPot.getContent();
+                Block plant = flowerPot.getPotted();
                 if (plant != Blocks.AIR) {
                     POTTABLE_BLOCK_IDENTIFIERS.add(BuiltInRegistries.BLOCK.getKey(plant).toString());
                 }
@@ -194,6 +196,7 @@ public class MappingsGenerator {
                     List<String> stateKeys = new ArrayList<>(states.keySet());
                     // ignore some useless keys
                     stateKeys.remove("stone_slab_type");
+                    stateKeys.remove("stone_type"); // added to minecraft:stone
                     STATES.put(identifier, stateKeys);
                 }
             }
@@ -252,8 +255,6 @@ public class MappingsGenerator {
                 // Fix some discrepancies - key is the Java string and value is the Bedrock string
 
                 // Conflicts
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:grass", "minecraft:tallgrass"); // Conflicts with grass block
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:grass_block", "minecraft:grass");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:map", "minecraft:empty_map"); // Conflicts with filled map
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:melon", "minecraft:melon_block"); // Conflicts with melon slice
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:nether_brick", "minecraft:netherbrick"); // This is the item; the block conflicts
@@ -265,14 +266,19 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:stonecutter", "minecraft:stonecutter_block"); // Conflicts with, surprisingly, the OLD MCPE stonecutter
 
                 // Changed names
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:short_grass", "minecraft:tallgrass");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:frogspawn", "minecraft:frog_spawn");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:glow_item_frame", "minecraft:glow_frame");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:item_frame", "minecraft:frame");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:oak_door", "minecraft:wooden_door");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:scute", "minecraft:turtle_scute");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:shulker_box", "minecraft:undyed_shulker_box");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
+
+                // 1.20.3 experimental
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:breeze_spawn_egg", "minecraft:blaze_spawn_egg");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
@@ -524,7 +530,7 @@ public class MappingsGenerator {
             // Used to know if a biome is valid or not for Bedrock
             JsonObject bedrockBiomes = JsonParser.parseReader(new FileReader(biomeIdMap)).getAsJsonObject();
 
-            Set<ResourceLocation> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).get()
+            Set<ResourceLocation> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).orElseThrow()
                 .listElements().map(ref -> ref.key().location()).collect(Collectors.toSet());
 
             // Check for outdated fallback biomes
@@ -604,15 +610,13 @@ public class MappingsGenerator {
     public void generateEnchantments() {
         try {
             Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
-            for (int id = 0; id < BuiltInRegistries.ENCHANTMENT.size(); id++) {
-                Enchantment enchantment = BuiltInRegistries.ENCHANTMENT.byId(id);
+            for (Enchantment enchantment : BuiltInRegistries.ENCHANTMENT) {
 
                 String rarity = enchantment.getRarity().toString().toLowerCase();
                 int maxLevel = enchantment.getMaxLevel();
                 List<String> incompatibleEnchantments = new ArrayList<>();
                 List<String> validItems = new ArrayList<>();
-                for (int id2 = 0; id2 < BuiltInRegistries.ENCHANTMENT.size(); id2++) {
-                    Enchantment enchantment2 = BuiltInRegistries.ENCHANTMENT.byId(id2);
+                for (Enchantment enchantment2 : BuiltInRegistries.ENCHANTMENT) {
                     if (enchantment != enchantment2 && !enchantment.isCompatibleWith(enchantment2)) {
                         incompatibleEnchantments.add(BuiltInRegistries.ENCHANTMENT.getKey(enchantment2).toString());
                     }
@@ -811,6 +815,9 @@ public class MappingsGenerator {
                 } else if (state.getBlock() instanceof SignBlock) {
                     alwaysConsume.add(blockStateToString(state)); // Contains checks for item, but will always consume the action
                     continue;
+                } else if (state.getBlock() instanceof RespawnAnchorBlock) {
+                    // depends on the dimension (only works in the nether)
+                    continue;
                 }
 
                 requiresAbilities.set(false);
@@ -912,15 +919,6 @@ public class MappingsGenerator {
             } else {
                 bedrockIdentifier = formatDoubleSlab(trimmedIdentifier);
             }
-        } else if (trimmedIdentifier.endsWith("_leaves")) {
-            if (trimmedIdentifier.contains(":oak") || trimmedIdentifier.contains("spruce") || trimmedIdentifier.contains("birch") || trimmedIdentifier.contains("jungle")) {
-                bedrockIdentifier = "minecraft:leaves";
-            } else if (trimmedIdentifier.contains("acacia") || trimmedIdentifier.contains("dark_oak")) {
-                bedrockIdentifier = "minecraft:leaves2";
-            } else {
-                // Default to trimmed identifier, or the existing identifier
-                bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
-            }
         } else if (trimmedIdentifier.equals("minecraft:mangrove_sign")) {
             bedrockIdentifier = "minecraft:mangrove_standing_sign";
         } else if (trimmedIdentifier.equals("minecraft:tripwire")) {
@@ -928,8 +926,6 @@ public class MappingsGenerator {
         } else if (trimmedIdentifier.startsWith("minecraft:potted")) {
             // Pots are block entities on Bedrock
             bedrockIdentifier = "minecraft:flower_pot";
-        } else if (trimmedIdentifier.endsWith("concrete_powder")) {
-            bedrockIdentifier = "minecraft:concrete_powder";
         } else if (trimmedIdentifier.endsWith("piston_head")) {
             if (identifier.contains("type=sticky")) {
                 bedrockIdentifier = "minecraft:sticky_piston_arm_collision";
@@ -947,6 +943,8 @@ public class MappingsGenerator {
             bedrockIdentifier = trimmedIdentifier;
         } else if (isSkull(trimmedIdentifier)) {
             bedrockIdentifier = "minecraft:skull";
+        } else if (trimmedIdentifier.endsWith("light_gray_glazed_terracotta")) {
+            bedrockIdentifier = "minecraft:silver_glazed_terracotta";
         } else {
             // Default to trimmed identifier, or the existing identifier
             bedrockIdentifier = blockEntry != null ? blockEntry.getBedrockIdentifier() : trimmedIdentifier;
@@ -958,10 +956,10 @@ public class MappingsGenerator {
 
         object.addProperty("bedrock_identifier", bedrockIdentifier);
 
-        object.addProperty("block_hardness", state.getDestroySpeed(null, null));
+        object.addProperty("block_hardness", state.getDestroySpeed(EmptyBlockGetter.INSTANCE, BlockPos.ZERO));
         List<List<Double>> collisionBoxes = Lists.newArrayList();
         try {
-            state.getCollisionShape(null, null).toAabbs().forEach(item -> {
+            state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO).toAabbs().forEach(item -> {
                 List<Double> coordinateList = Lists.newArrayList();
                 // Convert Box class to an array of coordinates
                 // They need to be converted from min/max coordinates to centres and sizes
@@ -975,8 +973,9 @@ public class MappingsGenerator {
 
                 collisionBoxes.add(coordinateList);
             });
-        } catch (NullPointerException e) {
-            // Fallback to empty collision when the position is needed to calculate it
+        } catch (Exception e) {
+            System.out.println("Failed to get collision for " + state);
+            e.printStackTrace();
         }
 
         if (!COLLISION_LIST.contains(collisionBoxes)) {
@@ -998,15 +997,15 @@ public class MappingsGenerator {
             // Ignore water, lava, and fire because players can't pick them
             if (!trimmedIdentifier.equals("minecraft:water") && !trimmedIdentifier.equals("minecraft:lava") && !trimmedIdentifier.equals("minecraft:fire")) {
                 Block block = state.getBlock();
-                ItemStack pickStack = block.getCloneItemStack(null, null, state);
+                ItemStack pickStack = block.getCloneItemStack(EmptyLevelReader.INSTANCE, BlockPos.ZERO, state);
                 String pickStackIdentifier = BuiltInRegistries.ITEM.getKey(pickStack.getItem()).toString();
                 if (!pickStackIdentifier.equals(trimmedIdentifier)) {
                     object.addProperty("pick_item", pickStackIdentifier);
                 }
             }
-        } catch (NullPointerException e) {
-            // The block's pick item depends on a block entity.
-            // Banners and Shulker Boxes both depend on the block entity.
+        } catch (Exception e) {
+            System.out.println("Failed to get clone item stack for " + state);
+            e.printStackTrace();
         }
         object.addProperty("can_break_with_hand", !state.requiresCorrectToolForDrops());
         // Removes nbt tags from identifier
@@ -1097,11 +1096,9 @@ public class MappingsGenerator {
             stateLoop:
             for (StateMapper<?> stateMapper : stateMappers) {
                 String[] blockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).blockRegex();
-                if (blockRegex.length != 0) {
-                    for (String regex : blockRegex) {
-                        if (!trimmedIdentifier.matches(regex)) {
-                            continue stateLoop;
-                        }
+                for (String regex : blockRegex) {
+                    if (!trimmedIdentifier.matches(regex)) {
+                        continue stateLoop;
                     }
                 }
                 String value = javaState.split("=")[1];
@@ -1156,7 +1153,7 @@ public class MappingsGenerator {
             if (!isHead) {
                 statesObject.addProperty("big_dripleaf_tilt", "none");
             }
-        } else if (trimmedIdentifier.equals("minecraft:mangrove_wood")) {
+        } else if (trimmedIdentifier.equals("minecraft:mangrove_wood") || trimmedIdentifier.equals(("minecraft:cherry_wood"))) {
             // Didn't seem to do anything
             statesObject.addProperty("stripped_bit", false);
         } else if (trimmedIdentifier.contains("azalea_leaves") || trimmedIdentifier.endsWith("mangrove_leaves")) {
@@ -1168,16 +1165,6 @@ public class MappingsGenerator {
             stateIdentifier = "minecraft:cobblestone_wall";
         } else {
             stateIdentifier = bedrockIdentifier;
-        }
-
-        if (bedrockIdentifier.startsWith("minecraft:leaves")) {
-            String woodType = trimmedIdentifier.substring(trimmedIdentifier.indexOf(":") + 1, trimmedIdentifier.lastIndexOf("_"));
-            if (bedrockIdentifier.endsWith("2")) {
-                statesObject.addProperty("new_leaf_type", woodType);
-            } else {
-                statesObject.addProperty("old_leaf_type", woodType);
-            }
-            statesObject.addProperty("update_bit", false);
         }
 
         List<String> stateKeys = STATES.get(stateIdentifier);
@@ -1195,7 +1182,7 @@ public class MappingsGenerator {
             object.addProperty("pottable", true);
         }
 
-        if (statesObject.entrySet().size() != 0) {
+        if (!statesObject.entrySet().isEmpty()) {
             if (statesObject.has("wall_block_type") && isSensibleWall(trimmedIdentifier)) {
                 statesObject.getAsJsonObject().remove("wall_block_type");
             }
@@ -1224,9 +1211,6 @@ public class MappingsGenerator {
             bedrockIdentifier = "bed";
         } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
             bedrockIdentifier = "skull";
-        } else if (identifier.endsWith("_shulker_box")) {
-            // Colored shulker boxes only
-            bedrockIdentifier = "shulker_box";
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
@@ -1260,28 +1244,22 @@ public class MappingsGenerator {
                 object.addProperty("lastBlockRuntimeId", lastStateId);
             }
         }
-        String[] toolTypes = {"sword", "shovel", "pickaxe", "axe", "shears", "hoe"};
+
         String[] identifierSplit = identifier.split(":")[1].split("_");
-        if (identifierSplit.length > 1) {
-            Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[1]::equals).findAny();
-            if (optToolType.isPresent()) {
-                object.addProperty("tool_type", optToolType.get());
+        String armorOrToolType = identifierSplit[identifierSplit.length > 1 ? 1 : 0];
+
+        List<String> toolTypes = List.of("sword", "shovel", "pickaxe", "axe", "shears", "hoe");
+        if (toolTypes.contains(armorOrToolType)) {
+            object.addProperty("tool_type", armorOrToolType);
+            if (identifierSplit.length > 1) {
                 object.addProperty("tool_tier", identifierSplit[0]);
             }
-        } else {
-            Optional<String> optToolType = Arrays.stream(toolTypes).parallel().filter(identifierSplit[0]::equals).findAny();
-            optToolType.ifPresent(s -> object.addProperty("tool_type", s));
         }
-        String[] armorTypes = {"helmet", "leggings", "chestplate", "boots"};
-        if (identifierSplit.length > 1) {
-            Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[1]::equals).findAny();
-            if (optToolType.isPresent()) {
-                object.addProperty("armor_type", optToolType.get());
-            }
-        } else {
-            Optional<String> optToolType = Arrays.stream(armorTypes).parallel().filter(identifierSplit[0]::equals).findAny();
-            optToolType.ifPresent(s -> object.addProperty("armor_type", s));
+        List<String> armorTypes = List.of("helmet", "leggings", "chestplate", "boots");
+        if (armorTypes.contains(armorOrToolType)) {
+            object.addProperty("armor_type", armorOrToolType);
         }
+
         if (item.getMaxDamage() > 0) {
             Ingredient repairIngredient = null;
             JsonArray repairMaterials = new JsonArray();
@@ -1309,7 +1287,7 @@ public class MappingsGenerator {
                     repairMaterials.add(BuiltInRegistries.ITEM.getKey(repairItem.getItem()).toString());
                 }
             }
-            if (repairMaterials.size() > 0) {
+            if (!repairMaterials.isEmpty()) {
                 object.add("repair_materials", repairMaterials);
             }
         }
@@ -1354,6 +1332,7 @@ public class MappingsGenerator {
         }
 
         private <T extends Comparable<T>> String nameValue(Property<T> arg, Comparable<?> comparable) {
+            //noinspection unchecked
             return arg.getName((T) comparable);
         }
     };
@@ -1381,7 +1360,7 @@ public class MappingsGenerator {
      * @return true if this wall can be treated normally and not stupidly
      */
     private static boolean isSensibleWall(String identifier) {
-        return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick");
+        return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick") || identifier.contains("tuff");
     }
 
     private static boolean isSkull(String identifier) {

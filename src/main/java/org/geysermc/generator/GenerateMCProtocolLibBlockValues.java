@@ -20,6 +20,7 @@ public class GenerateMCProtocolLibBlockValues {
         format("SHULKER_BOX_LOWER", Blocks.SHULKER_BOX);
         format("SHULKER_BOX_HIGHER", Blocks.BLACK_SHULKER_BOX);
         format("BELL", Blocks.BELL);
+        format("DECORATED_POT", Blocks.DECORATED_POT);
     }
 
     private static void format(String name, Block block) {
