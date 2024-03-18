@@ -117,7 +117,7 @@ public class GenerateItemsClass {
                         .append(item.getMaxDamage())
                         .append(")");
             }
-git
+
             if (item instanceof TridentItem || item instanceof DiggerItem || item instanceof SwordItem) {
                 double playerDefault = Player.createAttributes().build().getValue(Attributes.ATTACK_DAMAGE);
                 var map = item.getDefaultAttributeModifiers(EquipmentSlot.MAINHAND);
