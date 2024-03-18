@@ -1,11 +1,20 @@
 package org.geysermc.generator;
 
+import com.google.common.collect.Multimap;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.DecoratedPotBlock;
 import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -106,6 +115,15 @@ public class GenerateItemsClass {
             if (item.getMaxDamage() > 0) {
                 builder.append(".maxDamage(")
                         .append(item.getMaxDamage())
+                        .append(")");
+            }
+
+            if (item instanceof TridentItem || item instanceof DiggerItem || item instanceof SwordItem) {
+                double playerDefault = Player.createAttributes().build().getValue(Attributes.ATTACK_DAMAGE);
+                var map = item.getDefaultAttributeModifiers(EquipmentSlot.MAINHAND);
+                AttributeModifier[] collection = map.get(Attributes.ATTACK_DAMAGE).toArray(new AttributeModifier[] {});
+                builder.append(".attackDamage(")
+                        .append((collection[0]).getAmount() + playerDefault)
                         .append(")");
             }
 
