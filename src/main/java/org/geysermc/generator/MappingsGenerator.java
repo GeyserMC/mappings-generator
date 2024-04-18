@@ -10,6 +10,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -612,7 +613,7 @@ public class MappingsGenerator {
             Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
             for (Enchantment enchantment : BuiltInRegistries.ENCHANTMENT) {
 
-                String rarity = enchantment.getRarity().toString().toLowerCase();
+                int anvilCost = enchantment.getAnvilCost();
                 int maxLevel = enchantment.getMaxLevel();
                 List<String> incompatibleEnchantments = new ArrayList<>();
                 List<String> validItems = new ArrayList<>();
@@ -625,6 +626,7 @@ public class MappingsGenerator {
                     incompatibleEnchantments = null;
                 }
                 // Super inefficient, but I don't think there is a better way
+                // TODO: Doesn't work, we need to load tags
                 for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                     Item value = BuiltInRegistries.ITEM.byId(i);
                     ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
@@ -633,7 +635,7 @@ public class MappingsGenerator {
                         validItems.add(key.getNamespace() + ":" + key.getPath());
                     }
                 }
-                enchantmentMap.put(BuiltInRegistries.ENCHANTMENT.getKey(enchantment).toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
+                enchantmentMap.put(BuiltInRegistries.ENCHANTMENT.getKey(enchantment).toString(), new EnchantmentEntry(anvilCost, maxLevel, incompatibleEnchantments, validItems));
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
@@ -833,11 +835,11 @@ public class MappingsGenerator {
                 }
                 when(mockClientLevel.getBlockState(new BlockPos(0, 0, 0))).thenReturn(state);
 
-                InteractionResult result = state.use(mockClientLevel, mockPlayer, InteractionHand.MAIN_HAND, blockHitResult);
+                InteractionResult result = state.useWithoutItem(mockClientLevel, mockPlayer, blockHitResult);
                 if (!requiresItem.get()) {
                     if (result.consumesAction() && requiresAbilities.get()) {
                         abilities.mayBuild = false;
-                        InteractionResult result2 = state.use(mockClientLevel, mockPlayer, InteractionHand.MAIN_HAND, blockHitResult);
+                        InteractionResult result2 = state.useWithoutItem(mockClientLevel, mockPlayer, blockHitResult);
                         if (result != result2) {
                             requiresMayBuild.add(blockStateToString(state));
                         }
@@ -1260,12 +1262,12 @@ public class MappingsGenerator {
             object.addProperty("armor_type", armorOrToolType);
         }
 
-        if (item.getMaxDamage() > 0) {
+        if (item.components().has(DataComponents.MAX_DAMAGE)) {
             Ingredient repairIngredient = null;
             JsonArray repairMaterials = new JsonArray();
             // Some repair ingredients use item tags which are not loaded
             if (item instanceof ArmorItem armorItem) {
-                repairIngredient = armorItem.getMaterial().getRepairIngredient();
+                repairIngredient = armorItem.getMaterial().value().repairIngredient().get();
                 object.addProperty("protection_value", armorItem.getDefense());
             } else if (item instanceof ElytraItem) {
                 repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
@@ -1296,7 +1298,7 @@ public class MappingsGenerator {
             object.addProperty("is_entity_placer", true);
         }
 
-        if (item.isEdible()) {
+        if (item.components().has(DataComponents.FOOD)) {
             object.addProperty("is_edible", true);
         }
 
