@@ -11,7 +11,8 @@ import java.util.List;
 @Getter
 @Setter
 public class EnchantmentEntry {
-    private String rarity;
+    @SerializedName("anvil_cost")
+    private int anvilCost;
 
     @SerializedName("max_level")
     private int maxLevel;
