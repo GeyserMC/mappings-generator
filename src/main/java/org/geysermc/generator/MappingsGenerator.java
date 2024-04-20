@@ -6,10 +6,12 @@ import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
+import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -17,7 +19,14 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.RegistryLayer;
+import net.minecraft.server.ReloadableServerResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.ServerPacksSource;
+import net.minecraft.server.packs.resources.CloseableResourceManager;
+import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.tags.TagManager;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -56,6 +65,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -610,6 +620,12 @@ public class MappingsGenerator {
 
     public void generateEnchantments() {
         try {
+            CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, List.of(ServerPacksSource.createVanillaPackSource()));
+            RegistryAccess.Frozen registryAccess = RegistryLayer.createRegistryAccess().compositeAccess();
+            TagManager tagManager = new TagManager(registryAccess);
+            registryAccess.registries().map(registryEntry -> tagManager.createLoader(resourceManager, Util.backgroundExecutor(), registryEntry))
+                    .map(CompletableFuture::join).forEach(loadResult -> ReloadableServerResources.updateRegistryTags(registryAccess, loadResult));
+
             Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
             for (Enchantment enchantment : BuiltInRegistries.ENCHANTMENT) {
 
@@ -626,7 +642,6 @@ public class MappingsGenerator {
                     incompatibleEnchantments = null;
                 }
                 // Super inefficient, but I don't think there is a better way
-                // TODO: Doesn't work, we need to load tags
                 for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                     Item value = BuiltInRegistries.ITEM.byId(i);
                     ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);

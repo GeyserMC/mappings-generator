@@ -10,3 +10,7 @@ mutable field net/minecraft/world/level/Level isClientSide Z
 mutable field net/minecraft/world/level/Level random Lnet/minecraft/util/RandomSource;
 accessible field net/minecraft/world/entity/Entity level Lnet/minecraft/world/level/Level;
 accessible field net/minecraft/world/entity/Entity position Lnet/minecraft/world/phys/Vec3;
+
+# Allow us to load tags required to generate enchantments' valid items
+accessible method net/minecraft/server/ReloadableServerResources updateRegistryTags (Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/tags/TagManager$LoadResult;)V
+accessible method net/minecraft/tags/TagManager createLoader (Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/concurrent/Executor;Lnet/minecraft/core/RegistryAccess$RegistryEntry;)Ljava/util/concurrent/CompletableFuture;
