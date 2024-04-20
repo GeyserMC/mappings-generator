@@ -51,6 +51,7 @@ public class GenerateItemsClass {
         classOverrides.put(Items.CHEST, "ChestItem");
         classOverrides.put(Items.ENDER_CHEST, "ChestItem");
         classOverrides.put(Items.TRAPPED_CHEST, "ChestItem");
+        classOverrides.put(Items.MACE, "MaceItem");
         List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class,
                 PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class);
 
