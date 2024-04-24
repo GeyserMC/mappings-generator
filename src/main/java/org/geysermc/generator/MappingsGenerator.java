@@ -34,6 +34,7 @@ import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.FireworkStarRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.EmptyBlockGetter;

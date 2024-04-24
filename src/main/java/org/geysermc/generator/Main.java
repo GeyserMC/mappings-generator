@@ -13,6 +13,7 @@ public class Main {
         generator.generateMapColors();
         generator.generateEnchantments();
         generator.generateParticles();
-        generator.generateInteractionData();
+        //generator.generateInteractionData();
+        RecipeGenerator.generate();
     }
 }
