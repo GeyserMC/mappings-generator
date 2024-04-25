@@ -1,10 +1,17 @@
 package org.geysermc.generator;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.RegistryCodecs;
+import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -12,7 +19,16 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.RegistryLayer;
+import net.minecraft.server.ReloadableServerResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.ServerPacksSource;
+import net.minecraft.server.packs.resources.CloseableResourceManager;
+import net.minecraft.server.packs.resources.MultiPackResourceManager;
+import net.minecraft.tags.TagManager;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.StackedContents;
@@ -28,12 +44,14 @@ import net.minecraft.world.level.block.ShulkerBoxBlock;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.CraftingDataType;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public final class RecipeGenerator {
-    private static final Codec<Map<String, List<GeyserRecipe>>> MAP_CODEC = Codec.unboundedMap(Codec.STRING, Codec.list(GeyserRecipe.CODEC));
+    private static RegistryAccess REGISTRY_ACCESS;
 
     public static void generate() {
         final Path mappings = Path.of("mappings");
@@ -41,6 +59,14 @@ public final class RecipeGenerator {
             System.out.println("Cannot create recipes! Did you clone submodules?");
             return;
         }
+
+        CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, List.of(ServerPacksSource.createVanillaPackSource()));
+        RegistryAccess.Frozen registryAccess = RegistryLayer.createRegistryAccess().compositeAccess();
+        TagManager tagManager = new TagManager(registryAccess);
+        registryAccess.registries().map(registryEntry -> tagManager.createLoader(resourceManager, Util.backgroundExecutor(), registryEntry))
+                .map(CompletableFuture::join).forEach(loadResult -> ReloadableServerResources.updateRegistryTags(registryAccess, loadResult));
+        REGISTRY_ACCESS = registryAccess;
+
         final List<DyeItem> allDyes = BuiltInRegistries.ITEM
                 .stream()
                 .filter(item -> item instanceof DyeItem)
@@ -72,6 +98,7 @@ public final class RecipeGenerator {
         final ItemStack arrow = new ItemStack(Items.ARROW);
         BuiltInRegistries.POTION.forEach(potion -> {
             final ItemStack potionStack = PotionContents.createItemStack(Items.LINGERING_POTION, Holder.direct(potion));
+            // Still hardcoded to heck! So don't do this in the future. :)
             validateAndAddWithShape(tippedArrowRecipes, tippedArrowTest, new ItemStack[]{
                     arrow, arrow, arrow,
                     arrow, potionStack, arrow,
@@ -116,7 +143,7 @@ public final class RecipeGenerator {
         }
 
         final ItemStack result = recipe.assemble(craftingContainer, null);
-        recipes.add(new GeyserRecipe(CraftingDataType.SHAPED, result, List.of(inputItems), List.of("AAA", "ABA", "AAA")));
+        recipes.add(new GeyserRecipe(CraftingDataType.SHAPED, result, Arrays.stream(inputItems).distinct().toList(), List.of("AAA", "ABA", "AAA")));
     }
 
     private static List<ItemStack> createItemList(Item... items) {
@@ -128,13 +155,34 @@ public final class RecipeGenerator {
         return List.of(stacks);
     }
 
+    static final Codec<ItemStack> STACK_CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                    ExtraCodecs.POSITIVE_INT.fieldOf("id").xmap(Item::byId, Item::getId).forGetter(ItemStack::getItem),
+                    ExtraCodecs.POSITIVE_INT.fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
+                    Codec.STRING.optionalFieldOf("components", null)
+                            .xmap(string -> DataComponentPatch.EMPTY, // Unneeded on this end of the cycle. :)
+                                    components -> {
+                                        if (components.isEmpty()) {
+                                            return null;
+                                        }
+                                        // Geyser doesn't have a way to deserialize DataComponents from NBT
+                                        ByteBuf byteBuf = Unpooled.buffer();
+                                        var buf = new RegistryFriendlyByteBuf(byteBuf, REGISTRY_ACCESS);
+                                        DataComponentPatch.STREAM_CODEC.encode(buf, components);
+                                        byte[] bytes = new byte[byteBuf.readableBytes()];
+                                        byteBuf.readBytes(bytes);
+                                        return Base64.getEncoder().encodeToString(bytes);
+                                    })
+                            .forGetter(ItemStack::getComponentsPatch)
+            ).apply(instance, (id, count, components) -> new ItemStack(Holder.direct(id), count, components)));
+
     private record GeyserRecipe(CraftingDataType bedrockRecipeType, ItemStack output, List<ItemStack> inputs, List<String> shape) {
         static final Codec<GeyserRecipe> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.STRING.fieldOf("bedrock_recipe_type")
                         .xmap(CraftingDataType::valueOf, CraftingDataType::toString)
                         .forGetter(GeyserRecipe::bedrockRecipeType),
-                ItemStack.CODEC.fieldOf("output").forGetter(GeyserRecipe::output),
-                Codec.list(ItemStack.CODEC).fieldOf("inputs").forGetter(GeyserRecipe::inputs),
+                STACK_CODEC.fieldOf("output").forGetter(GeyserRecipe::output),
+                Codec.list(STACK_CODEC).fieldOf("inputs").forGetter(GeyserRecipe::inputs),
                 Codec.list(Codec.STRING).optionalFieldOf("shape", null).forGetter(GeyserRecipe::shape)
         ).apply(instance, GeyserRecipe::new));
 
@@ -142,6 +190,8 @@ public final class RecipeGenerator {
             this(bedrockRecipeType, output, inputs, null);
         }
     }
+
+    private static final Codec<Map<String, List<GeyserRecipe>>> MAP_CODEC = Codec.unboundedMap(Codec.STRING, Codec.list(GeyserRecipe.CODEC));
 
     private record MockCraftingContainer(List<ItemStack> items) implements CraftingContainer {
 
