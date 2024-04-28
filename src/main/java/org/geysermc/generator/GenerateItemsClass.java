@@ -1,6 +1,7 @@
 package org.geysermc.generator;
 
 import com.google.common.collect.Multimap;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -47,10 +48,6 @@ public class GenerateItemsClass {
         classOverrides.put(Items.FIREWORK_STAR, "FireworkStarItem");
         classOverrides.put(Items.PLAYER_HEAD, "PlayerHeadItem");
         classOverrides.put(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem");
-        classOverrides.put(Items.BARREL, "ChestItem");
-        classOverrides.put(Items.CHEST, "ChestItem");
-        classOverrides.put(Items.ENDER_CHEST, "ChestItem");
-        classOverrides.put(Items.TRAPPED_CHEST, "ChestItem");
         classOverrides.put(Items.MACE, "MaceItem");
         List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class,
                 PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class);
@@ -68,11 +65,12 @@ public class GenerateItemsClass {
             if (item instanceof BlockItem blockItem) {
                 if (blockItem.getBlock() instanceof ShulkerBoxBlock) {
                     clazz = "ShulkerBoxItem";
-                } else if (blockItem.getBlock() instanceof FlowerBlock) {
-                    clazz = "FlowerItem";
                 } else if (blockItem.getBlock() instanceof DecoratedPotBlock) {
                     clazz = "DecoratedPotItem";
                 }
+            }
+            if (item instanceof ArmorItem armor && armor.getMaterial().is(ArmorMaterials.LEATHER)) {
+                clazz = "DyeableArmorItem";
             }
             if (clazz == null) {
                 clazz = classOverrides.getOrDefault(item, item instanceof BlockItem ? "BlockItem" : "Item");
