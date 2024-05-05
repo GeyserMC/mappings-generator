@@ -6,17 +6,27 @@ import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
+import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.RegistryLayer;
+import net.minecraft.server.ReloadableServerResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.ServerPacksSource;
+import net.minecraft.server.packs.resources.CloseableResourceManager;
+import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.tags.TagManager;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -55,6 +65,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -609,10 +620,16 @@ public class MappingsGenerator {
 
     public void generateEnchantments() {
         try {
+            CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, List.of(ServerPacksSource.createVanillaPackSource()));
+            RegistryAccess.Frozen registryAccess = RegistryLayer.createRegistryAccess().compositeAccess();
+            TagManager tagManager = new TagManager(registryAccess);
+            registryAccess.registries().map(registryEntry -> tagManager.createLoader(resourceManager, Util.backgroundExecutor(), registryEntry))
+                    .map(CompletableFuture::join).forEach(loadResult -> ReloadableServerResources.updateRegistryTags(registryAccess, loadResult));
+
             Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
             for (Enchantment enchantment : BuiltInRegistries.ENCHANTMENT) {
 
-                String rarity = enchantment.getRarity().toString().toLowerCase();
+                int anvilCost = enchantment.getAnvilCost();
                 int maxLevel = enchantment.getMaxLevel();
                 List<String> incompatibleEnchantments = new ArrayList<>();
                 List<String> validItems = new ArrayList<>();
@@ -633,7 +650,7 @@ public class MappingsGenerator {
                         validItems.add(key.getNamespace() + ":" + key.getPath());
                     }
                 }
-                enchantmentMap.put(BuiltInRegistries.ENCHANTMENT.getKey(enchantment).toString(), new EnchantmentEntry(rarity, maxLevel, incompatibleEnchantments, validItems));
+                enchantmentMap.put(BuiltInRegistries.ENCHANTMENT.getKey(enchantment).toString(), new EnchantmentEntry(anvilCost, maxLevel, incompatibleEnchantments, validItems));
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
@@ -833,11 +850,11 @@ public class MappingsGenerator {
                 }
                 when(mockClientLevel.getBlockState(new BlockPos(0, 0, 0))).thenReturn(state);
 
-                InteractionResult result = state.use(mockClientLevel, mockPlayer, InteractionHand.MAIN_HAND, blockHitResult);
+                InteractionResult result = state.useWithoutItem(mockClientLevel, mockPlayer, blockHitResult);
                 if (!requiresItem.get()) {
                     if (result.consumesAction() && requiresAbilities.get()) {
                         abilities.mayBuild = false;
-                        InteractionResult result2 = state.use(mockClientLevel, mockPlayer, InteractionHand.MAIN_HAND, blockHitResult);
+                        InteractionResult result2 = state.useWithoutItem(mockClientLevel, mockPlayer, blockHitResult);
                         if (result != result2) {
                             requiresMayBuild.add(blockStateToString(state));
                         }
@@ -1260,12 +1277,12 @@ public class MappingsGenerator {
             object.addProperty("armor_type", armorOrToolType);
         }
 
-        if (item.getMaxDamage() > 0) {
+        if (item.components().has(DataComponents.MAX_DAMAGE)) {
             Ingredient repairIngredient = null;
             JsonArray repairMaterials = new JsonArray();
             // Some repair ingredients use item tags which are not loaded
             if (item instanceof ArmorItem armorItem) {
-                repairIngredient = armorItem.getMaterial().getRepairIngredient();
+                repairIngredient = armorItem.getMaterial().value().repairIngredient().get();
                 object.addProperty("protection_value", armorItem.getDefense());
             } else if (item instanceof ElytraItem) {
                 repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
@@ -1296,7 +1313,7 @@ public class MappingsGenerator {
             object.addProperty("is_entity_placer", true);
         }
 
-        if (item.isEdible()) {
+        if (item.components().has(DataComponents.FOOD)) {
             object.addProperty("is_edible", true);
         }
 

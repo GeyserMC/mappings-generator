@@ -1,6 +1,9 @@
 package org.geysermc.generator;
 
 import com.google.common.collect.Multimap;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -10,6 +13,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.block.DecoratedPotBlock;
 import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
@@ -44,12 +48,9 @@ public class GenerateItemsClass {
         classOverrides.put(Items.FIREWORK_STAR, "FireworkStarItem");
         classOverrides.put(Items.PLAYER_HEAD, "PlayerHeadItem");
         classOverrides.put(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem");
-        classOverrides.put(Items.BARREL, "ChestItem");
-        classOverrides.put(Items.CHEST, "ChestItem");
-        classOverrides.put(Items.ENDER_CHEST, "ChestItem");
-        classOverrides.put(Items.TRAPPED_CHEST, "ChestItem");
-        List<Class<? extends Item>> mirroredClasses = List.of(DyeableArmorItem.class, TieredItem.class, DyeItem.class, SpawnEggItem.class,
-                PotionItem.class, ArmorItem.class, BannerItem.class, DyeableHorseArmorItem.class, BoatItem.class);
+        classOverrides.put(Items.MACE, "MaceItem");
+        List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class,
+                PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class);
 
         for (Item item : BuiltInRegistries.ITEM) {
             StringBuilder builder = new StringBuilder("public static final ");
@@ -64,11 +65,12 @@ public class GenerateItemsClass {
             if (item instanceof BlockItem blockItem) {
                 if (blockItem.getBlock() instanceof ShulkerBoxBlock) {
                     clazz = "ShulkerBoxItem";
-                } else if (blockItem.getBlock() instanceof FlowerBlock) {
-                    clazz = "FlowerItem";
                 } else if (blockItem.getBlock() instanceof DecoratedPotBlock) {
                     clazz = "DecoratedPotItem";
                 }
+            }
+            if (item instanceof ArmorItem armor && armor.getMaterial().is(ArmorMaterials.LEATHER)) {
+                clazz = "DyeableArmorItem";
             }
             if (clazz == null) {
                 clazz = classOverrides.getOrDefault(item, item instanceof BlockItem ? "BlockItem" : "Item");
@@ -98,7 +100,8 @@ public class GenerateItemsClass {
                         .append(", ");
             }
             if (item instanceof ArmorItem) {
-                String tier = ((ArmorMaterials) ((ArmorItem) item).getMaterial()).name();
+                String materialPath = ((ArmorItem) item).getMaterial().value().layers().get(0).texture(false).getPath();
+                String tier = materialPath.substring(materialPath.lastIndexOf('/') + 1, materialPath.indexOf('_')).toUpperCase(Locale.ROOT);
                 builder.append("ArmorMaterial.")
                         .append(tier)
                         .append(", ");
@@ -106,24 +109,26 @@ public class GenerateItemsClass {
 
             builder.append("builder()");
 
-            if (item.getMaxStackSize() != 64) {
+            if (item.getDefaultMaxStackSize() != 64) {
                 builder.append(".stackSize(")
-                        .append(item.getMaxStackSize())
+                        .append(item.getDefaultMaxStackSize())
                         .append(")");
             }
 
-            if (item.getMaxDamage() > 0) {
+            if (item.components().has(DataComponents.MAX_DAMAGE)) {
                 builder.append(".maxDamage(")
-                        .append(item.getMaxDamage())
+                        .append(item.components().get(DataComponents.MAX_DAMAGE))
                         .append(")");
             }
 
             if (item instanceof TridentItem || item instanceof DiggerItem || item instanceof SwordItem) {
                 double playerDefault = Player.createAttributes().build().getValue(Attributes.ATTACK_DAMAGE);
-                var map = item.getDefaultAttributeModifiers(EquipmentSlot.MAINHAND);
-                AttributeModifier[] collection = map.get(Attributes.ATTACK_DAMAGE).toArray(new AttributeModifier[] {});
+                ItemAttributeModifiers attributes = item.components().get(DataComponents.ATTRIBUTE_MODIFIERS);
+                AttributeModifier[] collection = attributes.modifiers().stream()
+                        .filter(modifier -> modifier.attribute().equals(Attributes.ATTACK_DAMAGE))
+                        .map(ItemAttributeModifiers.Entry::modifier).toArray(AttributeModifier[]::new);
                 builder.append(".attackDamage(")
-                        .append((collection[0]).getAmount() + playerDefault)
+                        .append((collection[0]).amount() + playerDefault)
                         .append(")");
             }
 
