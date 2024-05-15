@@ -1,7 +1,7 @@
 package org.geysermc.generator;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.DynamicOps;
+import net.minecraft.SharedConstants;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.RegistrySynchronization;
@@ -10,26 +10,44 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.server.RegistryLayer;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.CloseableResourceManager;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 public class GenerateNetworkCodec {
     private static final CompoundTag networkCodec = new CompoundTag();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws URISyntaxException, IOException {
         Util.initialize();
 
-        CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, ImmutableList.of(ServerPacksSource.createVanillaPackSource()));
+        FileSystem fs = FileSystems.newFileSystem(SharedConstants.class.getResource("/version.json").toURI(), Collections.emptyMap());
+        Path datapacksDir = fs.getPath("/data/minecraft/datapacks/");
+        List<String> packs = Files.list(datapacksDir).filter(p -> !p.equals(datapacksDir)).map(p -> p.getFileName().toString()).toList();
+        PackLocationInfo emptyLocationInfo = new PackLocationInfo("", Component.empty(), null, Optional.empty());
+
+        List<PackResources> packResources = new ArrayList<>();
+        packResources.add(ServerPacksSource.createVanillaPackSource());
+        packs.forEach(pack -> packResources.add(new PathPackResources(emptyLocationInfo, datapacksDir.resolve(pack))));
+
+        CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, packResources);
         RegistryAccess.Frozen worldGenAccess = RegistryLayer.createRegistryAccess().getAccessForLoading(RegistryLayer.WORLDGEN);
         RegistryAccess.Frozen loaded = RegistryDataLoader.load(resourceManager, worldGenAccess, RegistryDataLoader.WORLDGEN_REGISTRIES);
         LayeredRegistryAccess<RegistryLayer> registryAccess = RegistryLayer.createRegistryAccess().replaceFrom(RegistryLayer.WORLDGEN, loaded);
@@ -43,6 +61,8 @@ public class GenerateNetworkCodec {
         } catch (IOException e) {
             System.out.println("Failed to write networkCodec.nbt!");
             e.printStackTrace();
+        } finally {
+            fs.close();
         }
     }
 
