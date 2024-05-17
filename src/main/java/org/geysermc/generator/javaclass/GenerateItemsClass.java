@@ -1,24 +1,16 @@
-package org.geysermc.generator;
+package org.geysermc.generator.javaclass;
 
-import com.google.common.collect.Multimap;
-import net.minecraft.client.resources.model.Material;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.block.DecoratedPotBlock;
-import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
+import org.geysermc.generator.Util;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -53,7 +45,7 @@ public class GenerateItemsClass {
                 PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class);
 
         for (Item item : BuiltInRegistries.ITEM) {
-            StringBuilder builder = new StringBuilder("public static final ");
+            FieldConstructor constructor = new FieldConstructor("Item");
             String clazz = null;
 
             for (Class<? extends Item> aClass : mirroredClasses) {
@@ -77,16 +69,9 @@ public class GenerateItemsClass {
             }
 
             String path = BuiltInRegistries.ITEM.getKey(item).getPath();
-            builder.append("Item ")
-                    .append(path.toUpperCase(Locale.ROOT))
-                    .append(" = register(new ")
-                    .append(clazz)
-                    .append("(\"")
-                    .append(path)
-                    .append("\", ");
+            constructor.declareFieldName(path).declareClassName(clazz);
             if (item instanceof DyeItem) {
-                builder.append(((DyeItem) item).getDyeColor().getId())
-                        .append(", ");
+                constructor.addParameter(((DyeItem) item).getDyeColor().getId());
             }
             if (item instanceof TieredItem) {
                 String tier = ((Tiers) ((TieredItem) item).getTier()).name();
@@ -95,30 +80,22 @@ public class GenerateItemsClass {
                 } else if ("WOOD".equals(tier)) {
                     tier = "WOODEN";
                 }
-                builder.append("ToolTier.")
-                        .append(tier)
-                        .append(", ");
+                constructor.addParameter("ToolTier." + tier);
             }
             if (item instanceof ArmorItem) {
                 String materialPath = ((ArmorItem) item).getMaterial().value().layers().get(0).texture(false).getPath();
                 String tier = materialPath.substring(materialPath.lastIndexOf('/') + 1, materialPath.indexOf('_')).toUpperCase(Locale.ROOT);
-                builder.append("ArmorMaterial.")
-                        .append(tier)
-                        .append(", ");
+                constructor.addParameter("ArmorMaterial." + tier);
             }
 
-            builder.append("builder()");
+            constructor.finishParameters();
 
             if (item.getDefaultMaxStackSize() != 64) {
-                builder.append(".stackSize(")
-                        .append(item.getDefaultMaxStackSize())
-                        .append(")");
+                constructor.addMethod("stackSize", item.getDefaultMaxStackSize());
             }
 
             if (item.components().has(DataComponents.MAX_DAMAGE)) {
-                builder.append(".maxDamage(")
-                        .append(item.components().get(DataComponents.MAX_DAMAGE))
-                        .append(")");
+                constructor.addMethod("maxDamage", item.components().get(DataComponents.MAX_DAMAGE));
             }
 
             if (item instanceof TridentItem || item instanceof DiggerItem || item instanceof SwordItem) {
@@ -127,13 +104,11 @@ public class GenerateItemsClass {
                 AttributeModifier[] collection = attributes.modifiers().stream()
                         .filter(modifier -> modifier.attribute().equals(Attributes.ATTACK_DAMAGE))
                         .map(ItemAttributeModifiers.Entry::modifier).toArray(AttributeModifier[]::new);
-                builder.append(".attackDamage(")
-                        .append((collection[0]).amount() + playerDefault)
-                        .append(")");
+                constructor.addMethod("attackDamage", (collection[0]).amount() + playerDefault);
             }
 
-            builder.append("));"); // First bracket is for the item constructor; second is for the register method
-            System.out.println(builder.toString());
+            constructor.finish();
+            System.out.println(constructor.toString());
         }
     }
 }
