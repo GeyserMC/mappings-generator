@@ -1,10 +1,13 @@
 package org.geysermc.generator.javaclass;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.AbstractBannerBlock;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.*;
 import org.geysermc.generator.Util;
 
@@ -52,6 +55,19 @@ public final class GenerateBlocksClass {
             }
 
             constructor.finishParameters();
+
+            // As of 1.20.5, all these are unanimous per-block!!
+            final BlockState defaultState = block.defaultBlockState();
+            if (defaultState.hasBlockEntity()) {
+                constructor.addMethod("setBlockEntity");
+            }
+            if (defaultState.requiresCorrectToolForDrops()) {
+                constructor.addMethod("requiresCorrectToolForDrops");
+            }
+            final float destroyTime = block.defaultDestroyTime();
+            if (destroyTime != 0f) {
+                constructor.addMethod("destroyTime", destroyTime);
+            }
 
             final var properties = block.defaultBlockState().getProperties();
             properties.forEach(property -> {

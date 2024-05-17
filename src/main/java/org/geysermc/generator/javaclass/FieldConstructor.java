@@ -72,6 +72,16 @@ public class FieldConstructor {
         return this;
     }
 
+    public FieldConstructor addMethod(String name, float value) {
+        assert state == State.ADD_METHODS;
+        builder.append(".")
+                .append(name)
+                .append("(")
+                .append(value).append("f") // Note the f! :)
+                .append(")");
+        return this;
+    }
+
     public FieldConstructor addMethod(String name, double value) {
         assert state == State.ADD_METHODS;
         builder.append(".")

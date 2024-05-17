@@ -1,5 +1,7 @@
 package org.geysermc.generator;
 
+import org.geysermc.generator.state.CollisionGenerator;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -8,6 +10,7 @@ public class Main {
         MappingsGenerator generator = new MappingsGenerator();
         generator.generateItems();
         generator.generateBlocks();
+        CollisionGenerator.generate();
         generator.generateSounds();
         generator.generateBiomes();
         generator.generateMapColors();

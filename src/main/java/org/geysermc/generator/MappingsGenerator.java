@@ -145,11 +145,6 @@ public class MappingsGenerator {
         }
     }
 
-    // This ends up in collision.json
-    // collision_index in blocks.json refers to this to prevent duplication
-    // This helps to reduce file size
-    public static final List<List<List<Double>>> COLLISION_LIST = Lists.newArrayList();
-
     private static final JsonArray ALL_PLANKS = new JsonArray();
 
     private static final Gson GSON = new Gson();
@@ -186,7 +181,6 @@ public class MappingsGenerator {
             }
 
             File mappings = new File("mappings/blocks.json");
-            File collision = new File("mappings/collision.json");
             if (!mappings.exists()) {
                 System.out.println("Could not find mappings submodule! Did you clone them?");
                 return;
@@ -224,11 +218,6 @@ public class MappingsGenerator {
 
             FileWriter writer = new FileWriter(mappings);
             builder.create().toJson(rootObject, writer);
-            writer.close();
-
-            // Write collision types
-            writer = new FileWriter(collision);
-            builder.create().toJson(COLLISION_LIST, writer);
             writer.close();
 
             System.out.println("Some block states need to be manually mapped, please search for MANUALMAP in blocks.json, if there are no occurrences you do not need to do anything.");
@@ -974,32 +963,6 @@ public class MappingsGenerator {
         object.addProperty("bedrock_identifier", bedrockIdentifier);
 
         object.addProperty("block_hardness", state.getDestroySpeed(EmptyBlockGetter.INSTANCE, BlockPos.ZERO));
-        List<List<Double>> collisionBoxes = Lists.newArrayList();
-        try {
-            state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO).toAabbs().forEach(item -> {
-                List<Double> coordinateList = Lists.newArrayList();
-                // Convert Box class to an array of coordinates
-                // They need to be converted from min/max coordinates to centres and sizes
-                coordinateList.add(item.minX + ((item.maxX - item.minX) / 2));
-                coordinateList.add(item.minY + ((item.maxY - item.minY) / 2));
-                coordinateList.add(item.minZ + ((item.maxZ - item.minZ) / 2));
-
-                coordinateList.add(item.maxX - item.minX);
-                coordinateList.add(item.maxY - item.minY);
-                coordinateList.add(item.maxZ - item.minZ);
-
-                collisionBoxes.add(coordinateList);
-            });
-        } catch (Exception e) {
-            System.out.println("Failed to get collision for " + state);
-            e.printStackTrace();
-        }
-
-        if (!COLLISION_LIST.contains(collisionBoxes)) {
-            COLLISION_LIST.add(collisionBoxes);
-        }
-        // This points to the index of the collision in collision.json
-        object.addProperty("collision_index", COLLISION_LIST.lastIndexOf(collisionBoxes));
 
         PushReaction pushReaction = state.getPistonPushReaction();
         if (pushReaction != PushReaction.NORMAL) {
