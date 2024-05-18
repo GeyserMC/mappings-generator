@@ -35,6 +35,7 @@ public final class CollisionGenerator {
     public static final List<List<List<Double>>> COLLISION_LIST = Lists.newArrayList();
 
     public static void generate() {
+        // Util.initialize() should already be called.
         final Path mappings = Path.of("mappings");
         if (!Files.exists(mappings)) {
             System.out.println("Cannot create collisions! Did you clone submodules?");

@@ -4,11 +4,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.EmptyBlockGetter;
-import net.minecraft.world.level.block.AbstractBannerBlock;
-import net.minecraft.world.level.block.BedBlock;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.piston.MovingPistonBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.*;
+import net.minecraft.world.level.material.PushReaction;
 import org.geysermc.generator.Util;
 
 import java.awt.*;
@@ -25,7 +25,12 @@ public final class GenerateBlocksClass {
     public static void main(String[] args) {
         Util.initialize();
 
-        List<Class<? extends Block>> mirroredClasses = List.of(BedBlock.class);
+        Map<Block, String> classOverrides = new HashMap<>();
+        classOverrides.put(Blocks.PISTON, "PistonBlock");
+        classOverrides.put(Blocks.STICKY_PISTON, "PistonBlock");
+
+        List<Class<? extends Block>> mirroredClasses = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
+                FlowerPotBlock.class, LecternBlock.class, MovingPistonBlock.class);
 
         StringBuilder builder = new StringBuilder();
         var it = BuiltInRegistries.BLOCK.iterator();
@@ -36,6 +41,8 @@ public final class GenerateBlocksClass {
             String clazz = "Block";
             if (block instanceof AbstractBannerBlock) {
                 clazz = "BannerBlock";
+            } else if (block instanceof AbstractSkullBlock) {
+                clazz = "SkullBlock";
             }
 
             for (Class<? extends Block> aClass : mirroredClasses) {
@@ -45,13 +52,18 @@ public final class GenerateBlocksClass {
                 }
             }
 
+            clazz = classOverrides.getOrDefault(block, clazz);
+
             String path = BuiltInRegistries.BLOCK.getKey(block).getPath();
             constructor.declareFieldName(path).declareClassName(clazz);
 
-            if (block instanceof AbstractBannerBlock banner) {
-                constructor.addParameter(banner.getColor().getId());
-            } else if (block instanceof BedBlock bed) {
-                constructor.addParameter(bed.getColor().getId());
+            switch (block) {
+                case AbstractBannerBlock banner -> constructor.addParameter(banner.getColor().getId());
+                case BedBlock bed -> constructor.addParameter(bed.getColor().getId());
+                case FlowerPotBlock flowerPot ->
+                        constructor.addParameter(BuiltInRegistries.BLOCK.getKey(flowerPot.getPotted()).getPath().toUpperCase(Locale.ROOT));
+                default -> {
+                }
             }
 
             constructor.finishParameters();
@@ -67,6 +79,10 @@ public final class GenerateBlocksClass {
             final float destroyTime = block.defaultDestroyTime();
             if (destroyTime != 0f) {
                 constructor.addMethod("destroyTime", destroyTime);
+            }
+            final PushReaction pushReaction = defaultState.getPistonPushReaction();
+            if (pushReaction != PushReaction.NORMAL) {
+                constructor.addMethod("pushReaction", "PistonBehavior." + pushReaction);
             }
 
             final var properties = block.defaultBlockState().getProperties();
