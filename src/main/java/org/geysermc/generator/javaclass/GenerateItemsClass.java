@@ -7,14 +7,12 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DecoratedPotBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import org.geysermc.generator.Util;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 public class GenerateItemsClass {
 
@@ -70,6 +68,10 @@ public class GenerateItemsClass {
 
             String path = BuiltInRegistries.ITEM.getKey(item).getPath();
             constructor.declareFieldName(path).declareClassName(clazz);
+            if (!(item instanceof BlockItem blockItem)
+                    || !BuiltInRegistries.BLOCK.getKey(blockItem.getBlock()).getPath().equals(path)) { // ItemNameBlockItem class = item name is different from block. Plus some other exceptions like powder snow buckets
+                constructor.addParameter(FieldConstructor.wrap(path)); // First block will do this for us for block items.
+            }
             if (item instanceof DyeItem) {
                 constructor.addParameter(((DyeItem) item).getDyeColor().getId());
             }
@@ -105,6 +107,17 @@ public class GenerateItemsClass {
                         .filter(modifier -> modifier.attribute().equals(Attributes.ATTACK_DAMAGE))
                         .map(ItemAttributeModifiers.Entry::modifier).toArray(AttributeModifier[]::new);
                 constructor.addMethod("attackDamage", (collection[0]).amount() + playerDefault);
+            }
+
+            if (item instanceof BlockItem blockItem) {
+                List<String> blocks = new ArrayList<>();
+                blocks.add("Blocks." + BuiltInRegistries.BLOCK.getKey(blockItem.getBlock()).getPath().toUpperCase(Locale.ROOT));
+                Item.BY_BLOCK.entrySet()
+                        .stream()
+                        .filter(entry -> entry.getValue() == item && entry.getKey() != blockItem.getBlock()) // We'll keep the default one first
+                        .map(entry -> "Blocks." + BuiltInRegistries.BLOCK.getKey(entry.getKey()).getPath().toUpperCase(Locale.ROOT))
+                        .forEach(blocks::add);
+                constructor.addExtraParameters(blocks);
             }
 
             constructor.finish();

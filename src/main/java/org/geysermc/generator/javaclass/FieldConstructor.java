@@ -1,11 +1,11 @@
 package org.geysermc.generator.javaclass;
 
+import java.util.List;
 import java.util.Locale;
 
 public class FieldConstructor {
     private final StringBuilder builder = new StringBuilder("public static final ");
     private State state = State.START;
-    private String fieldName;
     private int parenthesisLevel = 0;
 
     public FieldConstructor(String baseClass) {
@@ -14,7 +14,6 @@ public class FieldConstructor {
 
     public FieldConstructor declareFieldName(String name) {
         assert state == State.START;
-        fieldName = name;
         builder.append(" ").append(name.toUpperCase(Locale.ROOT)).append(" = register(new ");
         parenthesisLevel++;
         state = State.WAITING_FOR_CLASS_NAME;
@@ -24,10 +23,7 @@ public class FieldConstructor {
     public FieldConstructor declareClassName(String name) {
         assert state == State.WAITING_FOR_CLASS_NAME;
         builder.append(name)
-                .append("(")
-                .append("\"")
-                .append(fieldName)
-                .append("\", ");
+                .append("(");
         parenthesisLevel++;
         state = State.ADD_PARAMETERS;
         return this;
@@ -89,6 +85,12 @@ public class FieldConstructor {
                 .append("(")
                 .append(value)
                 .append(")");
+        return this;
+    }
+
+    public FieldConstructor addExtraParameters(List<String> parameters) {
+        assert state == State.ADD_METHODS;
+        builder.append(", ").append(String.join(", ", parameters));
         return this;
     }
 

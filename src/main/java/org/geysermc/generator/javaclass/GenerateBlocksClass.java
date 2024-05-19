@@ -28,9 +28,11 @@ public final class GenerateBlocksClass {
         Map<Block, String> classOverrides = new HashMap<>();
         classOverrides.put(Blocks.PISTON, "PistonBlock");
         classOverrides.put(Blocks.STICKY_PISTON, "PistonBlock");
+        classOverrides.put(Blocks.WATER, "WaterBlock");
 
         List<Class<? extends Block>> mirroredClasses = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
-                FlowerPotBlock.class, LecternBlock.class, MovingPistonBlock.class);
+                FlowerPotBlock.class, FurnaceBlock.class, HoneyBlock.class, LecternBlock.class, MovingPistonBlock.class,
+                SpawnerBlock.class, WallSkullBlock.class);
 
         StringBuilder builder = new StringBuilder();
         var it = BuiltInRegistries.BLOCK.iterator();
@@ -43,6 +45,8 @@ public final class GenerateBlocksClass {
                 clazz = "BannerBlock";
             } else if (block instanceof AbstractSkullBlock) {
                 clazz = "SkullBlock";
+            } else if (block instanceof AbstractCauldronBlock) {
+                clazz = "CauldronBlock";
             }
 
             for (Class<? extends Block> aClass : mirroredClasses) {
@@ -55,10 +59,11 @@ public final class GenerateBlocksClass {
             clazz = classOverrides.getOrDefault(block, clazz);
 
             String path = BuiltInRegistries.BLOCK.getKey(block).getPath();
-            constructor.declareFieldName(path).declareClassName(clazz);
+            constructor.declareFieldName(path).declareClassName(clazz).addParameter(wrap(path));
 
             switch (block) {
                 case AbstractBannerBlock banner -> constructor.addParameter(banner.getColor().getId());
+                case AbstractSkullBlock skull -> constructor.addParameter("SkullBlock.Type." + ((SkullBlock.Types) skull.getType()).name());
                 case BedBlock bed -> constructor.addParameter(bed.getColor().getId());
                 case FlowerPotBlock flowerPot ->
                         constructor.addParameter(BuiltInRegistries.BLOCK.getKey(flowerPot.getPotted()).getPath().toUpperCase(Locale.ROOT));
