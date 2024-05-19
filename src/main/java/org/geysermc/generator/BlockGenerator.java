@@ -106,7 +106,22 @@ public final class BlockGenerator {
                     BlockEntry old = BLOCK_ENTRIES.get(blockStateToString(state));
                     CompoundTag states;
                     if (old.getBedrockStates() != null) {
-                        states = (CompoundTag) JsonOps.INSTANCE.convertTo(NbtOps.INSTANCE, old.getBedrockStates());
+                        // Can't use JsonOps here because it'll erase the NBT type. (I.E. integers become bytes)
+                        states = new CompoundTag();
+                        for (final var entry : old.getBedrockStates().getAsJsonObject().entrySet()) {
+                            String key = entry.getKey();
+                            JsonPrimitive value = entry.getValue().getAsJsonPrimitive();
+                            if (value.isBoolean()) {
+                                states.putBoolean(key, value.getAsBoolean());
+                            } else if (value.isNumber()) {
+                                states.putInt(key, value.getAsInt());
+                            } else if (value.isString()) {
+                                states.putString(key, value.getAsString());
+                            } else {
+                                throw new IllegalStateException();
+                            }
+                        }
+                        System.out.println(states);
                     } else {
                         states = null;
                     }
@@ -136,7 +151,7 @@ public final class BlockGenerator {
 
                 // Write this in JSON so it's easily human-parseable and Git-diff-able.
                 // Well, you know, for the file being 10MB.
-                DataResult<JsonElement> generatorResult = NewBlockEntry.GENERATOR_CODEC.encodeStart(JsonOps.INSTANCE, generatorEntries);
+                DataResult<JsonElement> generatorResult = NewBlockEntry.GENERATOR_CODEC.encodeStart(NewBlockEntry.JSON_OPS_WITH_BYTE_BOOLEAN, generatorEntries);
                 generatorResult.ifSuccess(json -> {
                     JsonObject rootObject = new JsonObject();
                     rootObject.add("mappings", json);

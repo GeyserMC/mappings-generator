@@ -1,10 +1,15 @@
 package org.geysermc.generator;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.PairCodec;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
@@ -22,4 +27,15 @@ public record NewBlockEntry(String bedrockIdentifier, CompoundTag state) {
                     CODEC.fieldOf("bedrock_state").forGetter(Pair::value)
             ).apply(instance, Pair::of)
     ));
+
+    static final JsonOps JSON_OPS_WITH_BYTE_BOOLEAN = new JsonOps(false) {
+        @Override
+        public JsonElement createByte(byte value) {
+            return switch (value) {
+                case 0 -> new JsonPrimitive(false);
+                case 1 -> new JsonPrimitive(true);
+                default -> super.createByte(value);
+            };
+        }
+    };
 }
