@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.piston.MovingPistonBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.material.PushReaction;
+import org.geysermc.generator.EmptyLevelReader;
 import org.geysermc.generator.Util;
 
 import java.awt.*;
@@ -49,9 +50,11 @@ public final class GenerateBlocksClass {
                 clazz = "CauldronBlock";
             }
 
+            boolean classMirrored = false;
             for (Class<? extends Block> aClass : mirroredClasses) {
                 if (aClass.isAssignableFrom(block.getClass())) {
                     clazz = aClass.getSimpleName();
+                    classMirrored = true;
                     break;
                 }
             }
@@ -88,6 +91,30 @@ public final class GenerateBlocksClass {
             final PushReaction pushReaction = defaultState.getPistonPushReaction();
             if (pushReaction != PushReaction.NORMAL) {
                 constructor.addMethod("pushReaction", "PistonBehavior." + pushReaction);
+            }
+
+            // These are not unanimous, but we can figure that out pretty quick.
+            if (!classMirrored) {
+                var allStates = block.getStateDefinition().getPossibleStates();
+                Item item = null;
+                for (BlockState state : allStates) {
+                    Item currentItem;
+                    try {
+                        currentItem = block.getCloneItemStack(EmptyLevelReader.INSTANCE, BlockPos.ZERO, state).getItem();
+                    } catch (Exception e) {
+                        break;
+                    }
+                    if (item == null) {
+                        item = currentItem;
+                    } else if (item != currentItem) {
+                        // ItemStack changes depending on state - as of 1.20.5 this is *just* piston heads.
+                        item = null;
+                        break;
+                    }
+                }
+                if (item != null && block.asItem() != item) {
+                    constructor.addMethod("pickItem", "() -> Items." + BuiltInRegistries.ITEM.getKey(item).getPath().toUpperCase(Locale.ROOT));
+                }
             }
 
             final var properties = block.defaultBlockState().getProperties();
