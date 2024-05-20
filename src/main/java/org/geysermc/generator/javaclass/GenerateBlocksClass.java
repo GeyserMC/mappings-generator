@@ -33,7 +33,7 @@ public final class GenerateBlocksClass {
 
         List<Class<? extends Block>> mirroredClasses = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
                 FlowerPotBlock.class, FurnaceBlock.class, HoneyBlock.class, LecternBlock.class, MovingPistonBlock.class,
-                SpawnerBlock.class, WallSkullBlock.class);
+                SpawnerBlock.class, TrapDoorBlock.class, WallSkullBlock.class);
 
         StringBuilder builder = new StringBuilder();
         var it = BuiltInRegistries.BLOCK.iterator();
