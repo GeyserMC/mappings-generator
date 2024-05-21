@@ -121,34 +121,21 @@ public final class GenerateBlocksClass {
             properties.forEach(property -> {
                 switch (property) {
                     case DirectionProperty directionProperty -> {
-                        List<String> collection = directionProperty.getPossibleValues().stream().map(direction -> "Direction." + direction.name()).toList();
+                        List<String> collection = PropertyBridge.allDirections(directionProperty);
                         constructor.newline().addMethod("enumState", findFieldName(property), String.join(", ", collection));
                     }
                     case EnumProperty<?> enumProperty -> {
                         if (PropertyBridge.geyserHasEnum(enumProperty.getValueClass())) {
-                            Collection<? extends Enum<?>> possibleValues = enumProperty.getPossibleValues();
-                            Enum<?>[] allValues = enumProperty.getValueClass().getEnumConstants();
-                            Stream<Enum<?>> stream = Arrays.stream(allValues).filter(anEnum -> !possibleValues.contains(anEnum));
-                            String result;
-                            if (stream.findAny().isPresent()) {
-                                // Only some values are present
-                                result = String.join(", ", possibleValues.stream().map(value -> enumProperty.getValueClass().getSimpleName() + "." + value.name()).toList());
-                            } else {
-                                // All values are used
-                                result = enumProperty.getValueClass().getSimpleName() + ".VALUES";
-                            }
-                            constructor.newline().addMethod("enumState", findFieldName(property), result);
+                            constructor.newline().addMethod("enumState", findFieldName(property), PropertyBridge.allEnums(enumProperty));
                         } else {
-                            List<String> collection = enumProperty.getPossibleValues().stream().map(object -> wrap(object.toString().toLowerCase(Locale.ROOT))).toList();
-                            constructor.newline().addMethod("enumState", findFieldName(property), String.join(", ", collection));
+                            // Geyser's BasicEnumProperty stores the values for BlockState value switching
+                            constructor.newline().addMethod("enumState", findFieldName(property));
                         }
                     }
-                    case IntegerProperty integerProperty -> {
-                        // Replicating the IntegerProperty constructor
-                        var values = integerProperty.getPossibleValues();
-                        int low = values.stream().min(Comparator.naturalOrder()).orElseThrow();
-                        int high = values.stream().max(Comparator.naturalOrder()).orElseThrow();
-                        constructor.newline().addMethod("intState", findFieldName(property), Integer.toString(low), Integer.toString(high));
+                    case IntegerProperty ignored -> {
+                        // Geyser's IntegerProperty has to store the low and high anyway, so we'll get the rates
+                        // from there.
+                        constructor.newline().addMethod("intState", findFieldName(property));
                     }
                     case BooleanProperty ignored -> {
                         constructor.newline().addMethod("booleanState", findFieldName(property));
