@@ -1,6 +1,7 @@
 package org.geysermc.generator.javaclass;
 
 import net.minecraft.core.Direction;
+import net.minecraft.core.FrontAndTop;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -14,7 +15,8 @@ import static org.geysermc.generator.javaclass.FieldConstructor.wrap;
 public final class PropertyBridge {
     private static final Set<Class<? extends Enum<?>>> GEYSER_ENUMS = Set.of(
             ChestType.class,
-            Direction.Axis.class
+            Direction.Axis.class,
+            FrontAndTop.class
     );
 
     static boolean geyserHasEnum(Class<? extends Enum<?>> clazz) {
