@@ -6,6 +6,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.piston.MovingPistonBlock;
+import net.minecraft.world.level.block.piston.PistonHeadBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.material.PushReaction;
@@ -33,7 +34,7 @@ public final class GenerateBlocksClass {
 
         List<Class<? extends Block>> mirroredClasses = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
                 FlowerPotBlock.class, FurnaceBlock.class, HoneyBlock.class, LecternBlock.class, MovingPistonBlock.class,
-                SpawnerBlock.class, TrapDoorBlock.class, WallSkullBlock.class);
+                PistonHeadBlock.class, SpawnerBlock.class, TrapDoorBlock.class, WallSkullBlock.class);
 
         StringBuilder builder = new StringBuilder();
         var it = BuiltInRegistries.BLOCK.iterator();
