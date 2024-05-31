@@ -10,7 +10,7 @@ import java.util.function.Function;
 import static org.geysermc.generator.state.BlockMapper.register;
 
 public final class BlockMappers {
-    static void registerMappers() {
+    public static void registerMappers() {
         register(AmethystClusterBlock.class).map(AmethystClusterBlock.FACING, "minecraft:block_face");
         register(RotatedPillarBlock.class).map(RotatedPillarBlock.AXIS, "pillar_axis");
         register(BeehiveBlock.class).transform(HorizontalDirectionalBlock.FACING, "direction",
@@ -102,7 +102,7 @@ public final class BlockMappers {
         register(FenceGateBlock.class)
                 .transform(FenceGateBlock.FACING, "direction",
                    value -> switch (value) {
-                       case NORTH -> 2;
+                        case NORTH -> 2;
                         case WEST -> 1;
                         case EAST -> 3;
                         default -> 0;
