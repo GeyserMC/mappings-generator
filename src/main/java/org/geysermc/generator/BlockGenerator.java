@@ -1,7 +1,5 @@
 package org.geysermc.generator;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.mojang.serialization.DataResult;
 import it.unimi.dsi.fastutil.Pair;
@@ -22,12 +20,10 @@ import org.cloudburstmc.nbt.NBTInputStream;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
-import org.geysermc.generator.state.StateMapper;
-import org.geysermc.generator.state.StateRemapper;
-import org.reflections.Reflections;
+import org.geysermc.generator.state.BlockMapper;
+import org.geysermc.generator.state.BlockMappers;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
@@ -48,19 +44,9 @@ public final class BlockGenerator {
 
     public static final Map<String, List<String>> STATES = new HashMap<>();
 
-    private static final Multimap<String, StateMapper<?>> STATE_MAPPERS = HashMultimap.create();
-
     public static void generate() {
-        Reflections ref = new Reflections("org.geysermc.generator.state.type");
-        for (Class<?> clazz : ref.getTypesAnnotatedWith(StateRemapper.class)) {
-            try {
-                StateMapper<?> stateMapper = (StateMapper<?>) clazz.getDeclaredConstructor().newInstance();
-                STATE_MAPPERS.put(clazz.getAnnotation(StateRemapper.class).value(), stateMapper);
-            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
-                     InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
+        BlockMappers.registerMappers();
+
         try {
             NbtList<NbtMap> palette;
             File blockPalette = new File("palettes/blockpalette.nbt");
@@ -282,34 +268,9 @@ public final class BlockGenerator {
         } else {
             System.out.println("Block entry for " + blockStateToString(state) + " is null?");
         }
-        String blockStateToString = blockStateToString(state);
-        for (var property : state.getProperties()) {
-            String key = property.getName();
-            if (!STATE_MAPPERS.containsKey(key)) {
-                continue;
-            }
-            Collection<StateMapper<?>> stateMappers = STATE_MAPPERS.get(key);
 
-            stateLoop:
-            for (StateMapper<?> stateMapper : stateMappers) {
-                String[] blockRegex = stateMapper.getClass().getAnnotation(StateRemapper.class).blockRegex();
-                for (String regex : blockRegex) {
-                    if (!trimmedIdentifier.matches(regex)) {
-                        continue stateLoop;
-                    }
-                }
-                String value = getPropertyName(state, property);
-                org.apache.commons.lang3.tuple.Pair<String, ?> bedrockState = stateMapper.translateState(blockStateToString, value);
-                if (bedrockState.getValue() instanceof Number) {
-                    bedrockStates.putInt(bedrockState.getKey(), StateMapper.asType(bedrockState, Number.class).intValue());
-                }
-                if (bedrockState.getValue() instanceof Boolean) {
-                    bedrockStates.putBoolean(bedrockState.getKey(), StateMapper.asType(bedrockState, Boolean.class));
-                }
-                if (bedrockState.getValue() instanceof String) {
-                    bedrockStates.putString(bedrockState.getKey(), StateMapper.asType(bedrockState, String.class));
-                }
-            }
+        for (BlockMapper blockMapper : BlockMapper.ALL_MAPPERS) {
+            blockMapper.apply(state, bedrockStates);
         }
 
         if (block == Blocks.GLOW_LICHEN || block == Blocks.SCULK_VEIN) {
