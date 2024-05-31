@@ -1,8 +1,5 @@
 package org.geysermc.generator;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
@@ -36,28 +33,18 @@ import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import org.apache.commons.lang3.tuple.Pair;
-import org.cloudburstmc.nbt.NBTInputStream;
-import org.cloudburstmc.nbt.NbtList;
-import org.cloudburstmc.nbt.NbtMap;
-import org.cloudburstmc.nbt.NbtType;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.geysermc.generator.state.StateMapper;
-import org.geysermc.generator.state.StateRemapper;
 import org.jetbrains.annotations.Nullable;
-import org.reflections.Reflections;
 
 import java.awt.*;
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -68,9 +55,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 import static org.geysermc.generator.BlockGenerator.blockStateToString;
 import static org.mockito.ArgumentMatchers.any;
@@ -297,6 +282,24 @@ public class MappingsGenerator {
 
                 if (isBlank(entry.getPlaySound()) && isBlank(entry.getEventSound())) {
                     System.out.println("No mapping for java sound: " + path);
+                }
+
+                if (!validPlaySound) {
+                    var instance = LevenshteinDistance.getDefaultInstance();
+                    int closestDistance = Integer.MAX_VALUE;
+                    String closestBedrockSound = null;
+                    for (String bedrockSound : validBedrockSounds) {
+                        int distance = instance.apply(path, bedrockSound);
+                        if (distance == 0) {
+                            System.out.println(path + " does exist as a valid Bedrock sound");
+                            break;
+                        }
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestBedrockSound = bedrockSound;
+                        }
+                    }
+                    System.out.println("The closest Bedrock sound for " + path + " is " + closestBedrockSound);
                 }
 
                 JsonObject object = (JsonObject) GSON.toJsonTree(entry);
