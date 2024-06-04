@@ -119,7 +119,6 @@ public final class BlockMappers {
                 Blocks.DAMAGED_ANVIL,
                 Blocks.END_PORTAL_FRAME,
                 Blocks.LECTERN,
-                Blocks.PINK_PETALS,
                 Blocks.COMPARATOR,
                 Blocks.REPEATER,
                 Blocks.SOUL_CAMPFIRE,

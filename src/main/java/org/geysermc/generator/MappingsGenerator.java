@@ -38,7 +38,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.jetbrains.annotations.Nullable;
@@ -255,7 +254,7 @@ public class MappingsGenerator {
                 // Auto map place block sounds
                 if (!validPlaySound && isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
                     if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
-                        Block block = BuiltInRegistries.BLOCK.get(new ResourceLocation("minecraft:" + path.split("\\.")[1]));
+                        Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
                         entry.setEventSound("PLACE");
                         if (block != Blocks.AIR) {
                             entry.setIdentifier(blockStateToString(block.defaultBlockState()));
@@ -509,52 +508,6 @@ public class MappingsGenerator {
         }
     }
 
-    public void generateEnchantments() {
-        try {
-            CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, List.of(ServerPacksSource.createVanillaPackSource()));
-            RegistryAccess.Frozen registryAccess = RegistryLayer.createRegistryAccess().compositeAccess();
-            TagManager tagManager = new TagManager(registryAccess);
-            registryAccess.registries().map(registryEntry -> tagManager.createLoader(resourceManager, Util.backgroundExecutor(), registryEntry))
-                    .map(CompletableFuture::join).forEach(loadResult -> ReloadableServerResources.updateRegistryTags(registryAccess, loadResult));
-
-            Map<String, EnchantmentEntry> enchantmentMap = new HashMap<>();
-            for (Enchantment enchantment : BuiltInRegistries.ENCHANTMENT) {
-
-                int anvilCost = enchantment.getAnvilCost();
-                int maxLevel = enchantment.getMaxLevel();
-                List<String> incompatibleEnchantments = new ArrayList<>();
-                List<String> validItems = new ArrayList<>();
-                for (Enchantment enchantment2 : BuiltInRegistries.ENCHANTMENT) {
-                    if (enchantment != enchantment2 && !enchantment.isCompatibleWith(enchantment2)) {
-                        incompatibleEnchantments.add(BuiltInRegistries.ENCHANTMENT.getKey(enchantment2).toString());
-                    }
-                }
-                if (incompatibleEnchantments.isEmpty()) {
-                    incompatibleEnchantments = null;
-                }
-                // Super inefficient, but I don't think there is a better way
-                for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
-                    Item value = BuiltInRegistries.ITEM.byId(i);
-                    ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
-                    ItemStack itemStack = new ItemStack(value);
-                    if (enchantment.canEnchant(itemStack)) {
-                        validItems.add(key.getNamespace() + ":" + key.getPath());
-                    }
-                }
-                enchantmentMap.put(BuiltInRegistries.ENCHANTMENT.getKey(enchantment).toString(), new EnchantmentEntry(anvilCost, maxLevel, incompatibleEnchantments, validItems));
-            }
-
-            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-            File mappings = new File("mappings/enchantments.json");
-            FileWriter writer = new FileWriter(mappings);
-            builder.create().toJson(enchantmentMap, writer);
-            writer.close();
-            System.out.println("Finished enchantment writing process!");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void generateParticles() {
         File mappings = new File("mappings/particles.json");
         if (!mappings.exists()) {
@@ -597,7 +550,7 @@ public class MappingsGenerator {
         Map<String, ParticleEntry> newParticles = new TreeMap<>();
 
         for (Map.Entry<String, ParticleEntry> entry : particles.entrySet()) {
-            ResourceLocation location = new ResourceLocation("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
+            ResourceLocation location = ResourceLocation.fromNamespaceAndPath("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
             if (BuiltInRegistries.PARTICLE_TYPE.get(location) == null) {
                 System.out.println("Particle of type " + entry.getKey() + " does not exist in this jar! It will be removed.");
             }

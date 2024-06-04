@@ -12,7 +12,6 @@ public class Main {
         generator.generateSounds();
         generator.generateBiomes();
         generator.generateMapColors();
-        generator.generateEnchantments();
         generator.generateParticles();
         //generator.generateInteractionData();
     }

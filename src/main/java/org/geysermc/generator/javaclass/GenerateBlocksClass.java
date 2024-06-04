@@ -3,7 +3,6 @@ package org.geysermc.generator.javaclass;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
-import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.piston.MovingPistonBlock;
 import net.minecraft.world.level.block.piston.PistonHeadBlock;
@@ -18,7 +17,6 @@ import java.awt.datatransfer.StringSelection;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.geysermc.generator.javaclass.FieldConstructor.wrap;
 
