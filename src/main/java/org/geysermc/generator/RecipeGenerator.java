@@ -72,7 +72,7 @@ public final class RecipeGenerator {
                 .filter(item -> item instanceof DyeItem)
                 .map(item -> (DyeItem) item)
                 .toList();
-        final Map<String, List<GeyserRecipe>> recipes = new HashMap<>();
+        final Map<String, MappedRecipes> recipes = new HashMap<>();
         // Firework stars
 
         // Shulker boxes
@@ -84,10 +84,10 @@ public final class RecipeGenerator {
         final ShulkerBoxColoring shulkerTest = new ShulkerBoxColoring(null);
         for (Item item : allShulkerBoxes) {
             for (DyeItem dyeItem : allDyes) {
-                validateAndAdd(shulkerRecipes, CraftingDataType.SHULKER_BOX, shulkerTest, item, dyeItem);
+                validateAndAdd(shulkerRecipes, shulkerTest, item, dyeItem);
             }
         }
-        recipes.put("shulker_boxes", shulkerRecipes);
+        recipes.put("shulker_boxes", new MappedRecipes(CraftingDataType.SHULKER_BOX, shulkerRecipes));
 
         // Firework rockets
         // Suspicious stews
@@ -105,7 +105,7 @@ public final class RecipeGenerator {
                     arrow, arrow, arrow
             });
         });
-        recipes.put("tipped_arrows", tippedArrowRecipes);
+        recipes.put("tipped_arrows", new MappedRecipes(CraftingDataType.SHAPED, tippedArrowRecipes));
 
         DataResult<Tag> result = MAP_CODEC.encodeStart(NbtOps.INSTANCE, recipes);
         result.ifSuccess(tag -> {
@@ -121,7 +121,7 @@ public final class RecipeGenerator {
         });
     }
 
-    private static void validateAndAdd(final List<GeyserRecipe> recipes, CraftingDataType bedrockRecipeType, CustomRecipe recipe, Item... inputItems) {
+    private static void validateAndAdd(final List<GeyserRecipe> recipes, CustomRecipe recipe, Item... inputItems) {
         List<ItemStack> inputItemStacks = createItemList(inputItems);
         var craftingContainer = new MockCraftingContainer(inputItemStacks);
         boolean matches = recipe.matches(craftingContainer, null);
@@ -131,7 +131,7 @@ public final class RecipeGenerator {
         }
 
         final ItemStack result = recipe.assemble(craftingContainer, null);
-        recipes.add(new GeyserRecipe(bedrockRecipeType, result, Arrays.stream(inputItems).map(ItemStack::new).toList()));
+        recipes.add(new GeyserRecipe(result, Arrays.stream(inputItems).map(ItemStack::new).toList()));
     }
 
     private static void validateAndAddWithShape(final List<GeyserRecipe> recipes, CustomRecipe recipe, ItemStack... inputItems) {
@@ -143,7 +143,7 @@ public final class RecipeGenerator {
         }
 
         final ItemStack result = recipe.assemble(craftingContainer, null);
-        recipes.add(new GeyserRecipe(CraftingDataType.SHAPED, result, Arrays.stream(inputItems).distinct().toList(), List.of("AAA", "ABA", "AAA")));
+        recipes.add(new GeyserRecipe(result, Arrays.stream(inputItems).distinct().toList(), List.of("AAA", "ABA", "AAA")));
     }
 
     private static List<ItemStack> createItemList(Item... items) {
@@ -155,6 +155,7 @@ public final class RecipeGenerator {
         return List.of(stacks);
     }
 
+    // Map ItemStacks to integer IDs and a deserializable component format
     static final Codec<ItemStack> STACK_CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     ExtraCodecs.POSITIVE_INT.fieldOf("id").xmap(Item::byId, Item::getId).forGetter(ItemStack::getItem),
@@ -176,22 +177,31 @@ public final class RecipeGenerator {
                             .forGetter(ItemStack::getComponentsPatch)
             ).apply(instance, (id, count, components) -> new ItemStack(Holder.direct(id), count, components)));
 
-    private record GeyserRecipe(CraftingDataType bedrockRecipeType, ItemStack output, List<ItemStack> inputs, List<String> shape) {
+    private record GeyserRecipe(ItemStack output, List<ItemStack> inputs, List<String> shape) {
         static final Codec<GeyserRecipe> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codec.STRING.fieldOf("bedrock_recipe_type")
-                        .xmap(CraftingDataType::valueOf, CraftingDataType::toString)
-                        .forGetter(GeyserRecipe::bedrockRecipeType),
                 STACK_CODEC.fieldOf("output").forGetter(GeyserRecipe::output),
                 Codec.list(STACK_CODEC).fieldOf("inputs").forGetter(GeyserRecipe::inputs),
                 Codec.list(Codec.STRING).optionalFieldOf("shape", null).forGetter(GeyserRecipe::shape)
         ).apply(instance, GeyserRecipe::new));
 
-        public GeyserRecipe(CraftingDataType bedrockRecipeType, ItemStack output, List<ItemStack> inputs) {
-            this(bedrockRecipeType, output, inputs, null);
+        public GeyserRecipe(ItemStack output, List<ItemStack> inputs) {
+            this(output, inputs, null);
         }
     }
 
-    private static final Codec<Map<String, List<GeyserRecipe>>> MAP_CODEC = Codec.unboundedMap(Codec.STRING, Codec.list(GeyserRecipe.CODEC));
+    private record MappedRecipes(CraftingDataType bedrockRecipeType, List<GeyserRecipe> recipes) {
+        static final Codec<MappedRecipes> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.STRING.fieldOf("bedrock_recipe_type")
+                        .xmap(CraftingDataType::valueOf, CraftingDataType::toString)
+                        .forGetter(MappedRecipes::bedrockRecipeType),
+                Codec.list(GeyserRecipe.CODEC).fieldOf("recipes").forGetter(MappedRecipes::recipes)
+        ).apply(instance, MappedRecipes::new));
+    }
+
+    /**
+     * This is what will serialize into the NBT.
+     */
+    private static final Codec<Map<String, MappedRecipes>> MAP_CODEC = Codec.unboundedMap(Codec.STRING, MappedRecipes.CODEC);
 
     private record MockCraftingContainer(List<ItemStack> items) implements CraftingContainer {
 
