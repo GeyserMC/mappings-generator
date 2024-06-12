@@ -38,6 +38,7 @@ public class GenerateItemsClass {
         classOverrides.put(Items.PLAYER_HEAD, "PlayerHeadItem");
         classOverrides.put(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem");
         classOverrides.put(Items.MACE, "MaceItem");
+        classOverrides.put(Items.WOLF_ARMOR, "WolfArmorItem");
         List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class,
                 PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class);
 
@@ -61,8 +62,9 @@ public class GenerateItemsClass {
             if (item instanceof ArmorItem armor && armor.getMaterial().is(ArmorMaterials.LEATHER)) {
                 clazz = "DyeableArmorItem";
             }
+            clazz = classOverrides.getOrDefault(item, clazz); // Needed so WolfArmor applies over ArmorItem
             if (clazz == null) {
-                clazz = classOverrides.getOrDefault(item, item instanceof BlockItem ? "BlockItem" : "Item");
+                clazz = item instanceof BlockItem ? "BlockItem" : "Item";
             }
 
             String path = BuiltInRegistries.ITEM.getKey(item).getPath();
