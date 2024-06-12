@@ -14,5 +14,6 @@ public class Main {
         generator.generateMapColors();
         generator.generateParticles();
         //generator.generateInteractionData();
+        RecipeGenerator.generate();
     }
 }
