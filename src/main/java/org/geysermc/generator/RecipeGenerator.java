@@ -1,27 +1,20 @@
 package org.geysermc.generator;
 
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.Util;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.RegistryCodecs;
 import net.minecraft.core.component.DataComponentPatch;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.packs.PackType;
@@ -30,21 +23,13 @@ import net.minecraft.server.packs.resources.CloseableResourceManager;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.tags.TagManager;
 import net.minecraft.util.ExtraCodecs;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.StackedContents;
-import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.PotionContents;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.ShulkerBoxColoring;
-import net.minecraft.world.item.crafting.TippedArrowRecipe;
+import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
-import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.CraftingDataType;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -72,7 +57,7 @@ public final class RecipeGenerator {
                 .filter(item -> item instanceof DyeItem)
                 .map(item -> (DyeItem) item)
                 .toList();
-        final Map<String, MappedRecipes> recipes = new HashMap<>();
+        final List<MappedRecipes> recipes = new ArrayList<>();
         // Firework stars
 
         // Shulker boxes
@@ -87,7 +72,7 @@ public final class RecipeGenerator {
                 validateAndAdd(shulkerRecipes, shulkerTest, item, dyeItem);
             }
         }
-        recipes.put("shulker_boxes", new MappedRecipes(CraftingDataType.SHULKER_BOX, shulkerRecipes));
+        recipes.add(new MappedRecipes(shulkerTest.getSerializer(), shulkerRecipes));
 
         // Firework rockets
         // Suspicious stews
@@ -99,18 +84,19 @@ public final class RecipeGenerator {
         BuiltInRegistries.POTION.forEach(potion -> {
             final ItemStack potionStack = PotionContents.createItemStack(Items.LINGERING_POTION, Holder.direct(potion));
             // Still hardcoded to heck! So don't do this in the future. :)
-            validateAndAddWithShape(tippedArrowRecipes, tippedArrowTest, new ItemStack[]{
+            validateAndAddWithShape(tippedArrowRecipes, tippedArrowTest,
                     arrow, arrow, arrow,
                     arrow, potionStack, arrow,
-                    arrow, arrow, arrow
-            });
+                    arrow, arrow, arrow);
         });
-        recipes.put("tipped_arrows", new MappedRecipes(CraftingDataType.SHAPED, tippedArrowRecipes));
+        recipes.add(new MappedRecipes(tippedArrowTest.getSerializer(), tippedArrowRecipes));
 
-        DataResult<Tag> result = MAP_CODEC.encodeStart(NbtOps.INSTANCE, recipes);
+        DataResult<Tag> result = MappedRecipes.LIST_CODEC.encodeStart(NbtOps.INSTANCE, recipes);
         result.ifSuccess(tag -> {
             try {
-                NbtIo.write((CompoundTag) tag, mappings.resolve("recipes.nbt"));
+                CompoundTag root = new CompoundTag();
+                root.put("recipes", tag);
+                NbtIo.write(root, mappings.resolve("recipes.nbt"));
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -123,7 +109,7 @@ public final class RecipeGenerator {
 
     private static void validateAndAdd(final List<GeyserRecipe> recipes, CustomRecipe recipe, Item... inputItems) {
         List<ItemStack> inputItemStacks = createItemList(inputItems);
-        var craftingContainer = new MockCraftingContainer(inputItemStacks);
+        var craftingContainer = createCraftingInput(inputItemStacks);
         boolean matches = recipe.matches(craftingContainer, null);
         if (!matches) {
             System.out.println("Recipe does not match! Look into this...");
@@ -135,7 +121,7 @@ public final class RecipeGenerator {
     }
 
     private static void validateAndAddWithShape(final List<GeyserRecipe> recipes, CustomRecipe recipe, ItemStack... inputItems) {
-        var craftingContainer = new MockCraftingContainer(List.of(inputItems));
+        var craftingContainer = createCraftingInput(List.of(inputItems));
         boolean matches = recipe.matches(craftingContainer, null);
         if (!matches) {
             System.out.println("Recipe does not match! Look into this...");
@@ -143,7 +129,7 @@ public final class RecipeGenerator {
         }
 
         final ItemStack result = recipe.assemble(craftingContainer, null);
-        recipes.add(new GeyserRecipe(result, Arrays.stream(inputItems).distinct().toList(), List.of("AAA", "ABA", "AAA")));
+        recipes.add(new GeyserRecipe(result, Arrays.stream(inputItems).distinct().toList(), List.of(IntList.of(0, 0, 0), IntList.of(0, 1, 0), IntList.of(0, 0, 0))));
     }
 
     private static List<ItemStack> createItemList(Item... items) {
@@ -177,11 +163,11 @@ public final class RecipeGenerator {
                             .forGetter(ItemStack::getComponentsPatch)
             ).apply(instance, (id, count, components) -> new ItemStack(Holder.direct(id), count, components)));
 
-    private record GeyserRecipe(ItemStack output, List<ItemStack> inputs, List<String> shape) {
+    private record GeyserRecipe(ItemStack output, List<ItemStack> inputs, List<List<Integer>> shape) {
         static final Codec<GeyserRecipe> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 STACK_CODEC.fieldOf("output").forGetter(GeyserRecipe::output),
                 Codec.list(STACK_CODEC).fieldOf("inputs").forGetter(GeyserRecipe::inputs),
-                Codec.list(Codec.STRING).optionalFieldOf("shape", null).forGetter(GeyserRecipe::shape)
+                Codec.list(Codec.list(Codec.INT)).optionalFieldOf("shape", null).forGetter(GeyserRecipe::shape)
         ).apply(instance, GeyserRecipe::new));
 
         public GeyserRecipe(ItemStack output, List<ItemStack> inputs) {
@@ -189,85 +175,20 @@ public final class RecipeGenerator {
         }
     }
 
-    private record MappedRecipes(CraftingDataType bedrockRecipeType, List<GeyserRecipe> recipes) {
+    /**
+     * This will be serialized into the NBT.
+     */
+    private record MappedRecipes(RecipeSerializer serializer, List<GeyserRecipe> recipes) {
         static final Codec<MappedRecipes> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codec.STRING.fieldOf("bedrock_recipe_type")
-                        .xmap(CraftingDataType::valueOf, CraftingDataType::toString)
-                        .forGetter(MappedRecipes::bedrockRecipeType),
+                Codec.INT.fieldOf("recipe_type")
+                        .xmap(BuiltInRegistries.RECIPE_SERIALIZER::byId, BuiltInRegistries.RECIPE_SERIALIZER::getId)
+                        .forGetter(MappedRecipes::serializer),
                 Codec.list(GeyserRecipe.CODEC).fieldOf("recipes").forGetter(MappedRecipes::recipes)
         ).apply(instance, MappedRecipes::new));
+        static final Codec<List<MappedRecipes>> LIST_CODEC = Codec.list(CODEC);
     }
 
-    /**
-     * This is what will serialize into the NBT.
-     */
-    private static final Codec<Map<String, MappedRecipes>> MAP_CODEC = Codec.unboundedMap(Codec.STRING, MappedRecipes.CODEC);
-
-    private record MockCraftingContainer(List<ItemStack> items) implements CraftingContainer {
-
-        @Override
-        public int getWidth() {
-            return 3;
-        }
-
-        @Override
-        public int getHeight() {
-            return 3;
-        }
-
-        @Override
-        public List<ItemStack> getItems() {
-            return items;
-        }
-
-        @Override
-        public int getContainerSize() {
-            return 9;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return false;
-        }
-
-        @Override
-        public ItemStack getItem(int i) {
-            return items.get(i);
-        }
-
-        @Override
-        public ItemStack removeItem(int i, int i1) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ItemStack removeItemNoUpdate(int i) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setItem(int i, ItemStack itemStack) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setChanged() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean stillValid(Player player) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void clearContent() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void fillStackedContents(StackedContents stackedContents) {
-            throw new UnsupportedOperationException();
-        }
+    private static CraftingInput createCraftingInput(List<ItemStack> items) {
+        return CraftingInput.of(3, 3, items);
     }
 }
