@@ -58,7 +58,12 @@ public final class RecipeGenerator {
                 .map(item -> (DyeItem) item)
                 .toList();
         final List<MappedRecipes> recipes = new ArrayList<>();
-        // Firework stars
+
+        // Firework stars - Bedrock sends more, but for now, let's just make sure something shows up in the recipe book.
+//        final List<GeyserRecipe> fireworkRecipes = new ArrayList<>();
+//        final FireworkRocketRecipe fireworkTest = new FireworkRocketRecipe(null);
+//        validateAndAdd(fireworkRecipes, fireworkTest, Items.PAPER, Items.GUNPOWDER);
+//        recipes.add(new MappedRecipes(fireworkTest.getSerializer(), fireworkRecipes));
 
         // Shulker boxes
         final List<Item> allShulkerBoxes = BuiltInRegistries.ITEM
@@ -145,7 +150,7 @@ public final class RecipeGenerator {
     static final Codec<ItemStack> STACK_CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     ExtraCodecs.POSITIVE_INT.fieldOf("id").xmap(Item::byId, Item::getId).forGetter(ItemStack::getItem),
-                    ExtraCodecs.POSITIVE_INT.fieldOf("count").orElse(1).forGetter(ItemStack::getCount),
+                    ExtraCodecs.POSITIVE_INT.optionalFieldOf("count", 1).forGetter(ItemStack::getCount),
                     Codec.STRING.optionalFieldOf("components", null)
                             .xmap(string -> DataComponentPatch.EMPTY, // Unneeded on this end of the cycle. :)
                                     components -> {
