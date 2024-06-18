@@ -241,3 +241,6 @@ bedrock-samples.zip
 logs/**
 map_colors.txt
 networkCodec.nbt
+level_events.txt
+sounds.txt
+statistics.txt
