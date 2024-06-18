@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.piston.MovingPistonBlock;
 import net.minecraft.world.level.block.piston.PistonHeadBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -78,7 +80,22 @@ public final class GenerateBlocksClass {
             // As of 1.20.5, all these are unanimous per-block!!
             final BlockState defaultState = block.defaultBlockState();
             if (defaultState.hasBlockEntity()) {
-                constructor.addMethod("setBlockEntity");
+                BlockEntityType<?> type;
+                BlockEntity blockEntity = ((EntityBlock) defaultState.getBlock())
+                        .newBlockEntity(BlockPos.ZERO, defaultState);
+                if (blockEntity != null) {
+                    type = blockEntity.getType();
+                } else {
+                    // EntityBlock#newBlockEntity is only null for pistons, as they have a separate method...
+                    if (defaultState.getBlock() instanceof MovingPistonBlock) {
+                        type = BlockEntityType.PISTON;
+                    } else {
+                        throw new RuntimeException("Did not find block entity type for: " + defaultState.getBlock().getName());
+                    }
+                }
+
+                String entityType = BlockEntityType.getKey(type).getPath().toUpperCase();
+                constructor.addMethod("setBlockEntity", "BlockEntityType." + entityType);
             }
             if (defaultState.requiresCorrectToolForDrops()) {
                 constructor.addMethod("requiresCorrectToolForDrops");
