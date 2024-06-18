@@ -21,7 +21,7 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         mavenCentral()
-        mavenLocal()
+        //mavenLocal()
 
         maven(url = "https://repo.opencollab.dev/maven-releases/")
         maven(url = "https://repo.opencollab.dev/maven-snapshots/")
