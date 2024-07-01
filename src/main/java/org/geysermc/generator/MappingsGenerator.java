@@ -150,7 +150,6 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:stonecutter", "minecraft:stonecutter_block"); // Conflicts with, surprisingly, the OLD MCPE stonecutter
 
                 // Changed names
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:short_grass", "minecraft:tallgrass");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:frogspawn", "minecraft:frog_spawn");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:glow_item_frame", "minecraft:glow_frame");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:item_frame", "minecraft:frame");
@@ -160,9 +159,6 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
-
-                // 1.20.3 experimental
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:breeze_spawn_egg", "minecraft:blaze_spawn_egg");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
