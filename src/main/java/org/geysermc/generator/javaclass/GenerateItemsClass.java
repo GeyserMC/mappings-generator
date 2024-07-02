@@ -42,6 +42,15 @@ public class GenerateItemsClass {
         List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class,
                 PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class, OminousBottleItem.class);
 
+        // These items already have the enchanted glint present on Bedrock.
+        List<Item> enchantmentGlintPresent = new ArrayList<>();
+        enchantmentGlintPresent.add(Items.ENCHANTED_GOLDEN_APPLE);
+        enchantmentGlintPresent.add(Items.EXPERIENCE_BOTTLE);
+        enchantmentGlintPresent.add(Items.WRITTEN_BOOK);
+        enchantmentGlintPresent.add(Items.NETHER_STAR);
+        enchantmentGlintPresent.add(Items.ENCHANTED_BOOK);
+        enchantmentGlintPresent.add(Items.END_CRYSTAL);
+
         for (Item item : BuiltInRegistries.ITEM) {
             FieldConstructor constructor = new FieldConstructor("Item");
             String clazz = null;
@@ -108,6 +117,19 @@ public class GenerateItemsClass {
                         .filter(modifier -> modifier.attribute().equals(Attributes.ATTACK_DAMAGE))
                         .map(ItemAttributeModifiers.Entry::modifier).toArray(AttributeModifier[]::new);
                 constructor.addMethod("attackDamage", (collection[0]).amount() + playerDefault);
+            }
+
+            if (item.components().has(DataComponents.RARITY)) {
+                Rarity rarity = item.components().get(DataComponents.RARITY);
+                if (rarity != null & rarity != Rarity.COMMON) {
+                    constructor.addMethod("rarity", "Rarity." + rarity.getSerializedName().toUpperCase());
+                }
+            }
+
+            if (item.components().has(DataComponents.ENCHANTMENT_GLINT_OVERRIDE)) {
+                if (!enchantmentGlintPresent.contains(item)) {
+                    constructor.addMethod("glint", String.valueOf(item.components().get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE)));
+                }
             }
 
             if (item instanceof BlockItem blockItem) {
