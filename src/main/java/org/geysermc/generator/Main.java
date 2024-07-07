@@ -7,12 +7,13 @@ public class Main {
 
         MappingsGenerator generator = new MappingsGenerator();
         generator.generateItems();
-        generator.generateBlocks();
+        BlockGenerator.generate();
+        CollisionGenerator.generate();
         generator.generateSounds();
         generator.generateBiomes();
         generator.generateMapColors();
-        generator.generateEnchantments();
         generator.generateParticles();
-        generator.generateInteractionData();
+        //generator.generateInteractionData();
+        RecipeGenerator.generate();
     }
 }
