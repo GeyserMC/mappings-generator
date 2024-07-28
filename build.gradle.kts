@@ -5,7 +5,7 @@ import java.nio.file.FileSystems
 import java.nio.file.StandardCopyOption
 
 val javaMinecraftVersion = "1.21"
-val bedrockResourcePackVersion = "1.21.0.26-preview"
+val bedrockResourcePackVersion = "1.21.20.24-preview"
 val resourcePack = file("bedrockresourcepack.zip")
 val bedrockSamples = file("bedrock-samples.zip")
 
@@ -14,6 +14,7 @@ version = "1.1.0"
 
 plugins {
     java
+    application
     `maven-publish`
     id("org.spongepowered.gradle.vanilla")
 }
@@ -23,8 +24,8 @@ dependencies {
 
     implementation("org.mockito", "mockito-core", "3.+")
 
-    implementation("org.cloudburstmc.protocol", "bedrock-codec", "3.0.0.Beta2-20240606.172607-7")
-    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta2-20240606.172607-7")
+    implementation("org.cloudburstmc.protocol", "bedrock-codec", "3.0.0.Beta3-20240726.112706-2")
+    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta3-20240726.112706-2")
 
     implementation("org.apache.commons", "commons-text", "1.12.0")
 
@@ -138,4 +139,8 @@ abstract class DownloadFileTask : DefaultTask() {
 
         println("Download of $url complete!")
     }
+}
+
+application {
+    mainClass.set("org.geysermc.generator.Main")
 }
