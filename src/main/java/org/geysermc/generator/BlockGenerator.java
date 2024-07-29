@@ -179,8 +179,6 @@ public final class BlockGenerator {
             bedrockIdentifier = "cobblestone_wall";
         } else if (block == Blocks.POWERED_RAIL) {
             bedrockIdentifier = "golden_rail";
-        } else if (block == Blocks.LIGHT) {
-            bedrockIdentifier = "light_block";
         } else if (block == Blocks.DIRT_PATH) {
             bedrockIdentifier = "grass_path";
         } else if (block == Blocks.SMALL_DRIPLEAF) {
