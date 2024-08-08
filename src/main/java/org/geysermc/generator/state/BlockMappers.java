@@ -133,7 +133,7 @@ public final class BlockMappers {
         register(Blocks.WATER, Blocks.LAVA).map(LiquidBlock.LEVEL, "liquid_depth");
         register(Blocks.MANGROVE_PROPAGULE)
                 .directMap(MangrovePropaguleBlock.HANGING)
-                .map(MangrovePropaguleBlock.STAGE, "propagule_stage");
+                .map(MangrovePropaguleBlock.AGE, "propagule_stage");
         register(Blocks.OBSERVER).map(ObserverBlock.FACING, "minecraft:facing_direction");
         register(Blocks.TRIAL_SPAWNER, Blocks.VAULT).directMap(BlockStateProperties.OMINOUS);
         register(Blocks.PINK_PETALS)
