@@ -305,15 +305,6 @@ public final class BlockMappers {
             return value.getSerializedName();
         };
         register(WallBlock.class)
-                .transform("wall_block_type", state -> {
-                    // Most walls follow the same naming pattern but not end brick walls
-                    if (state.is(Blocks.END_STONE_BRICK_WALL)) {
-                        return "end_brick";
-                    }
-                    ResourceLocation identifier = BuiltInRegistries.BLOCK.getKey(state.getBlock());
-                    String path = identifier.getPath();
-                    return path.replace("_wall", "");
-                })
                 .transform(WallBlock.NORTH_WALL, "wall_connection_type_north", wallDirectionMapper)
                 .transform(WallBlock.SOUTH_WALL, "wall_connection_type_south", wallDirectionMapper)
                 .transform(WallBlock.EAST_WALL, "wall_connection_type_east", wallDirectionMapper)

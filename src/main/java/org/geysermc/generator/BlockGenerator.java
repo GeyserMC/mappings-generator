@@ -16,6 +16,9 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.PistonType;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.SlabType;
+import org.cloudburstmc.blockstateupdater.BlockStateUpdater_1_21_30;
+import org.cloudburstmc.blockstateupdater.BlockStateUpdaters;
+import org.cloudburstmc.blockstateupdater.util.tagupdater.CompoundTagUpdaterContext;
 import org.cloudburstmc.nbt.NBTInputStream;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
@@ -171,12 +174,6 @@ public final class BlockGenerator {
         if (BLOCK_OVERRIDES.containsKey(trimmedIdentifier)) {
             // handle any special cases first
             bedrockIdentifier = BLOCK_OVERRIDES.get(trimmedIdentifier);
-        } else if (trimmedIdentifier.endsWith("_wall") && isSensibleWall(trimmedIdentifier)) {
-            // All walls before 1.16 use the same identifier (cobblestone_wall)
-            // Reset any existing mapping to cobblestone wall
-            bedrockIdentifier = trimmedIdentifier.substring("minecraft:".length());
-        } else if (trimmedIdentifier.endsWith("_wall")) {
-            bedrockIdentifier = "cobblestone_wall";
         } else if (block == Blocks.POWERED_RAIL) {
             bedrockIdentifier = "golden_rail";
         } else if (block == Blocks.DIRT_PATH) {
@@ -314,14 +311,7 @@ public final class BlockGenerator {
             bedrockStates.putBoolean("update_bit", false);
         }
 
-        String stateIdentifier;
-        if (trimmedIdentifier.endsWith("_wall") && !isSensibleWall(trimmedIdentifier)) {
-            stateIdentifier = "minecraft:cobblestone_wall";
-        } else {
-            stateIdentifier = bedrockIdentifier;
-        }
-
-        List<String> stateKeys = STATES.get(stateIdentifier);
+        List<String> stateKeys = STATES.get(bedrockIdentifier);
         if (stateKeys != null) {
             stateKeys.forEach(key -> {
                 if (trimmedIdentifier.contains("minecraft:shulker_box")) return;
@@ -331,14 +321,25 @@ public final class BlockGenerator {
             });
         }
 
-        if (!bedrockStates.isEmpty()) {
-            if (bedrockStates.contains("wall_block_type") && isSensibleWall(trimmedIdentifier)) {
-                bedrockStates.remove("wall_block_type");
-            }
-        }
+        // Use this hacky but handy bit of code to help migrate mappings to new versions!
+//        if (true) {
+//            NbtMap cloudburstStates = (NbtMap) NbtOps.INSTANCE.convertTo(CloudburstNbtOps.INSTANCE, bedrockStates);
+//            NbtMap cloudburstNbt = NbtMap.builder()
+//                    .putString("name", "minecraft:" + bedrockIdentifier)
+//                    .putCompound("states", cloudburstStates)
+//                    .build();
+//            cloudburstNbt = BlockStateUpdaters.updateBlockState(cloudburstNbt, OLD_VERSION);
+//            CompoundTag newStates = (CompoundTag) CloudburstNbtOps.INSTANCE.convertTo(NbtOps.INSTANCE, cloudburstNbt);
+//            newStates.remove("version");
+//            String newName = newStates.getString("name");
+//            newStates.remove("name");
+//            return new BlockEntry(newName.substring("minecraft:".length()), newStates.getCompound("states"));
+//        }
 
         return new BlockEntry(bedrockIdentifier, bedrockStates);
     }
+
+    private static final int OLD_VERSION = CompoundTagUpdaterContext.makeVersion(1, 21, 20);
 
     static String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
