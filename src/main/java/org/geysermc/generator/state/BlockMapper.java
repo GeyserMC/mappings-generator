@@ -5,7 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.cloudburstmc.nbt.NbtMap;
 
@@ -80,7 +80,7 @@ public class BlockMapper {
     /**
      * Values are the same, name is different.
      */
-    public BlockMapper map(DirectionProperty property, String bedrockName) {
+    public BlockMapper map(EnumProperty<Direction> property, String bedrockName) {
         this.blockStateMappers.add((state, tag) -> {
             Direction value = state.getValue(property);
             tag.putString(bedrockName, value.getSerializedName());
@@ -91,7 +91,7 @@ public class BlockMapper {
     /**
      * Bedrock name is "minecraft:cardinal_direction".
      */
-    public BlockMapper mapCardinalDirection(DirectionProperty property) {
+    public BlockMapper mapCardinalDirection(EnumProperty<Direction> property) {
         return this.map(property, "minecraft:cardinal_direction");
     }
 

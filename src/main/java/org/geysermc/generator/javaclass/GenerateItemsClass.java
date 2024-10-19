@@ -7,6 +7,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.equipment.EquipmentModels;
 import net.minecraft.world.level.block.DecoratedPotBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import org.geysermc.generator.Util;
@@ -39,8 +40,8 @@ public class GenerateItemsClass {
         classOverrides.put(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem");
         classOverrides.put(Items.MACE, "MaceItem");
         classOverrides.put(Items.WOLF_ARMOR, "WolfArmorItem");
-        List<Class<? extends Item>> mirroredClasses = List.of(TieredItem.class, DyeItem.class, SpawnEggItem.class,
-                PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class, OminousBottleItem.class);
+        List<Class<? extends Item>> mirroredClasses = List.of(DyeItem.class, SpawnEggItem.class,
+                PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class); // , OminousBottleItem.class); TODO: Look into this
 
         for (Item item : BuiltInRegistries.ITEM) {
             FieldConstructor constructor = new FieldConstructor("Item");
@@ -59,8 +60,11 @@ public class GenerateItemsClass {
                     clazz = "DecoratedPotItem";
                 }
             }
-            if (item instanceof ArmorItem armor && armor.getMaterial().is(ArmorMaterials.LEATHER)) {
+            if (item instanceof ArmorItem armor && armor.components().get(DataComponents.EQUIPPABLE).model().get() == EquipmentModels.LEATHER) {
                 clazz = "DyeableArmorItem";
+            }
+            if (Arrays.stream(new String[]{"_axe", "_hoe", "_pickaxe", "_shovel", "_sword"}).anyMatch(item.getDescriptionId()::contains)) {
+                clazz = "TieredItem";
             }
             clazz = classOverrides.getOrDefault(item, clazz); // Needed so WolfArmor applies over ArmorItem
             if (clazz == null) {
@@ -76,8 +80,9 @@ public class GenerateItemsClass {
             if (item instanceof DyeItem) {
                 constructor.addParameter(((DyeItem) item).getDyeColor().getId());
             }
-            if (item instanceof TieredItem) {
-                String tier = ((Tiers) ((TieredItem) item).getTier()).name();
+            if (clazz.equals("TieredItem")) {
+                String id = item.getDescriptionId();
+                String tier = id.substring(id.lastIndexOf('.') + 1, id.indexOf('_')).toUpperCase();
                 if ("GOLD".equals(tier)) {
                     tier = "GOLDEN";
                 } else if ("WOOD".equals(tier)) {
@@ -86,9 +91,9 @@ public class GenerateItemsClass {
                 constructor.addParameter("ToolTier." + tier);
             }
             if (item instanceof ArmorItem) {
-                String materialPath = ((ArmorItem) item).getMaterial().value().layers().get(0).texture(false).getPath();
-                String tier = materialPath.substring(materialPath.lastIndexOf('/') + 1, materialPath.indexOf('_')).toUpperCase(Locale.ROOT);
-                constructor.addParameter("ArmorMaterial." + tier);
+                String material = item.components().get(DataComponents.EQUIPPABLE).model().get().getPath().toUpperCase();
+                if (material.contains("_")) material = material.substring(0, material.indexOf('_'));
+                constructor.addParameter("ArmorMaterial." + material);
             }
 
             constructor.finishParameters();
