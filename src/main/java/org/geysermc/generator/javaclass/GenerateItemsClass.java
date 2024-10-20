@@ -90,7 +90,7 @@ public class GenerateItemsClass {
                 }
                 constructor.addParameter("ToolTier." + tier);
             }
-            if (item instanceof ArmorItem) {
+            if (item instanceof ArmorItem || item == Items.WOLF_ARMOR) { // TODO
                 String material = item.components().get(DataComponents.EQUIPPABLE).model().get().getPath().toUpperCase();
                 if (material.contains("_")) material = material.substring(0, material.indexOf('_'));
                 constructor.addParameter("ArmorMaterial." + material);

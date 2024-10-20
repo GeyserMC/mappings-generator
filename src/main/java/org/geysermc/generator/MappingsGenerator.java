@@ -16,14 +16,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.RegistryLayer;
-import net.minecraft.server.ReloadableServerResources;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.repository.ServerPacksSource;
-import net.minecraft.server.packs.resources.CloseableResourceManager;
-import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.tags.TagManager;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -251,7 +244,7 @@ public class MappingsGenerator {
                 // Auto map place block sounds
                 if (!validPlaySound && isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
                     if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
-                        Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
+                        Block block = BuiltInRegistries.BLOCK.getValue(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
                         entry.setEventSound("PLACE");
                         if (block != Blocks.AIR) {
                             entry.setIdentifier(blockStateToString(block.defaultBlockState()));
@@ -477,7 +470,7 @@ public class MappingsGenerator {
             }
 
             for (MapColor.Brightness brightness : MapColor.Brightness.values()) {
-                int rgb = color.calculateRGBColor(brightness);
+                int rgb = color.calculateARGBColor(brightness);
                 mapColors.add(new Color(rgb, true));
             }
         }
@@ -799,29 +792,29 @@ public class MappingsGenerator {
             Ingredient repairIngredient = null;
             JsonArray repairMaterials = new JsonArray();
             // Some repair ingredients use item tags which are not loaded
-            if (item instanceof ArmorItem armorItem) {
-                repairIngredient = armorItem.getMaterial().value().repairIngredient().get();
-                object.addProperty("protection_value", armorItem.getDefense());
-            } else if (item instanceof ElytraItem) {
-                repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
-            } else if (item instanceof TieredItem tieredItem) {
-                if (tieredItem.getTier() == Tiers.WOOD) {
-                    repairMaterials = ALL_PLANKS;
-                } else if (tieredItem.getTier() == Tiers.STONE) {
-                    repairMaterials.add("minecraft:cobblestone");
-                    repairMaterials.add("minecraft:cobbled_deepslate");
-                    repairMaterials.add("minecraft:blackstone"); // JE only https://bugs.mojang.com/browse/MCPE-71859
-                } else {
-                    repairIngredient = tieredItem.getTier().getRepairIngredient();
-                }
-            } else if (item instanceof ShieldItem) {
-                repairMaterials = ALL_PLANKS;
-            }
-            if (repairIngredient != null) {
-                for (ItemStack repairItem : repairIngredient.getItems()) {
-                    repairMaterials.add(BuiltInRegistries.ITEM.getKey(repairItem.getItem()).toString());
-                }
-            }
+//            if (item instanceof ArmorItem armorItem) {
+//                repairIngredient = armorItem.getMaterial().value().repairIngredient().get();
+//                object.addProperty("protection_value", armorItem.getDefense());
+//            } else if (item instanceof ElytraItem) {
+//                repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
+//            } else if (item instanceof TieredItem tieredItem) {
+//                if (tieredItem.getTier() == Tiers.WOOD) {
+//                    repairMaterials = ALL_PLANKS;
+//                } else if (tieredItem.getTier() == Tiers.STONE) {
+//                    repairMaterials.add("minecraft:cobblestone");
+//                    repairMaterials.add("minecraft:cobbled_deepslate");
+//                    repairMaterials.add("minecraft:blackstone"); // JE only https://bugs.mojang.com/browse/MCPE-71859
+//                } else {
+//                    repairIngredient = tieredItem.getTier().getRepairIngredient();
+//                }
+//            } else if (item instanceof ShieldItem) {
+//                repairMaterials = ALL_PLANKS;
+//            }
+//            if (repairIngredient != null) {
+//                for (ItemStack repairItem : repairIngredient.items()) {
+//                    repairMaterials.add(BuiltInRegistries.ITEM.getKey(repairItem.getItem()).toString());
+//                }
+//            }
             if (!repairMaterials.isEmpty()) {
                 object.add("repair_materials", repairMaterials);
             }
