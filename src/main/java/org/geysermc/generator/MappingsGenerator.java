@@ -723,6 +723,10 @@ public class MappingsGenerator {
     public JsonObject getRemapItem(String identifier, Item item, Block block) {
         String trimmedIdentifier = identifier.replace("minecraft:", "");
         JsonObject object = new JsonObject();
+        if (FeatureFlags.isExperimental(item.requiredFeatures())) {
+            object.addProperty("bedrock_identifier", "minecraft:unknown");
+            return object;
+        }
         ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
         // Deal with items that we replace
         String bedrockIdentifier = switch (trimmedIdentifier) {
@@ -737,8 +741,6 @@ public class MappingsGenerator {
             bedrockIdentifier = "banner";
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
-        } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
-            bedrockIdentifier = "skull";
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {

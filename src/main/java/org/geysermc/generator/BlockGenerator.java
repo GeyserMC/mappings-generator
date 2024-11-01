@@ -9,6 +9,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -169,6 +171,9 @@ public final class BlockGenerator {
         BlockEntry blockEntry = BLOCK_ENTRIES.get(state);
         String trimmedIdentifier = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
         Block block = state.getBlock();
+        if (FeatureFlags.isExperimental(block.requiredFeatures())) {
+            return new BlockEntry("unknown", new CompoundTag());
+        }
 
         String bedrockIdentifier;
         if (BLOCK_OVERRIDES.containsKey(trimmedIdentifier)) {

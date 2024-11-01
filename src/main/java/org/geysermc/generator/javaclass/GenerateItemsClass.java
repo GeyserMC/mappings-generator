@@ -63,6 +63,9 @@ public class GenerateItemsClass {
             if (item instanceof ArmorItem armor && armor.components().get(DataComponents.EQUIPPABLE).model().get() == EquipmentModels.LEATHER) {
                 clazz = "DyeableArmorItem";
             }
+            if (item == Items.LEATHER_HORSE_ARMOR) {
+                clazz = "DyeableArmorItem";
+            }
             if (Arrays.stream(new String[]{"_axe", "_hoe", "_pickaxe", "_shovel", "_sword"}).anyMatch(item.getDescriptionId()::contains)) {
                 clazz = "TieredItem";
             }
