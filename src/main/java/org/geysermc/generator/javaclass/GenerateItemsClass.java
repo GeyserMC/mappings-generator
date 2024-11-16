@@ -40,8 +40,10 @@ public class GenerateItemsClass {
         classOverrides.put(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem");
         classOverrides.put(Items.MACE, "MaceItem");
         classOverrides.put(Items.WOLF_ARMOR, "WolfArmorItem");
+        classOverrides.put(Items.OMINOUS_BOTTLE, "OminousBottleItem");
+        classOverrides.put(Items.LIGHT, "LightItem");
         List<Class<? extends Item>> mirroredClasses = List.of(DyeItem.class, SpawnEggItem.class,
-                PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class); // , OminousBottleItem.class); TODO: Look into this
+                PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class);
 
         for (Item item : BuiltInRegistries.ITEM) {
             FieldConstructor constructor = new FieldConstructor("Item");
