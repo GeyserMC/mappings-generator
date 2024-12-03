@@ -1,6 +1,7 @@
 package org.geysermc.generator.javaclass;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
@@ -135,7 +136,10 @@ public final class GenerateBlocksClass {
             properties.forEach(property -> {
                 switch (property) {
                     case EnumProperty<?> enumProperty -> {
-                        if (PropertyBridge.geyserHasEnum(enumProperty.getValueClass())) {
+                        if (enumProperty.getValueClass().equals(Direction.class)) {
+                            List<String> collection = PropertyBridge.allDirections((EnumProperty<Direction>) enumProperty);
+                            constructor.newline().addMethod("enumState", findFieldName(property), String.join(", ", collection));
+                        } else if (PropertyBridge.geyserHasEnum(enumProperty.getValueClass())) {
                             constructor.newline().addMethod("enumState", findFieldName(property), PropertyBridge.allEnums(enumProperty));
                         } else {
                             // Geyser's BasicEnumProperty stores the values for BlockState value switching

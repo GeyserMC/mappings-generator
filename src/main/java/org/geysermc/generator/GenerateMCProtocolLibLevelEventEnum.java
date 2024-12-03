@@ -1,6 +1,6 @@
 package org.geysermc.generator;
 
-import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LevelEventHandler;
 import net.minecraft.world.level.block.LevelEvent;
 import org.mockito.Mockito;
 
@@ -16,8 +16,8 @@ public class GenerateMCProtocolLibLevelEventEnum {
     public static void main(String[] args) throws IllegalAccessException {
         StringBuilder output = new StringBuilder();
         Field[] events = LevelEvent.class.getDeclaredFields();
-        LevelRenderer mockLevelRenderer = Mockito.mock(LevelRenderer.class);
-        Mockito.doCallRealMethod().when(mockLevelRenderer).globalLevelEvent(anyInt(), any(), anyInt());
+        LevelEventHandler mockLevelEventHandler = Mockito.mock(LevelEventHandler.class);
+        Mockito.doCallRealMethod().when(mockLevelEventHandler).globalLevelEvent(anyInt(), any(), anyInt());
 
         int currentValue;
         int lastValue = -1;
@@ -30,7 +30,7 @@ public class GenerateMCProtocolLibLevelEventEnum {
             output.append(event.getName()).append('(').append(currentValue).append("),");
 
             try {
-                mockLevelRenderer.globalLevelEvent(currentValue, null, 0);
+                mockLevelEventHandler.globalLevelEvent(currentValue, null, 0);
             } catch (NullPointerException e) {
                 output.append(" // Global level event");
             }

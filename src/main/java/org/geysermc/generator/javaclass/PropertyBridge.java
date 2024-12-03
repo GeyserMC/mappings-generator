@@ -15,12 +15,15 @@ public final class PropertyBridge {
     private static final Set<Class<? extends Enum<?>>> GEYSER_ENUMS = Set.of(
             ChestType.class,
             Direction.Axis.class,
-            FrontAndTop.class,
-            Direction.class
+            FrontAndTop.class
     );
 
     static boolean geyserHasEnum(Class<?> clazz) {
         return GEYSER_ENUMS.contains(clazz);
+    }
+
+    static List<String> allDirections(EnumProperty<Direction> property) {
+        return property.getPossibleValues().stream().map(direction -> "Direction." + direction.name()).toList();
     }
 
     static String allEnums(EnumProperty<?> enumProperty) {
@@ -65,7 +68,11 @@ public final class PropertyBridge {
                     }
                     case "BooleanProperty" -> "BooleanProperty";
                     case "EnumProperty" -> {
-                        if (geyserHasEnum(property.getValueClass())) {
+                        if (property.getValueClass().equals(Direction.class)) {
+                            className = "EnumProperty";
+                            parameters = ", " + String.join(", ", allDirections((EnumProperty<Direction>) property));
+                            yield "EnumProperty<Direction>";
+                        } else if (geyserHasEnum(property.getValueClass())) {
                             className = "EnumProperty";
                             parameters = ", " + allEnums((EnumProperty<?>) property);
                             yield "EnumProperty<" + property.getValueClass().getSimpleName() + ">";

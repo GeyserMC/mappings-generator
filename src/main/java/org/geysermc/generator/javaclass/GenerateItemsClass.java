@@ -64,7 +64,6 @@ public class GenerateItemsClass {
             if (item instanceof ArmorItem armor && armor.getDescriptionId().contains("leather")) {
                 clazz = "DyeableArmorItem";
             }
-
             clazz = classOverrides.getOrDefault(item, clazz); // Needed so WolfArmor applies over ArmorItem
             if (clazz == null) {
                 clazz = item instanceof BlockItem ? "BlockItem" : "Item";

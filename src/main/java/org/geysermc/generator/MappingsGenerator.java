@@ -7,7 +7,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -40,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -238,8 +238,7 @@ public class MappingsGenerator {
                 // Auto map place block sounds
                 if (!validPlaySound && isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
                     if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
-                        Optional<Holder.Reference<Block>> holder = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
-                        Block block = holder.orElseThrow().value();
+                        Block block = BuiltInRegistries.BLOCK.getValue(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
                         entry.setEventSound("PLACE");
                         if (block != Blocks.AIR) {
                             entry.setIdentifier(blockStateToString(block.defaultBlockState()));
@@ -718,6 +717,10 @@ public class MappingsGenerator {
     public JsonObject getRemapItem(String identifier, Item item, Block block) {
         String trimmedIdentifier = identifier.replace("minecraft:", "");
         JsonObject object = new JsonObject();
+        if (FeatureFlags.isExperimental(item.requiredFeatures())) {
+            object.addProperty("bedrock_identifier", "minecraft:unknown");
+            return object;
+        }
         ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
         // Deal with items that we replace
         String bedrockIdentifier = switch (trimmedIdentifier) {
@@ -732,8 +735,6 @@ public class MappingsGenerator {
             bedrockIdentifier = "banner";
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
-        } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
-            bedrockIdentifier = "skull";
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
