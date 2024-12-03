@@ -7,7 +7,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.equipment.ArmorMaterials;
 import net.minecraft.world.level.block.DecoratedPotBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import org.geysermc.generator.Util;
@@ -26,7 +25,6 @@ public class GenerateItemsClass {
         classOverrides.put(Items.ARROW, "ArrowItem");
         classOverrides.put(Items.MAP, "MapItem");
         classOverrides.put(Items.FILLED_MAP, "FilledMapItem");
-        classOverrides.put(Items.ELYTRA, "ElytraItem");
         classOverrides.put(Items.SHIELD, "ShieldItem");
         classOverrides.put(Items.FISHING_ROD, "FishingRodItem");
         classOverrides.put(Items.ENCHANTED_BOOK, "EnchantedBookItem");
@@ -38,9 +36,9 @@ public class GenerateItemsClass {
         classOverrides.put(Items.FIREWORK_STAR, "FireworkStarItem");
         classOverrides.put(Items.PLAYER_HEAD, "PlayerHeadItem");
         classOverrides.put(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem");
-        classOverrides.put(Items.MACE, "MaceItem");
         classOverrides.put(Items.WOLF_ARMOR, "WolfArmorItem");
         classOverrides.put(Items.OMINOUS_BOTTLE, "OminousBottleItem");
+        classOverrides.put(Items.LIGHT, "LightItem");
         List<Class<? extends Item>> mirroredClasses = List.of(DyeItem.class, SpawnEggItem.class,
                 PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class);
 
@@ -61,9 +59,12 @@ public class GenerateItemsClass {
                     clazz = "DecoratedPotItem";
                 }
             }
-            if (item instanceof ArmorItem armor && armor.getMaterial().is(ArmorMaterials.LEATHER)) {
+
+            // Armor Items
+            if (item instanceof ArmorItem armor && armor.getDescriptionId().contains("leather")) {
                 clazz = "DyeableArmorItem";
             }
+
             clazz = classOverrides.getOrDefault(item, clazz); // Needed so WolfArmor applies over ArmorItem
             if (clazz == null) {
                 clazz = item instanceof BlockItem ? "BlockItem" : "Item";
@@ -78,23 +79,6 @@ public class GenerateItemsClass {
             if (item instanceof DyeItem) {
                 constructor.addParameter(((DyeItem) item).getDyeColor().getId());
             }
-            // TODO remove in Geyser; implement new build speed calculation
-//            if (item instanceof TieredItem) {
-//                String tier = ((Tiers) ((TieredItem) item).getTier()).name();
-//                if ("GOLD".equals(tier)) {
-//                    tier = "GOLDEN";
-//                } else if ("WOOD".equals(tier)) {
-//                    tier = "WOODEN";
-//                }
-//                constructor.addParameter("ToolTier." + tier);
-//            }
-            // TODO find a way to get material
-            // ArmorMaterials is neat, but not accessible sadly :/ could hardcode it???
-//            if (item instanceof ArmorItem) {
-//                String materialPath = ((ArmorItem) item).getMaterial().value().layers().get(0).texture(false).getPath();
-//                String tier = materialPath.substring(materialPath.lastIndexOf('/') + 1, materialPath.indexOf('_')).toUpperCase(Locale.ROOT);
-//                constructor.addParameter("ArmorMaterial." + tier);
-//            }
 
             constructor.finishParameters();
 
