@@ -3,12 +3,11 @@ package org.geysermc.generator;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
-import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -16,14 +15,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.RegistryLayer;
-import net.minecraft.server.ReloadableServerResources;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.repository.ServerPacksSource;
-import net.minecraft.server.packs.resources.CloseableResourceManager;
-import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.tags.TagManager;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -31,9 +23,6 @@ import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.crafting.FireworkStarRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
@@ -43,7 +32,6 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
@@ -52,7 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -251,7 +238,8 @@ public class MappingsGenerator {
                 // Auto map place block sounds
                 if (!validPlaySound && isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
                     if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
-                        Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
+                        Optional<Holder.Reference<Block>> holder = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
+                        Block block = holder.orElseThrow().value();
                         entry.setEventSound("PLACE");
                         if (block != Blocks.AIR) {
                             entry.setIdentifier(blockStateToString(block.defaultBlockState()));
@@ -470,26 +458,26 @@ public class MappingsGenerator {
     }
 
     public void generateMapColors() {
-        List<Color> mapColors = new ArrayList<>();
+        List<Integer> mapColors = new ArrayList<>();
         for (MapColor color : MapColor.MATERIAL_COLORS) {
             if (color == null) {
                 continue;
             }
 
             for (MapColor.Brightness brightness : MapColor.Brightness.values()) {
-                int rgb = color.calculateRGBColor(brightness);
-                mapColors.add(new Color(rgb, true));
+                int argb = color.calculateARGBColor(brightness);
+                mapColors.add(argb);
             }
         }
 
         StringBuilder finalOutput = new StringBuilder();
         for (int i = 0; i < mapColors.size(); i++) {
-            Color color = mapColors.get(i);
-            finalOutput.append("COLOR_").append(i).append("(").append(color.getRed()).append(", ").append(color.getGreen()).append(", ").append(color.getBlue()).append("),\n");
+            Integer color = mapColors.get(i);
+            finalOutput.append("COLOR_").append(i).append("(").append(color);
         }
 
         // Remap the empty colors
-        finalOutput = new StringBuilder(finalOutput.toString().replaceAll("\\(0, 0, 0\\)", "(-1, -1, -1)"));
+        //TODO finalOutput = new StringBuilder(finalOutput.toString().replaceAll("\\(0, 0, 0\\)", "(-1, -1, -1)"));
 
         // Fix the end
         finalOutput = new StringBuilder(finalOutput.substring(0, finalOutput.length() - 2) + ";");
@@ -548,7 +536,7 @@ public class MappingsGenerator {
 
         for (Map.Entry<String, ParticleEntry> entry : particles.entrySet()) {
             ResourceLocation location = ResourceLocation.fromNamespaceAndPath("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
-            if (BuiltInRegistries.PARTICLE_TYPE.get(location) == null) {
+            if (BuiltInRegistries.PARTICLE_TYPE.get(location).isEmpty()) {
                 System.out.println("Particle of type " + entry.getKey() + " does not exist in this jar! It will be removed.");
             }
         }
@@ -786,45 +774,10 @@ public class MappingsGenerator {
         List<String> toolTypes = List.of("sword", "shovel", "pickaxe", "axe", "shears", "hoe");
         if (toolTypes.contains(armorOrToolType)) {
             object.addProperty("tool_type", armorOrToolType);
-            if (identifierSplit.length > 1) {
-                object.addProperty("tool_tier", identifierSplit[0]);
-            }
         }
         List<String> armorTypes = List.of("helmet", "leggings", "chestplate", "boots");
         if (armorTypes.contains(armorOrToolType)) {
             object.addProperty("armor_type", armorOrToolType);
-        }
-
-        if (item.components().has(DataComponents.MAX_DAMAGE)) {
-            Ingredient repairIngredient = null;
-            JsonArray repairMaterials = new JsonArray();
-            // Some repair ingredients use item tags which are not loaded
-            if (item instanceof ArmorItem armorItem) {
-                repairIngredient = armorItem.getMaterial().value().repairIngredient().get();
-                object.addProperty("protection_value", armorItem.getDefense());
-            } else if (item instanceof ElytraItem) {
-                repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
-            } else if (item instanceof TieredItem tieredItem) {
-                if (tieredItem.getTier() == Tiers.WOOD) {
-                    repairMaterials = ALL_PLANKS;
-                } else if (tieredItem.getTier() == Tiers.STONE) {
-                    repairMaterials.add("minecraft:cobblestone");
-                    repairMaterials.add("minecraft:cobbled_deepslate");
-                    repairMaterials.add("minecraft:blackstone"); // JE only https://bugs.mojang.com/browse/MCPE-71859
-                } else {
-                    repairIngredient = tieredItem.getTier().getRepairIngredient();
-                }
-            } else if (item instanceof ShieldItem) {
-                repairMaterials = ALL_PLANKS;
-            }
-            if (repairIngredient != null) {
-                for (ItemStack repairItem : repairIngredient.getItems()) {
-                    repairMaterials.add(BuiltInRegistries.ITEM.getKey(repairItem.getItem()).toString());
-                }
-            }
-            if (!repairMaterials.isEmpty()) {
-                object.add("repair_materials", repairMaterials);
-            }
         }
 
         if (item instanceof SpawnEggItem || item instanceof MinecartItem || item instanceof FireworkRocketItem || item instanceof BoatItem) {
