@@ -37,6 +37,7 @@ public class GenerateItemsClass {
         classOverrides.put(Items.PLAYER_HEAD, "PlayerHeadItem");
         classOverrides.put(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem");
         classOverrides.put(Items.WOLF_ARMOR, "WolfArmorItem");
+        classOverrides.put(Items.LEATHER_HORSE_ARMOR, "DyeableArmorItem");
         classOverrides.put(Items.OMINOUS_BOTTLE, "OminousBottleItem");
         classOverrides.put(Items.LIGHT, "LightItem");
         List<Class<? extends Item>> mirroredClasses = List.of(DyeItem.class, SpawnEggItem.class,

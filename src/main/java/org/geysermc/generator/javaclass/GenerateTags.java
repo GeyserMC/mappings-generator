@@ -12,9 +12,9 @@ public final class GenerateTags {
 
     public static void main(String[] args) throws IllegalAccessException {
         // Doing it this way since, as of 1.21, there might be some lazy initialization with tags going on.
-        printTags("BlockTag", BlockTags.class);
-        printTags("ItemTag", ItemTags.class);
-        printTags("EnchantmentTag", EnchantmentTags.class);
+        printTags("Tag<Block>", BlockTags.class);
+        printTags("Tag<Item>", ItemTags.class);
+        printTags("Tag<Enchantment>", EnchantmentTags.class);
     }
 
     private static void printTags(String geyserName, Class<?> clazz) throws IllegalAccessException {
@@ -22,7 +22,7 @@ public final class GenerateTags {
             TagKey<?> key = (TagKey<?>) field.get(null);
             String path = key.location().getPath();
             String fieldName = path.replace("/", "_").toUpperCase(Locale.ROOT);
-            System.out.println("public static final " + geyserName + " " + fieldName + " = new " + geyserName + "(\"" + path + "\");");
+            System.out.println("public static final " + geyserName + " " + fieldName + " = create(\"" + path + "\");");
         }
         System.out.println();
     }

@@ -54,9 +54,9 @@ public final class BlockGenerator {
 
         try {
             NbtList<NbtMap> palette;
-            File blockPalette = new File("palettes/blockpalette.nbt");
+            File blockPalette = new File("palettes/block_palette.nbt");
             if (!blockPalette.exists()) {
-                System.out.println("Could not find block palette (blockpalette.nbt), please refer to the README in the palettes directory.");
+                System.out.println("Could not find block palette (block_palette.nbt), please refer to the README in the palettes directory.");
                 return;
             }
 

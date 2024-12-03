@@ -5,7 +5,7 @@ import java.nio.file.FileSystems
 import java.nio.file.StandardCopyOption
 
 val javaMinecraftVersion = "1.21.4-rc3"
-val bedrockResourcePackVersion = "1.21.30.3"
+val bedrockResourcePackVersion = "1.21.40.3"
 val resourcePack = file("bedrockresourcepack.zip")
 val bedrockSamples = file("bedrock-samples.zip")
 
@@ -63,7 +63,7 @@ val resourcePackTask = tasks.register<CreateResourcePackTask>("resourcePack") {
 
 val blockPaletteTask = tasks.register<DownloadFileTask>("downloadBlockPalette") {
     url.set("https://raw.githubusercontent.com/CloudburstMC/Data/master/block_palette.nbt")
-    destination.set(file("palettes/blockpalette.nbt"))
+    destination.set(file("palettes/block_palette.nbt"))
 }
 
 val runtimeItemStatesTask = tasks.register<DownloadFileTask>("downloadRuntimeItemStates") {

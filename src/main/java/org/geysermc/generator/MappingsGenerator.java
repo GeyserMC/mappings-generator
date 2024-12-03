@@ -472,11 +472,8 @@ public class MappingsGenerator {
         StringBuilder finalOutput = new StringBuilder();
         for (int i = 0; i < mapColors.size(); i++) {
             Integer color = mapColors.get(i);
-            finalOutput.append("COLOR_").append(i).append("(").append(color);
+            finalOutput.append("COLOR_").append(i).append("(").append(color).append("),").append("\n");
         }
-
-        // Remap the empty colors
-        //TODO finalOutput = new StringBuilder(finalOutput.toString().replaceAll("\\(0, 0, 0\\)", "(-1, -1, -1)"));
 
         // Fix the end
         finalOutput = new StringBuilder(finalOutput.substring(0, finalOutput.length() - 2) + ";");

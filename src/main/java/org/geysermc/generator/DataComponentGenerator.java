@@ -61,7 +61,7 @@ public final class DataComponentGenerator {
 
         GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
         try {
-            FileWriter writer = new FileWriter("item_components.json");
+            FileWriter writer = new FileWriter("item_data_components.json");
             builder.create().toJson(allItemComponents, writer);
             writer.close();
         } catch (IOException e) {
