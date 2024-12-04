@@ -94,8 +94,6 @@ public class MappingsGenerator {
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
     public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
 
-    private static final JsonArray ALL_PLANKS = new JsonArray();
-
     private static final Gson GSON = new Gson();
 
     public void generateItems() {
@@ -156,9 +154,6 @@ public class MappingsGenerator {
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                 Item value = BuiltInRegistries.ITEM.byId(i);
                 ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
-                if (key.getPath().endsWith("planks")) {
-                    ALL_PLANKS.add(key.toString());
-                }
             }
 
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {

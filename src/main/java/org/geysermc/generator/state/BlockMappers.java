@@ -1,7 +1,5 @@
 package org.geysermc.generator.state;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.*;
 
@@ -220,7 +218,8 @@ public final class BlockMappers {
                     case WEST -> 1;
                     default -> 0;
                 })
-                .transform(TrapDoorBlock.HALF, "upside_down_bit", value -> value == Half.TOP);
+                .transform(TrapDoorBlock.HALF, "upside_down_bit", value -> value == Half.TOP)
+                .map(BlockStateProperties.OPEN, "open_bit");
         register(Blocks.TRIAL_SPAWNER).transform(TrialSpawnerBlock.STATE, value -> switch (value) {
             case INACTIVE -> 0;
             case WAITING_FOR_PLAYERS -> 1;
@@ -298,6 +297,8 @@ public final class BlockMappers {
             default -> 0;
         });
 
+        register(StandingSignBlock.class).map(BlockStateProperties.ROTATION_16, "ground_sign_direction");
+
         Function<WallSide, Object> wallDirectionMapper = value -> {
             if (value == WallSide.LOW) {
                 return "short";
@@ -310,6 +311,29 @@ public final class BlockMappers {
                 .transform(WallBlock.EAST_WALL, "wall_connection_type_east", wallDirectionMapper)
                 .transform(WallBlock.WEST_WALL, "wall_connection_type_west", wallDirectionMapper)
                 .map(WallBlock.UP, "wall_post_bit");
+
+        register(SaplingBlock.class) // TODO exclude MANGROVE_PROPAGULE
+                .transform(BlockStateProperties.STAGE, "age_bit", value -> {
+                    if (value == 0) {
+                        return false;
+                    } else if (value == 1) {
+                        return true;
+                    } else {
+                        throw new IllegalStateException("Unknown stage property!");
+                    }
+                });
+
+        register(CreakingHeartBlock.class)
+                .directMap(BlockStateProperties.NATURAL)
+                .map(BlockStateProperties.AXIS, "pillar_axis")
+                .directMap(BlockStateProperties.ACTIVE);
+
+        register(MossyCarpetBlock.class)
+                .transform(BlockStateProperties.EAST_WALL, "pale_moss_carpet_side_east", wallDirectionMapper)
+                .transform(BlockStateProperties.SOUTH_WALL, "pale_moss_carpet_side_south", wallDirectionMapper)
+                .transform(BlockStateProperties.WEST_WALL, "pale_moss_carpet_side_west", wallDirectionMapper)
+                .transform(BlockStateProperties.NORTH_WALL, "pale_moss_carpet_side_north", wallDirectionMapper)
+                .transform(BlockStateProperties.BOTTOM, "upper_block_bit", value -> !value);
     }
 
 }

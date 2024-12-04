@@ -41,7 +41,7 @@ public final class BlockGenerator {
     /**
      * Java to Bedrock block identifier overrides
      */
-    public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
+    public static final Map<Block, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
         // Register BLOCK_OVERRIDES here
@@ -176,9 +176,9 @@ public final class BlockGenerator {
         }
 
         String bedrockIdentifier;
-        if (BLOCK_OVERRIDES.containsKey(trimmedIdentifier)) {
+        if (BLOCK_OVERRIDES.containsKey(block)) {
             // handle any special cases first
-            bedrockIdentifier = BLOCK_OVERRIDES.get(trimmedIdentifier);
+            bedrockIdentifier = BLOCK_OVERRIDES.get(block);
         } else if (block == Blocks.POWERED_RAIL) {
             bedrockIdentifier = "golden_rail";
         } else if (block == Blocks.DIRT_PATH) {
@@ -214,6 +214,8 @@ public final class BlockGenerator {
             }
         } else if (block == Blocks.MANGROVE_SIGN) {
             bedrockIdentifier = "mangrove_standing_sign";
+        } else if (block == Blocks.PALE_OAK_SIGN) {
+            bedrockIdentifier = "pale_oak_standing_sign";
         } else if (block == Blocks.TRIPWIRE) {
             bedrockIdentifier = "trip_wire";
         } else if (trimmedIdentifier.startsWith("minecraft:potted")) {
@@ -235,12 +237,13 @@ public final class BlockGenerator {
         } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
             bedrockIdentifier = trimmedIdentifier.substring("minecraft:".length());;
         } else if (isSkull(trimmedIdentifier)) {
-            bedrockIdentifier = "skull";
+            bedrockIdentifier = trimmedIdentifier.replace("minecraft:", "").replace("_wall", "");
         } else if (trimmedIdentifier.endsWith("light_gray_glazed_terracotta")) {
             bedrockIdentifier = "silver_glazed_terracotta";
         } else {
             // Default to trimmed identifier, or the existing identifier
-            bedrockIdentifier = blockEntry != null ? blockEntry.bedrockIdentifier() : trimmedIdentifier.replace("minecraft:", "");
+            bedrockIdentifier = (blockEntry != null && !blockEntry.bedrockIdentifier().equals("unknown")) ?
+                    blockEntry.bedrockIdentifier() : trimmedIdentifier.replace("minecraft:", "");
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
@@ -273,7 +276,7 @@ public final class BlockGenerator {
             blockMapper.apply(state, bedrockStates);
         }
 
-        if (block == Blocks.GLOW_LICHEN || block == Blocks.SCULK_VEIN) {
+        if (block == Blocks.GLOW_LICHEN || block == Blocks.SCULK_VEIN || block == Blocks.RESIN_CLUMP) {
             int bitset = 0;
             if (state.getValue(BlockStateProperties.DOWN)) {
                 bitset |= 1;
@@ -312,7 +315,7 @@ public final class BlockGenerator {
         } else if (block == Blocks.MANGROVE_WOOD || block == Blocks.CHERRY_WOOD) {
             // Didn't seem to do anything
             bedrockStates.putBoolean("stripped_bit", false);
-        } else if (trimmedIdentifier.contains("azalea_leaves") || trimmedIdentifier.endsWith("mangrove_leaves")) {
+        } else if (trimmedIdentifier.endsWith("_leaves") || trimmedIdentifier.contains("azalea_leaves")) {
             bedrockStates.putBoolean("update_bit", false);
         }
 
