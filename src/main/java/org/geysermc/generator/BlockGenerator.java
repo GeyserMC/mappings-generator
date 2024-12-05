@@ -312,7 +312,12 @@ public final class BlockGenerator {
             if (!isHead) {
                 bedrockStates.putString("big_dripleaf_tilt", "none");
             }
-        } else if (trimmedIdentifier.endsWith("_leaves") || trimmedIdentifier.contains("azalea_leaves")) {
+        } else if (trimmedIdentifier.endsWith("_leaves") ||
+                trimmedIdentifier.contains("azalea_leaves")) {
+            bedrockStates.putBoolean("update_bit", false);
+        }
+
+        if (bedrockIdentifier.contains("flower_pot")) {
             bedrockStates.putBoolean("update_bit", false);
         }
 
