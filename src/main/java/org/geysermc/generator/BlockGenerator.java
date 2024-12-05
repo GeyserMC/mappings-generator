@@ -312,9 +312,6 @@ public final class BlockGenerator {
             if (!isHead) {
                 bedrockStates.putString("big_dripleaf_tilt", "none");
             }
-        } else if (block == Blocks.MANGROVE_WOOD || block == Blocks.CHERRY_WOOD) {
-            // Didn't seem to do anything
-            bedrockStates.putBoolean("stripped_bit", false);
         } else if (trimmedIdentifier.endsWith("_leaves") || trimmedIdentifier.contains("azalea_leaves")) {
             bedrockStates.putBoolean("update_bit", false);
         }
