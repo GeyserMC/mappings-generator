@@ -271,6 +271,7 @@ public final class BlockMappers {
                         // 'ground_sign_direction' is used instead of 'facing_direction'
                     };
                 })
+                .map(CeilingHangingSignBlock.ROTATION, "ground_sign_direction") // even if not used, it's still present for hanging signs
                 .transform("hanging", state -> true);
         register(WallHangingSignBlock.class)
                 .transform("attached_bit", state -> true)
@@ -312,7 +313,7 @@ public final class BlockMappers {
                 .transform(WallBlock.WEST_WALL, "wall_connection_type_west", wallDirectionMapper)
                 .map(WallBlock.UP, "wall_post_bit");
 
-        register(SaplingBlock.class) // TODO exclude MANGROVE_PROPAGULE
+        register(SaplingBlock.class).additionalRequirement(state -> !(state.getBlock() instanceof MangrovePropaguleBlock))
                 .transform(BlockStateProperties.STAGE, "age_bit", value -> {
                     if (value == 0) {
                         return false;
@@ -322,6 +323,8 @@ public final class BlockMappers {
                         throw new IllegalStateException("Unknown stage property!");
                     }
                 });
+
+        register(Blocks.PALE_HANGING_MOSS).directMap(BlockStateProperties.TIP);
 
         register(CreakingHeartBlock.class)
                 .directMap(BlockStateProperties.NATURAL)

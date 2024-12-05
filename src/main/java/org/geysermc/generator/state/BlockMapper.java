@@ -32,6 +32,11 @@ public class BlockMapper {
         return this;
     }
 
+    public BlockMapper additionalRequirement(Predicate<BlockState> predicate) {
+        this.conditions = this.conditions.and(predicate);
+        return this;
+    }
+
     public static BlockMapper register(Block... blocks) {
         return new BlockMapper().block(blocks);
     }
