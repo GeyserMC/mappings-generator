@@ -31,6 +31,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.FileSystem;
@@ -39,7 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -452,23 +452,26 @@ public class MappingsGenerator {
     }
 
     public void generateMapColors() {
-        List<Integer> mapColors = new ArrayList<>();
+        List<Color> mapColors = new ArrayList<>();
         for (MapColor color : MapColor.MATERIAL_COLORS) {
             if (color == null) {
                 continue;
             }
 
             for (MapColor.Brightness brightness : MapColor.Brightness.values()) {
-                int argb = color.calculateARGBColor(brightness);
-                mapColors.add(argb);
+                int rgb = color.calculateARGBColor(brightness);
+                mapColors.add(new Color(rgb, true));
             }
         }
 
         StringBuilder finalOutput = new StringBuilder();
         for (int i = 0; i < mapColors.size(); i++) {
-            Integer color = mapColors.get(i);
-            finalOutput.append("COLOR_").append(i).append("(").append(color).append("),").append("\n");
+            Color color = mapColors.get(i);
+            finalOutput.append("COLOR_").append(i).append("(").append(color.getRed()).append(", ").append(color.getGreen()).append(", ").append(color.getBlue()).append("),\n");
         }
+
+        // Remap the empty colors
+        finalOutput = new StringBuilder(finalOutput.toString().replaceAll("\\(0, 0, 0\\)", "(-1, -1, -1)"));
 
         // Fix the end
         finalOutput = new StringBuilder(finalOutput.substring(0, finalOutput.length() - 2) + ";");
