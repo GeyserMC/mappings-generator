@@ -3,6 +3,7 @@ package org.geysermc.generator;
 import com.mojang.serialization.DynamicOps;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.LayeredRegistryAccess;
+import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.RegistrySynchronization;
 import net.minecraft.nbt.CompoundTag;
@@ -20,6 +21,7 @@ import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.CloseableResourceManager;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
+import net.minecraft.tags.TagLoader;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -48,8 +50,9 @@ public class GenerateNetworkCodec {
         packs.forEach(pack -> packResources.add(new PathPackResources(emptyLocationInfo, datapacksDir.resolve(pack))));
 
         CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, packResources);
+        List<Registry.PendingTags<?>> list = TagLoader.loadTagsForExistingRegistries(resourceManager, RegistryLayer.createRegistryAccess().getLayer(RegistryLayer.STATIC));
         RegistryAccess.Frozen worldGenAccess = RegistryLayer.createRegistryAccess().getAccessForLoading(RegistryLayer.WORLDGEN);
-        RegistryAccess.Frozen loaded = RegistryDataLoader.load(resourceManager, worldGenAccess, RegistryDataLoader.WORLDGEN_REGISTRIES);
+        RegistryAccess.Frozen loaded = RegistryDataLoader.load(resourceManager, TagLoader.buildUpdatedLookups(worldGenAccess, list), RegistryDataLoader.WORLDGEN_REGISTRIES);
         LayeredRegistryAccess<RegistryLayer> registryAccess = RegistryLayer.createRegistryAccess().replaceFrom(RegistryLayer.WORLDGEN, loaded);
         DynamicOps<Tag> dynamicOps = registryAccess.compositeAccess().createSerializationContext(NbtOps.INSTANCE);
 
@@ -67,11 +70,11 @@ public class GenerateNetworkCodec {
     }
 
     static <T> void nextStep(DynamicOps<Tag> dynamicOps, RegistryDataLoader.RegistryData<T> registryData, RegistryAccess registryAccess) {
-        registryAccess.registry(registryData.key())
+        registryAccess.lookup(registryData.key())
             .ifPresent(
                 registry -> {
                     List<RegistrySynchronization.PackedRegistryEntry> list = new ArrayList<>(registry.size());
-                    registry.holders()
+                    registry.listElements()
                         .forEach(
                             reference -> {
                                 Tag tag = registryData.elementCodec().encodeStart(dynamicOps, reference.value())

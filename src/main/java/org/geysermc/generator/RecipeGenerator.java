@@ -21,7 +21,7 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.CloseableResourceManager;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
-import net.minecraft.tags.TagManager;
+import net.minecraft.tags.TagLoader;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.PotionContents;
@@ -47,9 +47,10 @@ public final class RecipeGenerator {
 
         CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, List.of(ServerPacksSource.createVanillaPackSource()));
         RegistryAccess.Frozen registryAccess = RegistryLayer.createRegistryAccess().compositeAccess();
-        TagManager tagManager = new TagManager(registryAccess);
-        registryAccess.registries().map(registryEntry -> tagManager.createLoader(resourceManager, Util.backgroundExecutor(), registryEntry))
-                .map(CompletableFuture::join).forEach(loadResult -> ReloadableServerResources.updateRegistryTags(registryAccess, loadResult));
+        TagLoader.loadTagsForExistingRegistries(resourceManager, registryAccess);
+//        TagManager tagManager = new TagManager(registryAccess);
+//        registryAccess.registries().map(registryEntry -> tagManager.createLoader(resourceManager, Util.backgroundExecutor(), registryEntry))
+//                .map(CompletableFuture::join).forEach(loadResult -> ReloadableServerResources.updateRegistryTags(registryAccess, loadResult));
         REGISTRY_ACCESS = registryAccess;
 
         final List<DyeItem> allDyes = BuiltInRegistries.ITEM
@@ -70,14 +71,14 @@ public final class RecipeGenerator {
                 .stream()
                 .filter(item -> Block.byItem(item) instanceof ShulkerBoxBlock)
                 .toList();
-        final List<GeyserRecipe> shulkerRecipes = new ArrayList<>();
-        final ShulkerBoxColoring shulkerTest = new ShulkerBoxColoring(null);
-        for (Item item : allShulkerBoxes) {
-            for (DyeItem dyeItem : allDyes) {
+        for (DyeItem dyeItem : allDyes) {
+            final List<GeyserRecipe> shulkerRecipes = new ArrayList<>();
+            final TransmuteRecipe shulkerTest = new TransmuteRecipe(null, null, Ingredient.of(dyeItem), Ingredient.of(allShulkerBoxes.stream()), Holder.direct(ShulkerBoxBlock.getBlockByColor(dyeItem.getDyeColor()).asItem()));
+            for (Item item : allShulkerBoxes) {
                 validateAndAdd(shulkerRecipes, shulkerTest, item, dyeItem);
             }
+            recipes.add(new MappedRecipes(shulkerTest.getSerializer(), shulkerRecipes));
         }
-        recipes.add(new MappedRecipes(shulkerTest.getSerializer(), shulkerRecipes));
 
         // Firework rockets
         // Suspicious stews
@@ -112,7 +113,7 @@ public final class RecipeGenerator {
         });
     }
 
-    private static void validateAndAdd(final List<GeyserRecipe> recipes, CustomRecipe recipe, Item... inputItems) {
+    private static void validateAndAdd(final List<GeyserRecipe> recipes, CraftingRecipe recipe, Item... inputItems) {
         List<ItemStack> inputItemStacks = createItemList(inputItems);
         var craftingContainer = createCraftingInput(inputItemStacks);
         boolean matches = recipe.matches(craftingContainer, null);

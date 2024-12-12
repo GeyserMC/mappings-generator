@@ -1,6 +1,7 @@
 package org.geysermc.generator.javaclass;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
@@ -14,8 +15,6 @@ import net.minecraft.world.level.material.PushReaction;
 import org.geysermc.generator.EmptyLevelReader;
 import org.geysermc.generator.Util;
 
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
@@ -116,7 +115,7 @@ public final class GenerateBlocksClass {
                 for (BlockState state : allStates) {
                     Item currentItem;
                     try {
-                        currentItem = block.getCloneItemStack(EmptyLevelReader.INSTANCE, BlockPos.ZERO, state).getItem();
+                        currentItem = state.getCloneItemStack(EmptyLevelReader.INSTANCE, BlockPos.ZERO, true).getItem();
                     } catch (Exception e) {
                         break;
                     }
@@ -136,12 +135,11 @@ public final class GenerateBlocksClass {
             final var properties = block.defaultBlockState().getProperties();
             properties.forEach(property -> {
                 switch (property) {
-                    case DirectionProperty directionProperty -> {
-                        List<String> collection = PropertyBridge.allDirections(directionProperty);
-                        constructor.newline().addMethod("enumState", findFieldName(property), String.join(", ", collection));
-                    }
                     case EnumProperty<?> enumProperty -> {
-                        if (PropertyBridge.geyserHasEnum(enumProperty.getValueClass())) {
+                        if (enumProperty.getValueClass().equals(Direction.class)) {
+                            List<String> collection = PropertyBridge.allDirections((EnumProperty<Direction>) enumProperty);
+                            constructor.newline().addMethod("enumState", findFieldName(property), String.join(", ", collection));
+                        } else if (PropertyBridge.geyserHasEnum(enumProperty.getValueClass())) {
                             constructor.newline().addMethod("enumState", findFieldName(property), PropertyBridge.allEnums(enumProperty));
                         } else {
                             // Geyser's BasicEnumProperty stores the values for BlockState value switching

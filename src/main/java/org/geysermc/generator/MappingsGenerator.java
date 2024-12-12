@@ -3,12 +3,10 @@ package org.geysermc.generator;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
-import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -16,14 +14,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.RegistryLayer;
-import net.minecraft.server.ReloadableServerResources;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.repository.ServerPacksSource;
-import net.minecraft.server.packs.resources.CloseableResourceManager;
-import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.tags.TagManager;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -31,9 +22,6 @@ import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.crafting.FireworkStarRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
@@ -52,7 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -106,8 +93,6 @@ public class MappingsGenerator {
 
     public static final Map<String, String> JAVA_TO_BEDROCK_ITEM_OVERRIDE = new HashMap<>();
     public static final List<String> VALID_BEDROCK_ITEMS = new ArrayList<>();
-
-    private static final JsonArray ALL_PLANKS = new JsonArray();
 
     private static final Gson GSON = new Gson();
 
@@ -169,9 +154,6 @@ public class MappingsGenerator {
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                 Item value = BuiltInRegistries.ITEM.byId(i);
                 ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
-                if (key.getPath().endsWith("planks")) {
-                    ALL_PLANKS.add(key.toString());
-                }
             }
 
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
@@ -251,7 +233,7 @@ public class MappingsGenerator {
                 // Auto map place block sounds
                 if (!validPlaySound && isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
                     if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
-                        Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
+                        Block block = BuiltInRegistries.BLOCK.getValue(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
                         entry.setEventSound("PLACE");
                         if (block != Blocks.AIR) {
                             entry.setIdentifier(blockStateToString(block.defaultBlockState()));
@@ -477,7 +459,7 @@ public class MappingsGenerator {
             }
 
             for (MapColor.Brightness brightness : MapColor.Brightness.values()) {
-                int rgb = color.calculateRGBColor(brightness);
+                int rgb = color.calculateARGBColor(brightness);
                 mapColors.add(new Color(rgb, true));
             }
         }
@@ -548,7 +530,7 @@ public class MappingsGenerator {
 
         for (Map.Entry<String, ParticleEntry> entry : particles.entrySet()) {
             ResourceLocation location = ResourceLocation.fromNamespaceAndPath("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
-            if (BuiltInRegistries.PARTICLE_TYPE.get(location) == null) {
+            if (BuiltInRegistries.PARTICLE_TYPE.get(location).isEmpty()) {
                 System.out.println("Particle of type " + entry.getKey() + " does not exist in this jar! It will be removed.");
             }
         }
@@ -730,6 +712,10 @@ public class MappingsGenerator {
     public JsonObject getRemapItem(String identifier, Item item, Block block) {
         String trimmedIdentifier = identifier.replace("minecraft:", "");
         JsonObject object = new JsonObject();
+        if (FeatureFlags.isExperimental(item.requiredFeatures())) {
+            object.addProperty("bedrock_identifier", "minecraft:unknown");
+            return object;
+        }
         ItemEntry itemEntry = ITEM_ENTRIES.computeIfAbsent(identifier, (key) -> new ItemEntry(key, 0, false));
         // Deal with items that we replace
         String bedrockIdentifier = switch (trimmedIdentifier) {
@@ -744,8 +730,6 @@ public class MappingsGenerator {
             bedrockIdentifier = "banner";
         } else if (identifier.endsWith("bed")) {
             bedrockIdentifier = "bed";
-        } else if (identifier.endsWith("_skull") || identifier.endsWith("_head")) {
-            bedrockIdentifier = "skull";
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
@@ -786,45 +770,10 @@ public class MappingsGenerator {
         List<String> toolTypes = List.of("sword", "shovel", "pickaxe", "axe", "shears", "hoe");
         if (toolTypes.contains(armorOrToolType)) {
             object.addProperty("tool_type", armorOrToolType);
-            if (identifierSplit.length > 1) {
-                object.addProperty("tool_tier", identifierSplit[0]);
-            }
         }
         List<String> armorTypes = List.of("helmet", "leggings", "chestplate", "boots");
         if (armorTypes.contains(armorOrToolType)) {
             object.addProperty("armor_type", armorOrToolType);
-        }
-
-        if (item.components().has(DataComponents.MAX_DAMAGE)) {
-            Ingredient repairIngredient = null;
-            JsonArray repairMaterials = new JsonArray();
-            // Some repair ingredients use item tags which are not loaded
-            if (item instanceof ArmorItem armorItem) {
-                repairIngredient = armorItem.getMaterial().value().repairIngredient().get();
-                object.addProperty("protection_value", armorItem.getDefense());
-            } else if (item instanceof ElytraItem) {
-                repairIngredient = Ingredient.of(Items.PHANTOM_MEMBRANE);
-            } else if (item instanceof TieredItem tieredItem) {
-                if (tieredItem.getTier() == Tiers.WOOD) {
-                    repairMaterials = ALL_PLANKS;
-                } else if (tieredItem.getTier() == Tiers.STONE) {
-                    repairMaterials.add("minecraft:cobblestone");
-                    repairMaterials.add("minecraft:cobbled_deepslate");
-                    repairMaterials.add("minecraft:blackstone"); // JE only https://bugs.mojang.com/browse/MCPE-71859
-                } else {
-                    repairIngredient = tieredItem.getTier().getRepairIngredient();
-                }
-            } else if (item instanceof ShieldItem) {
-                repairMaterials = ALL_PLANKS;
-            }
-            if (repairIngredient != null) {
-                for (ItemStack repairItem : repairIngredient.getItems()) {
-                    repairMaterials.add(BuiltInRegistries.ITEM.getKey(repairItem.getItem()).toString());
-                }
-            }
-            if (!repairMaterials.isEmpty()) {
-                object.add("repair_materials", repairMaterials);
-            }
         }
 
         if (item instanceof SpawnEggItem || item instanceof MinecartItem || item instanceof FireworkRocketItem || item instanceof BoatItem) {

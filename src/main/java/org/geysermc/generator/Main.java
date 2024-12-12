@@ -15,5 +15,6 @@ public class Main {
         generator.generateParticles();
         //generator.generateInteractionData();
         RecipeGenerator.generate();
+        DataComponentGenerator.generate();
     }
 }

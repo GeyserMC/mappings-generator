@@ -2,6 +2,7 @@ package org.geysermc.generator.javaclass;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.FrontAndTop;
+import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.state.properties.*;
 import org.geysermc.generator.Util;
 
@@ -22,7 +23,7 @@ public final class PropertyBridge {
         return GEYSER_ENUMS.contains(clazz);
     }
 
-    static List<String> allDirections(DirectionProperty property) {
+    static List<String> allDirections(EnumProperty<Direction> property) {
         return property.getPossibleValues().stream().map(direction -> "Direction." + direction.name()).toList();
     }
 
@@ -67,13 +68,12 @@ public final class PropertyBridge {
                         yield "IntegerProperty";
                     }
                     case "BooleanProperty" -> "BooleanProperty";
-                    case "DirectionProperty" -> {
-                        className = "EnumProperty";
-                        parameters = ", " + String.join(", ", allDirections((DirectionProperty) property));
-                        yield "EnumProperty<Direction>";
-                    }
                     case "EnumProperty" -> {
-                        if (geyserHasEnum(property.getValueClass())) {
+                        if (property.getValueClass().equals(Direction.class)) {
+                            className = "EnumProperty";
+                            parameters = ", " + String.join(", ", allDirections((EnumProperty<Direction>) property));
+                            yield "EnumProperty<Direction>";
+                        } else if (geyserHasEnum(property.getValueClass())) {
                             className = "EnumProperty";
                             parameters = ", " + allEnums((EnumProperty<?>) property);
                             yield "EnumProperty<" + property.getValueClass().getSimpleName() + ">";

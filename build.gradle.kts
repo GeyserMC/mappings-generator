@@ -4,8 +4,8 @@ import java.nio.file.Files
 import java.nio.file.FileSystems
 import java.nio.file.StandardCopyOption
 
-val javaMinecraftVersion = "1.21"
-val bedrockResourcePackVersion = "1.21.30.3"
+val javaMinecraftVersion = "1.21.4"
+val bedrockResourcePackVersion = "1.21.50.7"
 val resourcePack = file("bedrockresourcepack.zip")
 val bedrockSamples = file("bedrock-samples.zip")
 
@@ -24,10 +24,10 @@ dependencies {
 
     implementation("org.mockito", "mockito-core", "3.+")
 
-    implementation("org.cloudburstmc.protocol", "bedrock-codec", "3.0.0.Beta3-20240726.112706-2")
-    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta3-20240726.112706-2")
+    implementation("org.cloudburstmc.protocol", "bedrock-codec", "3.0.0.Beta5-SNAPSHOT")
+    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta5-SNAPSHOT")
 
-    implementation("org.cloudburstmc", "block-state-updater", "1.21.30-SNAPSHOT")
+    implementation("org.cloudburstmc", "block-state-updater", "1.21.40-SNAPSHOT")
 
     implementation("org.apache.commons", "commons-text", "1.12.0")
 
@@ -63,7 +63,7 @@ val resourcePackTask = tasks.register<CreateResourcePackTask>("resourcePack") {
 
 val blockPaletteTask = tasks.register<DownloadFileTask>("downloadBlockPalette") {
     url.set("https://raw.githubusercontent.com/CloudburstMC/Data/master/block_palette.nbt")
-    destination.set(file("palettes/blockpalette.nbt"))
+    destination.set(file("palettes/block_palette.nbt"))
 }
 
 val runtimeItemStatesTask = tasks.register<DownloadFileTask>("downloadRuntimeItemStates") {

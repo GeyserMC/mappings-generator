@@ -9,6 +9,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,7 +41,7 @@ public final class BlockGenerator {
     /**
      * Java to Bedrock block identifier overrides
      */
-    public static final Map<String, String> BLOCK_OVERRIDES = new HashMap<>();
+    public static final Map<Block, String> BLOCK_OVERRIDES = new HashMap<>();
 
     static {
         // Register BLOCK_OVERRIDES here
@@ -52,9 +54,9 @@ public final class BlockGenerator {
 
         try {
             NbtList<NbtMap> palette;
-            File blockPalette = new File("palettes/blockpalette.nbt");
+            File blockPalette = new File("palettes/block_palette.nbt");
             if (!blockPalette.exists()) {
-                System.out.println("Could not find block palette (blockpalette.nbt), please refer to the README in the palettes directory.");
+                System.out.println("Could not find block palette (block_palette.nbt), please refer to the README in the palettes directory.");
                 return;
             }
 
@@ -169,11 +171,14 @@ public final class BlockGenerator {
         BlockEntry blockEntry = BLOCK_ENTRIES.get(state);
         String trimmedIdentifier = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
         Block block = state.getBlock();
+        if (FeatureFlags.isExperimental(block.requiredFeatures())) {
+            return new BlockEntry("unknown", new CompoundTag());
+        }
 
         String bedrockIdentifier;
-        if (BLOCK_OVERRIDES.containsKey(trimmedIdentifier)) {
+        if (BLOCK_OVERRIDES.containsKey(block)) {
             // handle any special cases first
-            bedrockIdentifier = BLOCK_OVERRIDES.get(trimmedIdentifier);
+            bedrockIdentifier = BLOCK_OVERRIDES.get(block);
         } else if (block == Blocks.POWERED_RAIL) {
             bedrockIdentifier = "golden_rail";
         } else if (block == Blocks.DIRT_PATH) {
@@ -209,6 +214,8 @@ public final class BlockGenerator {
             }
         } else if (block == Blocks.MANGROVE_SIGN) {
             bedrockIdentifier = "mangrove_standing_sign";
+        } else if (block == Blocks.PALE_OAK_SIGN) {
+            bedrockIdentifier = "pale_oak_standing_sign";
         } else if (block == Blocks.TRIPWIRE) {
             bedrockIdentifier = "trip_wire";
         } else if (trimmedIdentifier.startsWith("minecraft:potted")) {
@@ -230,12 +237,13 @@ public final class BlockGenerator {
         } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
             bedrockIdentifier = trimmedIdentifier.substring("minecraft:".length());;
         } else if (isSkull(trimmedIdentifier)) {
-            bedrockIdentifier = "skull";
+            bedrockIdentifier = trimmedIdentifier.replace("minecraft:", "").replace("_wall", "");
         } else if (trimmedIdentifier.endsWith("light_gray_glazed_terracotta")) {
             bedrockIdentifier = "silver_glazed_terracotta";
         } else {
             // Default to trimmed identifier, or the existing identifier
-            bedrockIdentifier = blockEntry != null ? blockEntry.bedrockIdentifier() : trimmedIdentifier.replace("minecraft:", "");
+            bedrockIdentifier = (blockEntry != null && !blockEntry.bedrockIdentifier().equals("unknown")) ?
+                    blockEntry.bedrockIdentifier() : trimmedIdentifier.replace("minecraft:", "");
         }
 
         if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
@@ -268,7 +276,7 @@ public final class BlockGenerator {
             blockMapper.apply(state, bedrockStates);
         }
 
-        if (block == Blocks.GLOW_LICHEN || block == Blocks.SCULK_VEIN) {
+        if (block == Blocks.GLOW_LICHEN || block == Blocks.SCULK_VEIN || block == Blocks.RESIN_CLUMP) {
             int bitset = 0;
             if (state.getValue(BlockStateProperties.DOWN)) {
                 bitset |= 1;
@@ -304,10 +312,12 @@ public final class BlockGenerator {
             if (!isHead) {
                 bedrockStates.putString("big_dripleaf_tilt", "none");
             }
-        } else if (block == Blocks.MANGROVE_WOOD || block == Blocks.CHERRY_WOOD) {
-            // Didn't seem to do anything
-            bedrockStates.putBoolean("stripped_bit", false);
-        } else if (trimmedIdentifier.contains("azalea_leaves") || trimmedIdentifier.endsWith("mangrove_leaves")) {
+        } else if (trimmedIdentifier.endsWith("_leaves") ||
+                trimmedIdentifier.contains("azalea_leaves")) {
+            bedrockStates.putBoolean("update_bit", false);
+        }
+
+        if (bedrockIdentifier.contains("flower_pot")) {
             bedrockStates.putBoolean("update_bit", false);
         }
 
