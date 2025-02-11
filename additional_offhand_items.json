@@ -1,5 +1,4 @@
 [
-  "minecraft:apple",
   "minecraft:arrow",
   "minecraft:brewing_stand",
   "minecraft:cake",
@@ -35,14 +34,11 @@
   "minecraft:music_disc_wait",
   "minecraft:music_disc_ward",
   "minecraft:nether_sprouts",
-  "minecraft:ominous_trial_key",
   "minecraft:repeater",
   "minecraft:snowball",
   "minecraft:soul_campfire",
   "minecraft:string",
   "minecraft:sugar_cane",
-  "minecraft:trial_key",
   "minecraft:warped_fungus_on_a_stick",
-  "minecraft:wind_charge",
   "minecraft:wolf_armor"
 ]

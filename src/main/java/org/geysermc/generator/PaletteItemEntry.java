@@ -14,4 +14,10 @@ public class PaletteItemEntry {
 
     @SerializedName("id")
     private int legacy_id;
+
+    @SerializedName("version")
+    private int version;
+
+    @SerializedName("componentBased")
+    private boolean componentBased;
 }
