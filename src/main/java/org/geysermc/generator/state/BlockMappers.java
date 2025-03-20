@@ -128,14 +128,14 @@ public final class BlockMappers {
                 .map(MangrovePropaguleBlock.AGE, "propagule_stage");
         register(Blocks.OBSERVER).map(ObserverBlock.FACING, "minecraft:facing_direction");
         register(Blocks.TRIAL_SPAWNER, Blocks.VAULT).directMap(BlockStateProperties.OMINOUS);
-        register(Blocks.PINK_PETALS)
-                .transform(PinkPetalsBlock.AMOUNT, "growth", value -> {
+        register(Blocks.PINK_PETALS, Blocks.WILDFLOWERS)
+                .transform(FlowerBedBlock.AMOUNT, "growth", value -> {
                     // Java has flower_amount   1, 2, 3, 4
                     // Bedrock has growth       0, 1, 2, 3, 4, 5, 6, 7
                     // but apparently growth greater than 3 can only be obtained via commands: https://minecraft.fandom.com/wiki/Pink_Petals
                     return value - 1;
                 })
-                .mapCardinalDirection(PinkPetalsBlock.FACING);
+                .mapCardinalDirection(FlowerBedBlock.FACING);
         register(Blocks.PITCHER_CROP)
                 .transform(PitcherCropBlock.AGE, "growth", value -> switch (value) {
                     case 0 -> 0;
@@ -301,10 +301,10 @@ public final class BlockMappers {
             return value.getSerializedName();
         };
         register(WallBlock.class)
-                .transform(WallBlock.NORTH_WALL, "wall_connection_type_north", wallDirectionMapper)
-                .transform(WallBlock.SOUTH_WALL, "wall_connection_type_south", wallDirectionMapper)
-                .transform(WallBlock.EAST_WALL, "wall_connection_type_east", wallDirectionMapper)
-                .transform(WallBlock.WEST_WALL, "wall_connection_type_west", wallDirectionMapper)
+                .transform(WallBlock.NORTH, "wall_connection_type_north", wallDirectionMapper)
+                .transform(WallBlock.SOUTH, "wall_connection_type_south", wallDirectionMapper)
+                .transform(WallBlock.EAST, "wall_connection_type_east", wallDirectionMapper)
+                .transform(WallBlock.WEST, "wall_connection_type_west", wallDirectionMapper)
                 .map(WallBlock.UP, "wall_post_bit");
 
         register(SaplingBlock.class).additionalRequirement(state -> !(state.getBlock() instanceof MangrovePropaguleBlock))
@@ -323,13 +323,7 @@ public final class BlockMappers {
         register(CreakingHeartBlock.class)
                 .directMap(BlockStateProperties.NATURAL)
                 .map(BlockStateProperties.AXIS, "pillar_axis")
-                .transform(BlockStateProperties.ACTIVE, "creaking_heart_state", value -> {
-                    if (value) {
-                        return "awake";
-                    } else {
-                        return "uprooted";
-                    }
-                });
+                .directMap(CreakingHeartBlock.STATE);
 
         register(MossyCarpetBlock.class)
                 .transform(BlockStateProperties.EAST_WALL, "pale_moss_carpet_side_east", wallDirectionMapper)
@@ -337,6 +331,14 @@ public final class BlockMappers {
                 .transform(BlockStateProperties.WEST_WALL, "pale_moss_carpet_side_west", wallDirectionMapper)
                 .transform(BlockStateProperties.NORTH_WALL, "pale_moss_carpet_side_north", wallDirectionMapper)
                 .transform(BlockStateProperties.BOTTOM, "upper_block_bit", value -> !value);
-    }
 
+        register(LeafLitterBlock.class)
+                .transform(LeafLitterBlock.AMOUNT, "growth", value -> {
+                    // Java has flower_amount   1, 2, 3, 4
+                    // Bedrock has growth       0, 1, 2, 3, 4, 5, 6, 7
+                    // but apparently growth greater than 3 can only be obtained via commands: https://minecraft.fandom.com/wiki/Pink_Petals
+                    return value - 1;
+                })
+                .mapCardinalDirection(LeafLitterBlock.FACING);
+    }
 }

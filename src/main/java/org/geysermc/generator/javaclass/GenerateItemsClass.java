@@ -2,11 +2,13 @@ package org.geysermc.generator.javaclass;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.block.DecoratedPotBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import org.geysermc.generator.Util;
@@ -41,7 +43,7 @@ public class GenerateItemsClass {
         classOverrides.put(Items.OMINOUS_BOTTLE, "OminousBottleItem");
         classOverrides.put(Items.LIGHT, "LightItem");
         List<Class<? extends Item>> mirroredClasses = List.of(DyeItem.class, SpawnEggItem.class,
-                PotionItem.class, ArmorItem.class, BannerItem.class, BoatItem.class);
+                PotionItem.class, BannerItem.class, BoatItem.class);
 
         for (Item item : BuiltInRegistries.ITEM) {
             FieldConstructor constructor = new FieldConstructor("Item");
@@ -61,10 +63,22 @@ public class GenerateItemsClass {
                 }
             }
 
-            // Armor Items
-            if (item instanceof ArmorItem armor && armor.getDescriptionId().contains("leather")) {
-                clazz = "DyeableArmorItem";
+
+            // Filter out mob heads and elytras
+            if (item.components().has(DataComponents.EQUIPPABLE) && !(item instanceof BlockItem) && item != Items.ELYTRA) {
+                Equippable equippable = item.components().get(DataComponents.EQUIPPABLE);
+                assert equippable != null;
+                // Filter out llama swag
+                if (equippable.canBeEquippedBy(EntityType.PLAYER)) {
+                    if (equippable.assetId().isPresent()
+                            && equippable.assetId().get().location().getPath().equals("leather")) {
+                        clazz = "DyeableArmorItem";
+                    } else {
+                        clazz = "ArmorItem";
+                    }
+                }
             }
+
             clazz = classOverrides.getOrDefault(item, clazz); // Needed so WolfArmor applies over ArmorItem
             if (clazz == null) {
                 clazz = item instanceof BlockItem ? "BlockItem" : "Item";
@@ -82,7 +96,7 @@ public class GenerateItemsClass {
 
             constructor.finishParameters();
 
-            if (item instanceof TridentItem || item instanceof DiggerItem || item instanceof SwordItem) {
+            if (item.components().has(DataComponents.WEAPON)) {
                 double playerDefault = Player.createAttributes().build().getValue(Attributes.ATTACK_DAMAGE);
                 ItemAttributeModifiers attributes = item.components().get(DataComponents.ATTRIBUTE_MODIFIERS);
                 AttributeModifier[] collection = attributes.modifiers().stream()

@@ -20,6 +20,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.PlayerEquipment;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
@@ -144,17 +145,14 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:test_block", "minecraft:unknown");
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:test_instance_block", "minecraft:unknown");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             JsonObject rootObject = new JsonObject();
-
-            for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
-                Item value = BuiltInRegistries.ITEM.byId(i);
-                ResourceLocation key = BuiltInRegistries.ITEM.getKey(value);
-            }
 
             for (int i = 0; i < BuiltInRegistries.ITEM.size(); i++) {
                 Item value = BuiltInRegistries.ITEM.byId(i);
@@ -216,7 +214,7 @@ public class MappingsGenerator {
                 SoundEntry entry = SOUND_ENTRIES.get(key.getPath());
 
                 if (entry == null) {
-                    entry = new SoundEntry(null, null, -1, null, false);
+                    entry = new SoundEntry(null, null, null, -1, null, false);
                 }
 
                 // update the playsound, only if a valid bedrock mapping is found
@@ -317,6 +315,14 @@ public class MappingsGenerator {
     }
 
     private boolean updatePlaySound(SoundEntry entry, String javaIdentifier, Set<String> bedrockSounds) {
+        if (javaIdentifier.contains("button") && !javaIdentifier.equals("ui.button.click")) {
+            if (javaIdentifier.contains("click_on")) {
+                entry.setPitchAdjust(0.6);
+            } else {
+                entry.setPitchAdjust(0.5);
+            }
+        }
+
         if (bedrockSounds.contains(javaIdentifier)) {
             entry.setPlaySound(javaIdentifier);
             return true;
@@ -609,7 +615,7 @@ public class MappingsGenerator {
         // Used by bee_hive
         mockPlayer.level = mockClientLevel;
         mockPlayer.position = Vec3.ZERO;
-        when(mockPlayer.getInventory()).thenReturn(new Inventory(mockPlayer));
+        when(mockPlayer.getInventory()).thenReturn(new Inventory(mockPlayer, new PlayerEquipment(mockPlayer)));
 
         AtomicBoolean requiresAbilities = new AtomicBoolean(false);
         when(mockPlayer.getAbilities()).then(invocationOnMock -> {
