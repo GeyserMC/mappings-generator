@@ -9,7 +9,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -18,13 +17,9 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.PistonType;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.SlabType;
-import org.cloudburstmc.blockstateupdater.BlockStateUpdater_1_21_30;
 import org.cloudburstmc.blockstateupdater.BlockStateUpdaters;
 import org.cloudburstmc.blockstateupdater.util.tagupdater.CompoundTagUpdaterContext;
-import org.cloudburstmc.nbt.NBTInputStream;
-import org.cloudburstmc.nbt.NbtList;
-import org.cloudburstmc.nbt.NbtMap;
-import org.cloudburstmc.nbt.NbtType;
+import org.cloudburstmc.nbt.*;
 import org.geysermc.generator.state.BlockMapper;
 import org.geysermc.generator.state.BlockMappers;
 
@@ -343,13 +338,21 @@ public final class BlockGenerator {
 //            newStates.remove("version");
 //            String newName = newStates.getString("name");
 //            newStates.remove("name");
+//            // TODO temporary fix
+//            if (state.getBlock() instanceof CreakingHeartBlock) {
+//                NbtMapBuilder mapBuilder = cloudburstNbt.toBuilder();
+//                mapBuilder.remove("active");
+//                mapBuilder.putString("creaking_heart_state", newStates.getCompound("states").getString("creaking_heart_state"));
+//                newStates = (CompoundTag) CloudburstNbtOps.INSTANCE.convertTo(NbtOps.INSTANCE, mapBuilder.build());
+//                return new BlockEntry(newName.substring("minecraft:".length()), newStates);
+//            }
 //            return new BlockEntry(newName.substring("minecraft:".length()), newStates.getCompound("states"));
 //        }
 
         return new BlockEntry(bedrockIdentifier, bedrockStates);
     }
 
-    private static final int OLD_VERSION = CompoundTagUpdaterContext.makeVersion(1, 21, 20);
+    private static final int OLD_VERSION = CompoundTagUpdaterContext.makeVersion(1, 21, 40);
 
     static String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();

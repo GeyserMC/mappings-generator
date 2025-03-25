@@ -88,23 +88,18 @@ public final class BlockMappers {
                     default -> throw new IllegalArgumentException("Got " + value + " instead of a cardinal direction");
                 });
         register(DoorBlock.class)
-                .transform(DoorBlock.FACING, "direction", value -> switch (value) {
-                    case NORTH -> 3;
-                    case SOUTH -> 1;
-                    case WEST -> 2;
-                    default -> 0;
+                // This is NOT a direct mappings to minecraft:cardinal_direction!!!
+                .transform(DoorBlock.FACING, "minecraft:cardinal_direction", value -> switch (value) {
+                    case NORTH -> "east";
+                    case SOUTH -> "west";
+                    case WEST -> "north";
+                    default -> "south";
                 })
                 .transform(DoorBlock.HALF, "upper_block_bit", value -> value == DoubleBlockHalf.UPPER)
                 .transform(DoorBlock.HINGE, "door_hinge_bit", value -> value == DoorHingeSide.RIGHT)
                 .map(DoorBlock.OPEN, "open_bit");
         register(FenceGateBlock.class)
-                .transform(FenceGateBlock.FACING, "direction",
-                   value -> switch (value) {
-                        case NORTH -> 2;
-                        case WEST -> 1;
-                        case EAST -> 3;
-                        default -> 0;
-                })
+                .mapCardinalDirection(FenceGateBlock.FACING)
                 .map(FenceGateBlock.IN_WALL, "in_wall_bit")
                 .map(FenceGateBlock.OPEN, "open_bit");
 
@@ -127,7 +122,6 @@ public final class BlockMappers {
         ).mapCardinalDirection(HorizontalDirectionalBlock.FACING);
 
         register(LeavesBlock.class).map(LeavesBlock.PERSISTENT, "persistent_bit");
-        register(Blocks.LIGHT).map(LightBlock.LEVEL, "block_light_level");
         register(Blocks.WATER, Blocks.LAVA).map(LiquidBlock.LEVEL, "liquid_depth");
         register(Blocks.MANGROVE_PROPAGULE)
                 .directMap(MangrovePropaguleBlock.HANGING)
@@ -329,7 +323,13 @@ public final class BlockMappers {
         register(CreakingHeartBlock.class)
                 .directMap(BlockStateProperties.NATURAL)
                 .map(BlockStateProperties.AXIS, "pillar_axis")
-                .directMap(BlockStateProperties.ACTIVE);
+                .transform(BlockStateProperties.ACTIVE, "creaking_heart_state", value -> {
+                    if (value) {
+                        return "awake";
+                    } else {
+                        return "uprooted";
+                    }
+                });
 
         register(MossyCarpetBlock.class)
                 .transform(BlockStateProperties.EAST_WALL, "pale_moss_carpet_side_east", wallDirectionMapper)
