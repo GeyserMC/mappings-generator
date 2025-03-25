@@ -88,7 +88,13 @@ public final class BlockMappers {
                     default -> throw new IllegalArgumentException("Got " + value + " instead of a cardinal direction");
                 });
         register(DoorBlock.class)
-                .mapCardinalDirection(DoorBlock.FACING)
+                // This is NOT a direct mappings to minecraft:cardinal_direction!!!
+                .transform(DoorBlock.FACING, "minecraft:cardinal_direction", value -> switch (value) {
+                    case NORTH -> "east";
+                    case SOUTH -> "west";
+                    case WEST -> "north";
+                    default -> "south";
+                })
                 .transform(DoorBlock.HALF, "upper_block_bit", value -> value == DoubleBlockHalf.UPPER)
                 .transform(DoorBlock.HINGE, "door_hinge_bit", value -> value == DoorHingeSide.RIGHT)
                 .map(DoorBlock.OPEN, "open_bit");
