@@ -376,6 +376,34 @@ public class MappingsGenerator {
                 }
                 // otherwise uses normal goat sound
             }
+
+            if (identifier.contains("wolf_puglin")) {
+                identifier = identifier.replace("wolf_puglin", "wolf.puglin");
+            }
+
+            if (identifier.contains("wolf_sad")) {
+                identifier = identifier.replace("wolf_sad", "wolf.sad");
+            }
+
+            if (identifier.contains("wolf_angry")) {
+                identifier = identifier.replace("wolf_angry", "wolf.mad");
+            }
+
+            if (identifier.contains("wolf_big")) {
+                identifier = identifier.replace("wolf_big", "wolf.big");
+            }
+
+            if (identifier.contains("wolf_cute")) {
+                identifier = identifier.replace("wolf_cute", "wolf.cute");
+            }
+
+            if (identifier.contains("wolf_grumpy")) {
+                identifier = identifier.replace("wolf_grumpy", "wolf.grumpy");
+            }
+
+            if (identifier.contains(".pant")) {
+                identifier = identifier.replace(".pant", ".panting");
+            }
         } else {
             identifier = identifier.replace("item.armor", "armor");
         }
@@ -543,6 +571,11 @@ public class MappingsGenerator {
 
         for (Map.Entry<ResourceKey<ParticleType<?>>, ParticleType<?>> entry : BuiltInRegistries.PARTICLE_TYPE.entrySet()) {
             String enumName = entry.getKey().location().getPath().toUpperCase(Locale.ROOT);
+            if (enumName.equals("TRIAL_SPAWNER_DETECTION")) {
+                enumName = "TRIAL_SPAWNER_DETECTED_PLAYER";
+            } else if (enumName.equals("TRIAL_SPAWNER_DETECTION_OMINOUS")) {
+                enumName = "TRIAL_SPAWNER_DETECTED_PLAYER_OMINOUS";
+            }
             ParticleEntry geyserParticle = particles.computeIfAbsent(enumName, ($) -> new ParticleEntry());
 
             if (geyserParticle.cloudburstLevelEventType == null) {
