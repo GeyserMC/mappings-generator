@@ -2,7 +2,6 @@ package org.geysermc.generator.javaclass;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.FrontAndTop;
-import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.state.properties.*;
 import org.geysermc.generator.Util;
 

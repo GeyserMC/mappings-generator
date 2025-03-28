@@ -15,6 +15,8 @@ import net.minecraft.world.level.material.PushReaction;
 import org.geysermc.generator.EmptyLevelReader;
 import org.geysermc.generator.Util;
 
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
@@ -33,7 +35,7 @@ public final class GenerateBlocksClass {
 
         List<Class<? extends Block>> mirroredClasses = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
                 FlowerPotBlock.class, FurnaceBlock.class, HoneyBlock.class, LecternBlock.class, MovingPistonBlock.class,
-                PistonHeadBlock.class, SpawnerBlock.class, TrapDoorBlock.class, WallSkullBlock.class);
+                PistonHeadBlock.class, SpawnerBlock.class, TrapDoorBlock.class, WallSkullBlock.class, ButtonBlock.class);
 
         StringBuilder builder = new StringBuilder();
         var it = BuiltInRegistries.BLOCK.iterator();
@@ -165,9 +167,9 @@ public final class GenerateBlocksClass {
                 builder.append("\n");
             }
         }
-//        System.out.println();
-//        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(builder.toString()), null);
-//        System.out.println("Contents copied to your clipboard. Your welcome :)");
+        System.out.println();
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(builder.toString()), null);
+        System.out.println("Contents copied to your clipboard. Your welcome :)");
     }
 
     private static String findFieldName(Property<?> property) {

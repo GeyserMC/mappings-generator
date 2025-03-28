@@ -16,7 +16,8 @@ public final class ProcessItemComponents {
 
     // As of Bedrock 1.21, only items with the item_properties component can have their offhand status toggled.
     // As of Bedrock 1.21.60, items with the version 1 (DATA_DRIVEN) cannot be modified
-    // Those break on the client end
+    // Those break on the client end.
+    // Currently (1.21.60 / 1.21.70) no items can be modified. RIP.
     public static void main(String[] args) {
         Util.initialize();
 
@@ -48,11 +49,16 @@ public final class ProcessItemComponents {
             ex.printStackTrace();
         }
 
-        for (String key : tag.getAllKeys()) {
-            CompoundTag components = tag.getCompound(key);
+        for (String key : tag.keySet()) {
+            CompoundTag components = tag.getCompoundOrEmpty(key);
             if (key.equals("minecraft:fishing_rod")) {
                 // Fix the damage being unequal between the two versions
                 // Maybe. Didn't implement it yet since it actually changes how it's treated over the network
+                continue;
+            }
+
+            if (itemVersion.get(key) == null) {
+                throw new RuntimeException("Unknown item version: " + key);
             }
 
             if (itemVersion.get(key) == 1) {
@@ -60,12 +66,17 @@ public final class ProcessItemComponents {
                 continue;
             }
 
-            if (!components.getAllKeys().contains("item_properties")) {
+            if (!components.keySet().contains("item_properties")) {
                 continue;
             }
-            CompoundTag itemProperties = components.getCompound("item_properties");
+            CompoundTag itemProperties = components.getCompoundOrEmpty("item_properties");
             itemProperties.putBoolean("allow_off_hand", true);
             allOffhandItems.add(key);
+        }
+
+        if (allOffhandItems.isEmpty()) {
+            System.out.println("No items found that can be modified!");
+            return;
         }
 
         try {

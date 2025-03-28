@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.PistonType;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.SlabType;
-import org.cloudburstmc.blockstateupdater.BlockStateUpdaters;
 import org.cloudburstmc.blockstateupdater.util.tagupdater.CompoundTagUpdaterContext;
 import org.cloudburstmc.nbt.*;
 import org.geysermc.generator.state.BlockMapper;
@@ -40,6 +39,8 @@ public final class BlockGenerator {
 
     static {
         // Register BLOCK_OVERRIDES here
+        BLOCK_OVERRIDES.put(Blocks.TEST_BLOCK, "unknown");
+        BLOCK_OVERRIDES.put(Blocks.TEST_INSTANCE_BLOCK, "unknown");
     }
 
     public static final Map<String, List<String>> STATES = new HashMap<>();
@@ -230,7 +231,7 @@ public final class BlockGenerator {
             // "wall hanging" signs do not exist on BE. they are just hanging signs.
             bedrockIdentifier = trimmedIdentifier.replace("_wall", "").substring("minecraft:".length());
         } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
-            bedrockIdentifier = trimmedIdentifier.substring("minecraft:".length());;
+            bedrockIdentifier = trimmedIdentifier.substring("minecraft:".length());
         } else if (isSkull(trimmedIdentifier)) {
             bedrockIdentifier = trimmedIdentifier.replace("minecraft:", "").replace("_wall", "");
         } else if (trimmedIdentifier.endsWith("light_gray_glazed_terracotta")) {
@@ -251,7 +252,7 @@ public final class BlockGenerator {
         if (blockEntry != null && STATES.get("minecraft:" + blockEntry.bedrockIdentifier()) != null) {
             List<String> toRemove = new ArrayList<>();
             // Since we now rely on block states being exact after 1.16.100, we need to remove any old states
-            for (String key : bedrockStates.getAllKeys()) {
+            for (String key : bedrockStates.keySet()) {
                 List<String> states = STATES.get("minecraft:" + blockEntry.bedrockIdentifier());
                 if (!states.contains(key) &&
                         !key.contains("stone_slab_type")) { // Ignore the stone slab types since we ignore them above
@@ -336,17 +337,17 @@ public final class BlockGenerator {
 //            cloudburstNbt = BlockStateUpdaters.updateBlockState(cloudburstNbt, OLD_VERSION);
 //            CompoundTag newStates = (CompoundTag) CloudburstNbtOps.INSTANCE.convertTo(NbtOps.INSTANCE, cloudburstNbt);
 //            newStates.remove("version");
-//            String newName = newStates.getString("name");
+//            String newName = newStates.getString("name").orElseThrow();
 //            newStates.remove("name");
 //            // TODO temporary fix
 //            if (state.getBlock() instanceof CreakingHeartBlock) {
 //                NbtMapBuilder mapBuilder = cloudburstNbt.toBuilder();
 //                mapBuilder.remove("active");
-//                mapBuilder.putString("creaking_heart_state", newStates.getCompound("states").getString("creaking_heart_state"));
+//                mapBuilder.putString("creaking_heart_state", newStates.getString("creaking_heart_state").orElseThrow());
 //                newStates = (CompoundTag) CloudburstNbtOps.INSTANCE.convertTo(NbtOps.INSTANCE, mapBuilder.build());
 //                return new BlockEntry(newName.substring("minecraft:".length()), newStates);
 //            }
-//            return new BlockEntry(newName.substring("minecraft:".length()), newStates.getCompound("states"));
+//            return new BlockEntry(newName.substring("minecraft:".length()), newStates.getCompound("states").orElseThrow());
 //        }
 
         return new BlockEntry(bedrockIdentifier, bedrockStates);
@@ -381,13 +382,6 @@ public final class BlockGenerator {
             return arg.getName((T) comparable);
         }
     };
-
-    /**
-     * @return true if this wall can be treated normally and not stupidly
-     */
-    private static boolean isSensibleWall(String identifier) {
-        return identifier.contains("blackstone") || identifier.contains("deepslate") || identifier.contains("mud_brick") || identifier.contains("tuff");
-    }
 
     private static boolean isSkull(String identifier) {
         return identifier.contains("skull") || (identifier.contains("head") && !identifier.contains("piston"));
