@@ -5,7 +5,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.minecraft.Util;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentPatch;
@@ -16,7 +15,6 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.RegistryLayer;
-import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.CloseableResourceManager;
@@ -33,7 +31,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 public final class RecipeGenerator {
     private static RegistryAccess REGISTRY_ACCESS;
@@ -73,7 +70,12 @@ public final class RecipeGenerator {
                 .toList();
         for (DyeItem dyeItem : allDyes) {
             final List<GeyserRecipe> shulkerRecipes = new ArrayList<>();
-            final TransmuteRecipe shulkerTest = new TransmuteRecipe(null, null, Ingredient.of(dyeItem), Ingredient.of(allShulkerBoxes.stream()), Holder.direct(ShulkerBoxBlock.getBlockByColor(dyeItem.getDyeColor()).asItem()));
+            final TransmuteRecipe shulkerTest = new TransmuteRecipe(
+                    null,
+                    null,
+                    Ingredient.of(dyeItem),
+                    Ingredient.of(allShulkerBoxes.stream()),
+                    new TransmuteResult(ShulkerBoxBlock.getBlockByColor(dyeItem.getDyeColor()).asItem()));
             for (Item item : allShulkerBoxes) {
                 validateAndAdd(shulkerRecipes, shulkerTest, item, dyeItem);
             }

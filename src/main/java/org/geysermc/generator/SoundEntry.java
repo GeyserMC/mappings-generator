@@ -16,6 +16,10 @@ public class SoundEntry {
     private String playSound;
 
     @Nullable
+    @SerializedName("pitch_adjust")
+    private Double pitchAdjust;
+
+    @Nullable
     @SerializedName("bedrock_mapping")
     private String eventSound;
 
