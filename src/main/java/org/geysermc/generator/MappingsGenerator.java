@@ -375,34 +375,36 @@ public class MappingsGenerator {
                     identifier = screamer; // specific screamer sound
                 }
                 // otherwise uses normal goat sound
-            }
+            } else if (identifier.startsWith("mob.wolf_")) {
+                if (identifier.contains("wolf_puglin")) {
+                    identifier = identifier.replace("wolf_puglin", "wolf.puglin");
+                }
 
-            if (identifier.contains("wolf_puglin")) {
-                identifier = identifier.replace("wolf_puglin", "wolf.puglin");
-            }
+                if (identifier.contains("wolf_sad")) {
+                    identifier = identifier.replace("wolf_sad", "wolf.sad");
+                }
 
-            if (identifier.contains("wolf_sad")) {
-                identifier = identifier.replace("wolf_sad", "wolf.sad");
-            }
+                if (identifier.contains("wolf_angry")) {
+                    identifier = identifier.replace("wolf_angry", "wolf.mad");
+                }
 
-            if (identifier.contains("wolf_angry")) {
-                identifier = identifier.replace("wolf_angry", "wolf.mad");
-            }
+                if (identifier.contains("wolf_big")) {
+                    identifier = identifier.replace("wolf_big", "wolf.big");
+                }
 
-            if (identifier.contains("wolf_big")) {
-                identifier = identifier.replace("wolf_big", "wolf.big");
-            }
+                if (identifier.contains("wolf_cute")) {
+                    identifier = identifier.replace("wolf_cute", "wolf.cute");
+                }
 
-            if (identifier.contains("wolf_cute")) {
-                identifier = identifier.replace("wolf_cute", "wolf.cute");
-            }
+                if (identifier.contains("wolf_grumpy")) {
+                    identifier = identifier.replace("wolf_grumpy", "wolf.grumpy");
+                }
 
-            if (identifier.contains("wolf_grumpy")) {
-                identifier = identifier.replace("wolf_grumpy", "wolf.grumpy");
-            }
+                if (identifier.contains(".pant")) {
+                    identifier = identifier.replace(".pant", ".panting");
+                }
 
-            if (identifier.contains(".pant")) {
-                identifier = identifier.replace(".pant", ".panting");
+                identifier = identifier.replace("ambient", "bark");
             }
         } else {
             identifier = identifier.replace("item.armor", "armor");
