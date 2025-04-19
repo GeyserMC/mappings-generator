@@ -5,6 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 
@@ -100,6 +101,20 @@ public class BlockMapper {
     }
 
     /**
+     * Bedrock name is a numeric "facing_direction", and all 6 directions are used
+     */
+    public BlockMapper mapFacingDirection(EnumProperty<Direction> property) {
+        return this.transform(property, "facing_direction", value -> switch (value) {
+            case DOWN -> 0;
+            case UP -> 1;
+            case SOUTH -> 2;
+            case NORTH -> 3;
+            case EAST -> 4;
+            case WEST -> 5;
+        });
+    }
+
+    /**
      * Java name and Bedrock name are same, as well as possible values
      */
     public BlockMapper directMap(Property<?> property) {
@@ -124,6 +139,16 @@ public class BlockMapper {
     public BlockMapper transform(String bedrockName, Function<BlockState, Object> function) {
         this.blockStateMappers.add((state, tag) -> {
             Object value = function.apply(state);
+            addToTag(tag, bedrockName, value);
+        });
+        return this;
+    }
+
+    /**
+     * Add additional Bedrock tag. update_bit says hi!
+     */
+    public BlockMapper addBedrockProperty(String bedrockName, Object value) {
+        this.blockStateMappers.add((state, tag) -> {
             addToTag(tag, bedrockName, value);
         });
         return this;
