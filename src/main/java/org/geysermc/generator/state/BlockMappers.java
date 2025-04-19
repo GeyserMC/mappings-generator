@@ -55,6 +55,10 @@ public final class BlockMappers {
                             case 3 -> 6;
                             default -> throw new RuntimeException("Unknown cauldron liquid level!");
                         });
+        register(Blocks.CAULDRON).addBedrockProperty("fill_level", 0);
+        register(Blocks.LAVA_CAULDRON).addBedrockProperty("cauldron_liquid", "lava");
+        register(Blocks.WATER_CAULDRON, Blocks.CAULDRON).addBedrockProperty("cauldron_liquid", "water");
+        register(Blocks.POWDER_SNOW_CAULDRON).addBedrockProperty("cauldron_liquid", "powder_snow");
         register(Blocks.CHISELED_BOOKSHELF)
                 .transform("books_stored", state -> {
                     // bedrock stores the book occupancy list as a bitmask.
@@ -123,7 +127,6 @@ public final class BlockMappers {
                 Blocks.CARVED_PUMPKIN,
                 Blocks.JACK_O_LANTERN
         ).mapCardinalDirection(HorizontalDirectionalBlock.FACING);
-
         register(Blocks.REPEATER)
                 .transform(RepeaterBlock.DELAY, "repeater_delay", value -> value -1);
 
@@ -507,6 +510,44 @@ public final class BlockMappers {
             }
             return count;
         });
+        register(Blocks.NETHER_WART).directMap(NetherWartBlock.AGE);
+        register(Blocks.BREWING_STAND)
+                .map(BlockStateProperties.HAS_BOTTLE_0, "brewing_stand_slot_a_bit")
+                .map(BlockStateProperties.HAS_BOTTLE_1, "brewing_stand_slot_b_bit")
+                .map(BlockStateProperties.HAS_BOTTLE_2, "brewing_stand_slot_c_bit");
+        register(Blocks.END_PORTAL_FRAME).map(EndPortalFrameBlock.HAS_EYE, "end_portal_eye_bit");
+        register(Blocks.COCOA)
+                .directMap(CocoaBlock.AGE)
+                .transform(CocoaBlock.FACING, "direction",
+                        value -> switch (value) {
+                            case WEST -> 1;
+                            case NORTH -> 2;
+                            case EAST -> 3;
+                            default -> 0;
+                        });
+        register(Blocks.TRIPWIRE_HOOK)
+                .map(TripWireHookBlock.ATTACHED, "attached_bit")
+                .transform(TripWireHookBlock.FACING, "direction",
+                        value -> switch (value) {
+                            case WEST -> 1;
+                            case NORTH -> 2;
+                            case EAST -> 3;
+                            default -> 0;
+                        })
+                .map(TripWireHookBlock.POWERED, "powered_bit");
+        register(Blocks.TRIPWIRE)
+                // ???
+                .addBedrockProperty("suspended_bit", true)
+                .map(TripWireBlock.ATTACHED, "attached_bit")
+                .map(TripWireBlock.DISARMED, "disarmed_bit")
+                .map(TripWireBlock.POWERED, "powered_bit");
+        register(CommandBlock.class)
+                .map(CommandBlock.CONDITIONAL, "conditional_bit")
+                .mapFacingDirection(CommandBlock.FACING);
+        register(FlowerPotBlock.class).addBedrockProperty("update_bit", false);
+        register(Blocks.CARROTS).map(CarrotBlock.AGE, "growth");
+        register(Blocks.POTATOES).map(PotatoBlock.AGE, "growth");
+        register(Blocks.BEETROOTS).map(BeetrootBlock.AGE, "growth");
 
         // dumb bedrock things
 

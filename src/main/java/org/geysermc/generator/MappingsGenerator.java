@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static org.geysermc.generator.BlockGenerator.blockStateToString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 

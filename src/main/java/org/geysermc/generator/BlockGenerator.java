@@ -1,13 +1,9 @@
 package org.geysermc.generator;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -17,15 +13,11 @@ import org.cloudburstmc.nbt.NBTInputStream;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
-import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
-import org.cloudburstmc.protocol.bedrock.codec.v786.Bedrock_v786;
 import org.geysermc.generator.state.BlockMapper;
 import org.geysermc.generator.state.BlockMappers;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -49,6 +41,7 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.ROOTED_DIRT, "dirt_with_roots");
         NAME_OVERRIDES.put(Blocks.POWDER_SNOW_CAULDRON, "cauldron");
         NAME_OVERRIDES.put(Blocks.WATER_CAULDRON, "cauldron");
+        NAME_OVERRIDES.put(Blocks.LAVA_CAULDRON, "cauldron");
         NAME_OVERRIDES.put(Blocks.WAXED_COPPER_BLOCK, "waxed_copper");
         NAME_OVERRIDES.put(Blocks.TRIPWIRE, "trip_wire");
         NAME_OVERRIDES.put(Blocks.MOVING_PISTON, "moving_block");
@@ -78,10 +71,12 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.OAK_PRESSURE_PLATE, "wooden_pressure_plate");
         NAME_OVERRIDES.put(Blocks.OAK_TRAPDOOR, "trapdoor");
         NAME_OVERRIDES.put(Blocks.OAK_FENCE_GATE, "fence_gate");
+        NAME_OVERRIDES.put(Blocks.OAK_BUTTON, "wooden_button");
 
         NAME_OVERRIDES.put(Blocks.DARK_OAK_SIGN, "darkoak_standing_sign");
         NAME_OVERRIDES.put(Blocks.DARK_OAK_WALL_SIGN, "darkoak_wall_sign");
         NAME_OVERRIDES.put(Blocks.COBBLESTONE_STAIRS, "stone_stairs");
+        NAME_OVERRIDES.put(Blocks.NETHER_BRICKS, "nether_brick");
 
         STATE_BLOCK_OVERRIDES.put(Blocks.DEEPSLATE_REDSTONE_ORE, state -> {
             if (state.getValue(BlockStateProperties.LIT)) {
@@ -196,19 +191,24 @@ public class BlockGenerator {
             return STATE_BLOCK_OVERRIDES.get(state.getBlock()).apply(state);
         }
 
-        if (state.getBlock() instanceof BedBlock) {
+        Block block = state.getBlock();
+        if (block instanceof BedBlock) {
             return "bed";
         }
 
-        if (state.getBlock() instanceof StandingSignBlock) {
-            return BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath().replace("sign", "standing_sign");
+        if (block instanceof FlowerPotBlock) {
+            return "flower_pot";
         }
 
-        if (state.getBlock() instanceof WallHangingSignBlock) {
-            return BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath().replace("wall_", "");
+        if (block instanceof StandingSignBlock) {
+            return BuiltInRegistries.BLOCK.getKey(block).getPath().replace("sign", "standing_sign");
         }
 
-        return BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
+        if (block instanceof WallHangingSignBlock) {
+            return BuiltInRegistries.BLOCK.getKey(block).getPath().replace("wall_", "");
+        }
+
+        return BuiltInRegistries.BLOCK.getKey(block).getPath();
     }
 
     static String blockStateToString(BlockState blockState) {
