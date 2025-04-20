@@ -1,5 +1,6 @@
 package org.geysermc.generator;
 
+import com.mojang.datafixers.functions.PointFreeRule;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -9,15 +10,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.PistonType;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import org.cloudburstmc.nbt.NBTInputStream;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
 import org.geysermc.generator.state.BlockMapper;
 import org.geysermc.generator.state.BlockMappers;
+import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -63,6 +68,7 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.ATTACHED_PUMPKIN_STEM, "pumpkin_stem");
         NAME_OVERRIDES.put(Blocks.ATTACHED_MELON_STEM, "melon_stem");
         NAME_OVERRIDES.put(Blocks.LILY_PAD, "waterlily");
+        NAME_OVERRIDES.put(Blocks.TERRACOTTA, "hardened_clay");
 
         // oak -> wooden / no prefix
         NAME_OVERRIDES.put(Blocks.OAK_SIGN, "standing_sign");
@@ -77,6 +83,19 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.DARK_OAK_WALL_SIGN, "darkoak_wall_sign");
         NAME_OVERRIDES.put(Blocks.COBBLESTONE_STAIRS, "stone_stairs");
         NAME_OVERRIDES.put(Blocks.NETHER_BRICKS, "nether_brick");
+        NAME_OVERRIDES.put(Blocks.NETHER_QUARTZ_ORE, "quartz_ore");
+        NAME_OVERRIDES.put(Blocks.SLIME_BLOCK, "slime");
+        NAME_OVERRIDES.put(Blocks.PRISMARINE_BRICK_STAIRS, "prismarine_bricks_stairs");
+        NAME_OVERRIDES.put(Blocks.END_STONE_BRICKS, "end_bricks");
+        NAME_OVERRIDES.put(Blocks.END_STONE_BRICK_STAIRS, "end_brick_stairs");
+        NAME_OVERRIDES.put(Blocks.BEETROOTS, "beetroot");
+        NAME_OVERRIDES.put(Blocks.MAGMA_BLOCK, "magma");
+        NAME_OVERRIDES.put(Blocks.RED_NETHER_BRICKS, "red_nether_brick");
+        NAME_OVERRIDES.put(Blocks.SHULKER_BOX, "undyed_shulker_box");
+        NAME_OVERRIDES.put(Blocks.KELP_PLANT, "kelp");
+        NAME_OVERRIDES.put(Blocks.FROGSPAWN, "frog_spawn");
+        NAME_OVERRIDES.put(Blocks.VOID_AIR, "air");
+        NAME_OVERRIDES.put(Blocks.CAVE_AIR, "air");
 
         STATE_BLOCK_OVERRIDES.put(Blocks.DEEPSLATE_REDSTONE_ORE, state -> {
             if (state.getValue(BlockStateProperties.LIT)) {
@@ -108,6 +127,32 @@ public class BlockGenerator {
                 return "powered_repeater";
             } else {
                 return "unpowered_repeater";
+            }
+        });
+        // TODO test there are some confusing blockstates
+        STATE_BLOCK_OVERRIDES.put(Blocks.COMPARATOR, state -> {
+            if (state.getValue(BlockStateProperties.POWERED)) {
+                return "powered_comparator";
+            } else {
+                return "unpowered_comparator";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.DAYLIGHT_DETECTOR, state -> {
+           if (state.getValue(BlockStateProperties.INVERTED)) {
+               return "daylight_detector";
+           } else {
+               return "daylight_detector_inverted";
+           }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.LIGHT, state -> {
+            int lightValue = state.getValue(LightBlock.LEVEL);
+            return "light_block_" + lightValue;
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.STONE_SLAB, state -> {
+            if (state.getValue(BlockStateProperties.SLAB_TYPE) == SlabType.DOUBLE) {
+                return "normal_stone_double_slab";
+            } else {
+                return "normal_stone_slab";
             }
         });
     }
@@ -150,6 +195,8 @@ public class BlockGenerator {
 
         // These are ordered by java block state runtime ids.
         IntArrayList networkIds = new IntArrayList();
+        List<String> missed = new ArrayList<>();
+        int missedStates = 0;
 
         for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
             String name = getName(state);
@@ -172,7 +219,13 @@ public class BlockGenerator {
             // Now we play matchmaker.
             Integer version = stateToHash.get(map);
             if (version == null) {
-                throw new RuntimeException("Unknown block state: " + name + " state: " + blockStateToString(state) + " our bedrock state: " + map);
+                missedStates++;
+                if (!missed.contains(name)) {
+                    missed.add(name);
+                }
+
+                continue;
+                //throw new RuntimeException("Unknown block state: " + name + " state: " + blockStateToString(state) + " our bedrock state: " + map);
             }
 
             networkIds.add(version.intValue());
@@ -180,6 +233,12 @@ public class BlockGenerator {
                     name, version);
         }
 
+        for (String missing : missed) {
+            System.out.printf("Missed %s\n", missing);
+        }
+
+        System.out.printf("Missing block mappings: %s (%s blocks total), states missing: %s (%s total)",
+                missed.size(), BuiltInRegistries.BLOCK.size(), missedStates, Block.BLOCK_STATE_REGISTRY.size());
     }
 
     private static String getName(BlockState state) {
@@ -200,15 +259,25 @@ public class BlockGenerator {
             return "flower_pot";
         }
 
+        String blockName = BuiltInRegistries.BLOCK.getKey(block).getPath();
+
         if (block instanceof StandingSignBlock) {
-            return BuiltInRegistries.BLOCK.getKey(block).getPath().replace("sign", "standing_sign");
+            return blockName.replace("sign", "standing_sign");
         }
 
-        if (block instanceof WallHangingSignBlock) {
-            return BuiltInRegistries.BLOCK.getKey(block).getPath().replace("wall_", "");
+        if (block instanceof WallHangingSignBlock || block instanceof WallSkullBlock) {
+            return blockName.replace("wall_", "");
         }
 
-        return BuiltInRegistries.BLOCK.getKey(block).getPath();
+        if (block instanceof AbstractBannerBlock) {
+            if (block instanceof WallBannerBlock) {
+                return "wall_banner";
+            } else {
+                return "standing_banner";
+            }
+        }
+
+        return blockName;
     }
 
     static String blockStateToString(BlockState blockState) {
