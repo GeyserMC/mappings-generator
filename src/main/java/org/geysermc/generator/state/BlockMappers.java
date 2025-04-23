@@ -3,22 +3,27 @@ package org.geysermc.generator.state;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.*;
+import org.geysermc.generator.BlockGenerator;
 
 import java.util.function.Function;
 
+import static org.geysermc.generator.state.BlockMapper.addToTag;
 import static org.geysermc.generator.state.BlockMapper.register;
 
 public final class BlockMappers {
     public static void registerMappers() {
         register(AmethystClusterBlock.class).map(AmethystClusterBlock.FACING, "minecraft:block_face");
         register(RotatedPillarBlock.class).map(RotatedPillarBlock.AXIS, "pillar_axis");
-        register(BeehiveBlock.class).transform(HorizontalDirectionalBlock.FACING, "direction",
+        register(Blocks.BEEHIVE, Blocks.BEE_NEST, Blocks.LOOM)
+                .transform(HorizontalDirectionalBlock.FACING, "direction",
                 value -> switch (value) {
                     case WEST -> 1;
                     case NORTH -> 2;
                     case EAST -> 3;
-                    default -> 0;
+                    case SOUTH -> 0;
+                    default -> throw new IllegalStateException("Unexpected value: " + value);
                 });
+        register(Blocks.BEEHIVE, Blocks.BEE_NEST).directMap(BeehiveBlock.HONEY_LEVEL);
         register(BigDripleafBlock.class, BigDripleafStemBlock.class)
                 .map(BlockStateProperties.HORIZONTAL_FACING, "minecraft:cardinal_direction");
         register(Blocks.BIG_DRIPLEAF).transform(BlockStateProperties.TILT, "big_dripleaf_tilt",
@@ -210,21 +215,22 @@ public final class BlockMappers {
                 default -> throw new RuntimeException("Could not determine small dripleaf direction!");
             };
         });
-        register(StairBlock.class).transform(StairBlock.FACING, "weirdo_direction", value ->
-                switch (value) {
-                    case NORTH -> 3;
-                    case SOUTH -> 2;
-                    case WEST -> 1;
-                    default -> 0;
-                })
-                .transform(StairBlock.HALF, "upside_down_bit", value -> value == Half.TOP);
+        register(StairBlock.class)
+                .transform(StairBlock.HALF, "upside_down_bit", value -> value == Half.TOP)
+                .transform(StairBlock.FACING, "weirdo_direction", value ->
+                    switch (value) {
+                        case NORTH -> 3;
+                        case SOUTH -> 2;
+                        case WEST -> 1;
+                        default -> 0;
+                    });
         register(AttachedStemBlock.class).transform(AttachedStemBlock.FACING, "facing_direction",
                 value -> switch (value) {
                     case NORTH -> 2;
                     case WEST -> 4;
                     case SOUTH -> 3;
                     case EAST -> 5;
-                    default -> 0;
+                    default -> throw new IllegalStateException("Unexpected value: " + value);
                 })
                 .addBedrockProperty("growth", 7);
         register(StemBlock.class)
@@ -268,13 +274,7 @@ public final class BlockMappers {
         register(Blocks.WEEPING_VINES_PLANT).transform("weeping_vines_age", state -> 0);
         register(Blocks.CAVE_VINES).map(CaveVinesBlock.AGE, "growing_plant_age");
         register(Blocks.CAVE_VINES_PLANT).transform("growing_plant_age", state -> 0);
-        register(WallSkullBlock.class).transform(WallSkullBlock.FACING, "facing_direction", value -> switch (value) {
-            case NORTH -> 2;
-            case SOUTH -> 3;
-            case WEST -> 4;
-            case EAST -> 5;
-            default -> 0;
-        });
+        register(WallSkullBlock.class).mapFacingDirectionNorthTwo(WallSkullBlock.FACING);
 
         /*
         Note on the attached_bit mapping:
@@ -324,14 +324,7 @@ public final class BlockMappers {
                     default -> throw new IllegalArgumentException("Got " + value + " instead of a cardinal direction");
                 });
 
-        register(WallHangingSignBlock.class, WallSignBlock.class).transform(WallSignBlock.FACING, "facing_direction", value -> switch (value) {
-            case NORTH -> 2;
-            case SOUTH -> 3;
-            case WEST -> 4;
-            case EAST -> 5;
-            default -> 0;
-        });
-
+        register(WallHangingSignBlock.class, WallSignBlock.class).mapFacingDirectionNorthTwo(WallSignBlock.FACING);
         register(StandingSignBlock.class).map(BlockStateProperties.ROTATION_16, "ground_sign_direction");
 
         Function<WallSide, Object> wallDirectionMapper = value -> {
@@ -407,7 +400,7 @@ public final class BlockMappers {
                 }));
 
         register(Blocks.DROPPER, Blocks.DISPENSER)
-                .mapFacingDirection(BlockStateProperties.FACING)
+                .mapFacingDirectionNorthTwo(BlockStateProperties.FACING)
                 .map(BlockStateProperties.TRIGGERED, "triggered_bit");
 
         register(BedBlock.class)
@@ -424,7 +417,7 @@ public final class BlockMappers {
                     default -> throw new IllegalStateException("Unexpected value: " + direction);
                 });
         register(Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD, Blocks.END_ROD)
-                .mapFacingDirection(BlockStateProperties.FACING);
+                .mapFacingDirectionNorthThree(BlockStateProperties.FACING);
         register(Blocks.SEAGRASS).addBedrockProperty("sea_grass_type", "default");
         register(Blocks.TALL_SEAGRASS).transform(TallSeagrassBlock.HALF, "sea_grass_type", value -> switch (value) {
             case UPPER -> "double_top";
@@ -434,13 +427,7 @@ public final class BlockMappers {
         register(Blocks.REDSTONE_WIRE).map(BlockStateProperties.POWER, "redstone_signal");
         register(Blocks.WHEAT).map(CropBlock.AGE, "growth");
         register(Blocks.FARMLAND).map(FarmBlock.MOISTURE, "moisturized_amount");
-        register(Blocks.LADDER).transform(LadderBlock.FACING, "facing_direction", direction -> switch (direction) {
-            case NORTH -> 2;
-            case SOUTH -> 3;
-            case WEST -> 4;
-            case EAST -> 5;
-            default -> throw new IllegalStateException("Unexpected value: " + direction);
-        });
+        register(Blocks.LADDER).mapFacingDirectionNorthTwo(LadderBlock.FACING);
         register(Blocks.LEVER)
             .map(LeverBlock.POWERED, "open_bit")
             .transform("lever_direction", state -> {
@@ -479,28 +466,85 @@ public final class BlockMappers {
                 .transform(SnowLayerBlock.LAYERS, "height", value -> value - 1);
         register(Blocks.NETHER_PORTAL).map(NetherPortalBlock.AXIS, "portal_axis");
         register(Blocks.CAKE).map(BlockStateProperties.BITES, "bite_counter");
-//        register(Blocks.BROWN_MUSHROOM_BLOCK, Blocks.MUSHROOM_STEM, Blocks.RED_MUSHROOM_BLOCK).transform("huge_mushroom_bits", state -> {
-//            int count = 0;
-//            if (state.getValue(BlockStateProperties.DOWN)) {
-//                count++;
-//            }
-//            if (state.getValue(BlockStateProperties.UP)) {
-//                count++;
-//            }
-//            if (state.getValue(BlockStateProperties.SOUTH)) {
-//                count++;
-//            }
-//            if (state.getValue(BlockStateProperties.WEST)) {
-//                count++;
-//            }
-//            if (state.getValue(BlockStateProperties.NORTH)) {
-//                count++;
-//            }
-//            if (state.getValue(BlockStateProperties.EAST)) {
-//                count++;
-//            }
-//            return count;
-//        });
+        register(Blocks.MUSHROOM_STEM).transform("huge_mushroom_bits", state -> {
+           boolean down = state.getValue(BlockStateProperties.DOWN);
+           boolean up = state.getValue(BlockStateProperties.UP);
+
+           // the only state that we can map correctly
+           if (!down && !up) {
+               return 10;
+           }
+           // fallback: all sides
+           return 0;
+        });
+        register(Blocks.BROWN_MUSHROOM_BLOCK, Blocks.RED_MUSHROOM_BLOCK).transform("huge_mushroom_bits", state -> {
+            boolean down = state.getValue(BlockStateProperties.DOWN);
+            boolean up = state.getValue(BlockStateProperties.UP);
+            boolean north = state.getValue(BlockStateProperties.NORTH);
+            boolean south = state.getValue(BlockStateProperties.SOUTH);
+            boolean east = state.getValue(BlockStateProperties.EAST);
+            boolean west = state.getValue(BlockStateProperties.WEST);
+
+            if (up && down && east && south && west && north) {
+                return 14;
+            }
+
+            // Deliberately ignoring up/down as there are no bedrock states with up=false/down=true
+            if (west) {
+                if (north) {
+                    return 1;
+                }
+                if (south) {
+                    return 7;
+                }
+                return 4;
+            }
+
+            if (east) {
+                if (north) {
+                    return 3;
+                }
+                if (south) {
+                    return 9;
+                }
+                return 6;
+            }
+
+            if (south) {
+                return 8;
+            }
+
+            if (up) {
+                return 5;
+            }
+
+            if (north) {
+                return 2;
+            }
+
+            System.out.println(BlockGenerator.blockStateToString(state) + " is mapped to zero!");
+            return 0;
+
+            // Red/Brown Mushroom block
+            /*
+             * 0 -> -
+             * 1 -> north up west
+             * 2 -> north up
+             * 3 -> north up east
+             * 4 -> up west
+             * 5 -> up
+             * 6 -> up east
+             * 7 -> up west south
+             * 8 -> up south
+             * 9 -> up east south
+             * 10-> white mushroom stem, all horizontal sides
+             * 11-> -
+             * 12-> -
+             * 13-> -
+             * 14-> up down east south west north
+             * 15-> stem on all sides
+             */
+        });
 //        register(Blocks.VINE).transform("vine_direction_bits", state -> {
 //            int count = 0;
 //            if (state.getValue(BlockStateProperties.UP)) {
@@ -553,22 +597,16 @@ public final class BlockMappers {
                 .map(TripWireBlock.POWERED, "powered_bit");
         register(CommandBlock.class)
                 .map(CommandBlock.CONDITIONAL, "conditional_bit")
-                .mapFacingDirection(CommandBlock.FACING);
+                .mapFacingDirectionNorthTwo(CommandBlock.FACING);
         register(FlowerPotBlock.class).addBedrockProperty("update_bit", false);
         register(Blocks.CARROTS).map(CarrotBlock.AGE, "growth");
         register(Blocks.POTATOES).map(PotatoBlock.AGE, "growth");
+        // TODO seems wrong
         register(Blocks.BEETROOTS).map(BeetrootBlock.AGE, "growth");
         register(RotatedPillarBlock.class).map(RotatedPillarBlock.AXIS, "pillar_axis");
         register(Blocks.HOPPER)
                 .map(HopperBlock.ENABLED, "toggle_bit")
-                .transform(HopperBlock.FACING, "facing_direction", value -> switch (value) {
-                    case DOWN -> 0;
-                    case UP -> throw new IllegalStateException("Unexpected value: " + value);
-                    case NORTH -> 2;
-                    case SOUTH -> 3;
-                    case WEST -> 4;
-                    case EAST -> 5;
-                });
+                .mapFacingDirectionNorthTwo(HopperBlock.FACING);
         // remove duplicates
         register(DoublePlantBlock.class)
             .additionalRequirement(state -> state.getBlock() != Blocks.SEAGRASS && state.getBlock() != Blocks.TALL_SEAGRASS)
@@ -576,24 +614,19 @@ public final class BlockMappers {
                 case LOWER -> false;
                 case UPPER -> true;
             });
+        register(Blocks.BARREL)
+                .map(BarrelBlock.OPEN, "open_bit")
+                .mapFacingDirectionNorthTwo(BarrelBlock.FACING);
         register(BannerBlock.class).map(BannerBlock.ROTATION, "ground_sign_direction");
-        register(WallBannerBlock.class).transform(WallBannerBlock.FACING, "facing_direction", direction -> switch (direction) {
-            case NORTH -> 2;
-            case SOUTH -> 3;
-            case WEST -> 4;
-            case EAST -> 5;
-            default -> throw new IllegalStateException("Unexpected value: " + direction);
-        });
+        register(WallBannerBlock.class).mapFacingDirectionNorthTwo(WallBannerBlock.FACING);
         register(Blocks.CHORUS_FLOWER).directMap(ChorusFlowerBlock.AGE);
-        register(Blocks.TORCHFLOWER_CROP).map(TorchflowerCropBlock.AGE, "growth");
-        register(Blocks.FROSTED_ICE).directMap(FrostedIceBlock.AGE);
-        register(GlazedTerracottaBlock.class).transform(GlazedTerracottaBlock.FACING, "facing_direction", value -> switch (value) {
-            case NORTH -> 2;
-            case SOUTH -> 3;
-            case WEST -> 4;
-            case EAST -> 5;
+        register(Blocks.TORCHFLOWER_CROP).transform(TorchflowerCropBlock.AGE, "growth", value -> switch (value) {
+            case 0 -> 0;
+            case 1 -> 4;
             default -> throw new IllegalStateException("Unexpected value: " + value);
         });
+        register(Blocks.FROSTED_ICE).directMap(FrostedIceBlock.AGE);
+        register(GlazedTerracottaBlock.class).mapFacingDirectionNorthTwo(GlazedTerracottaBlock.FACING);
         register(Blocks.KELP).map(KelpBlock.AGE, "kelp_age");
         register(Blocks.SNIFFER_EGG, Blocks.TURTLE_EGG)
                 .transform(BlockStateProperties.HATCH, "cracked_state", value -> switch (value) {
@@ -621,20 +654,125 @@ public final class BlockMappers {
         register(SeaPickleBlock.class)
                 .transform(SeaPickleBlock.WATERLOGGED, "dead_bit", value -> !value)
                 .transform(SeaPickleBlock.PICKLES, "cluster_count", value -> value - 1);
-//        register(Blocks.BAMBOO)
-//                .transform(BambooStalkBlock.LEAVES, "bamboo_leaf_size", value -> switch (value) {
-//                    case NONE -> "no_leaves";
-//                    case SMALL -> "small_leaves";
-//                    case LARGE -> "large_leaves";
-//                });
+        register(Blocks.BAMBOO)
+                .transform(BambooStalkBlock.LEAVES, "bamboo_leaf_size", value -> switch (value) {
+                    case NONE -> "no_leaves";
+                    case SMALL -> "small_leaves";
+                    case LARGE -> "large_leaves";
+                });
         register(LanternBlock.class).directMap(LanternBlock.HANGING);
         register(CandleCakeBlock.class).directMap(CandleCakeBlock.LIT);
         register(Blocks.RESPAWN_ANCHOR).map(RespawnAnchorBlock.CHARGE, "respawn_anchor_charge");
         register(Blocks.INFESTED_DEEPSLATE).map(BlockStateProperties.AXIS, "pillar_axis");
         register(Blocks.COMPOSTER).map(ComposterBlock.LEVEL, "composter_fill_level");
+        register(Blocks.BUBBLE_COLUMN).map(BubbleColumnBlock.DRAG_DOWN, "drag_down");
+        register(Blocks.SWEET_BERRY_BUSH).map(SweetBerryBushBlock.AGE, "growth");
+        register(Blocks.LIGHTNING_ROD).mapFacingDirectionNorthTwo(LightningRodBlock.FACING);
+        register(Blocks.STRUCTURE_BLOCK).map(StructureBlock.MODE, "structure_block_type");
+        register(Blocks.LECTERN).map(LecternBlock.POWERED, "powered_bit");
+        register(Blocks.POINTED_DRIPSTONE)
+                .transform(PointedDripstoneBlock.THICKNESS, "dripstone_thickness", value -> switch (value) {
+                    case TIP -> "tip";
+                    case TIP_MERGE -> "merge";
+                    case FRUSTUM -> "frustum";
+                    case MIDDLE -> "middle";
+                    case BASE -> "base";
+                })
+                .transform(BlockStateProperties.VERTICAL_DIRECTION, "hanging", value -> switch (value) {
+                    case UP -> false;
+                    case DOWN -> true;
+                    default -> throw new IllegalStateException("Unexpected value: " + value);
+                });
+        register(Blocks.BELL)
+                .transform(BellBlock.ATTACHMENT, "attachment", value -> switch (value) {
+                    case FLOOR -> "standing";
+                    case SINGLE_WALL -> "side";
+                    case DOUBLE_WALL -> "multiple";
+                    case CEILING -> "hanging";
+                });
+        register(Blocks.GRINDSTONE)
+                .transform(GrindstoneBlock.FACE, "attachment", value -> switch (value) {
+                    case FLOOR -> "standing";
+                    case WALL -> "side";
+                    case CEILING -> "hanging";
+                })
+                .transform(GrindstoneBlock.FACING, "direction", value -> switch (value) {
+                    case SOUTH -> 0;
+                    case WEST -> 1;
+                    case NORTH -> 2;
+                    case EAST -> 3;
+                    default -> throw new IllegalStateException("Unexpected value: " + value);
+                });
+        register(Blocks.BELL)
+            .map(BellBlock.POWERED, "toggle_bit")
+            .transform(BellBlock.FACING, "direction", value -> switch (value) {
+               case NORTH -> 0;
+               case EAST -> 1;
+               case SOUTH -> 2;
+               case WEST -> 3;
+               default -> throw new IllegalStateException("Unexpected value: " + value);
+            });
+        register(Blocks.JIGSAW).addMapper((state, tag) -> {
+            var value = state.getValue(JigsawBlock.ORIENTATION);
+            int facingDirection, rotation;
+            switch (value) {
+                case EAST_UP -> {
+                    facingDirection = 5;
+                    rotation = 0;
+                }
+                case NORTH_UP -> {
+                    facingDirection = 2;
+                    rotation = 0;
+                }
+                case SOUTH_UP -> {
+                    facingDirection = 3;
+                    rotation = 0;
+                }
+                case WEST_UP -> {
+                    facingDirection = 4;
+                    rotation = 0;
+                }
+                case UP_EAST -> {
+                    facingDirection = 1;
+                    rotation = 1;
+                }
+                case UP_NORTH -> {
+                    facingDirection = 1;
+                    rotation = 0;
+                }
+                case UP_WEST -> {
+                    facingDirection = 1;
+                    rotation = 3;
+                }
+                case UP_SOUTH -> {
+                    facingDirection = 1;
+                    rotation = 2;
+                }
+                case DOWN_EAST -> {
+                    facingDirection = 0;
+                    rotation = 3;
+                }
+                case DOWN_WEST -> {
+                    facingDirection = 0;
+                    rotation = 1;
+                }
+                case DOWN_NORTH -> {
+                    facingDirection = 0;
+                    rotation = 0;
+                }
+                case DOWN_SOUTH -> {
+                    facingDirection = 0;
+                    rotation = 2;
+                }
+                default -> throw new IllegalStateException("Unexpected value in jigsaw block: " + BlockGenerator.blockStateToString(state));
+            }
+            addToTag(tag, "facing_direction", facingDirection);
+            addToTag(tag, "rotation", rotation);
+        });
 
         // quirky fun bedrock things
-
+        register(Blocks.WEEPING_VINES_PLANT).addBedrockProperty("weeping_vines_age", 0);
+        register(Blocks.TWISTING_VINES_PLANT).addBedrockProperty("twisting_vines_age", 0);
         register(Blocks.BAMBOO_SAPLING).addBedrockProperty("age_bit", false);
         register(BaseCoralFanBlock.class)
                 .additionalRequirement(state -> !(state.getBlock() instanceof BaseCoralWallFanBlock))
@@ -644,7 +782,6 @@ public final class BlockMappers {
                 Blocks.SMOOTH_QUARTZ,
                 Blocks.PURPUR_BLOCK)
                 .addBedrockProperty("pillar_axis", "y");
-        // TODO check
         register(Blocks.KELP_PLANT).addBedrockProperty("kelp_age", 0);
         register(Blocks.SKELETON_SKULL,
                 Blocks.DRAGON_HEAD,
@@ -656,7 +793,10 @@ public final class BlockMappers {
                 .addBedrockProperty("facing_direction", 1);
         register(Blocks.BEDROCK).addBedrockProperty("infiniburn_bit", false);
         register(Blocks.LAVA_CAULDRON).addBedrockProperty("fill_level", 6);
-        register(Blocks.BIG_DRIPLEAF_STEM).addBedrockProperty("big_dripleaf_head", true);
+        register(Blocks.BIG_DRIPLEAF).addBedrockProperty("big_dripleaf_head", true);
+        register(Blocks.BIG_DRIPLEAF_STEM)
+                .addBedrockProperty("big_dripleaf_head", false)
+                .addBedrockProperty("big_dripleaf_tilt", "none");
         register(Blocks.FLOWER_POT, Blocks.AZALEA_LEAVES).addBedrockProperty("update_bit", false);
         register(LeavesBlock.class).addBedrockProperty("update_bit", false);
         register(Blocks.PUMPKIN).addBedrockProperty("minecraft:cardinal_direction", "north");

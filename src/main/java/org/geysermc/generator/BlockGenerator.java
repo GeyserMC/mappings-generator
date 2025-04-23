@@ -1,23 +1,24 @@
 package org.geysermc.generator;
 
-import com.mojang.datafixers.functions.PointFreeRule;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.mojang.serialization.DataResult;
+import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.PistonType;
-import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.level.block.state.properties.*;
 import org.cloudburstmc.nbt.NBTInputStream;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
 import org.geysermc.generator.state.BlockMapper;
 import org.geysermc.generator.state.BlockMappers;
-import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -82,6 +83,8 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.DARK_OAK_SIGN, "darkoak_standing_sign");
         NAME_OVERRIDES.put(Blocks.DARK_OAK_WALL_SIGN, "darkoak_wall_sign");
         NAME_OVERRIDES.put(Blocks.COBBLESTONE_STAIRS, "stone_stairs");
+        NAME_OVERRIDES.put(Blocks.STONE_STAIRS, "normal_stone_stairs");
+        NAME_OVERRIDES.put(Blocks.STONE_SLAB, "normal_stone_slab");
         NAME_OVERRIDES.put(Blocks.NETHER_BRICKS, "nether_brick");
         NAME_OVERRIDES.put(Blocks.NETHER_QUARTZ_ORE, "quartz_ore");
         NAME_OVERRIDES.put(Blocks.SLIME_BLOCK, "slime");
@@ -96,6 +99,9 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.FROGSPAWN, "frog_spawn");
         NAME_OVERRIDES.put(Blocks.VOID_AIR, "air");
         NAME_OVERRIDES.put(Blocks.CAVE_AIR, "air");
+        NAME_OVERRIDES.put(Blocks.STONECUTTER, "stonecutter_block");
+        NAME_OVERRIDES.put(Blocks.WEEPING_VINES_PLANT, "weeping_vines");
+        NAME_OVERRIDES.put(Blocks.TWISTING_VINES_PLANT, "twisting_vines");
 
         STATE_BLOCK_OVERRIDES.put(Blocks.DEEPSLATE_REDSTONE_ORE, state -> {
             if (state.getValue(BlockStateProperties.LIT)) {
@@ -103,11 +109,23 @@ public class BlockGenerator {
             }
             return "deepslate_redstone_ore";
         });
+        STATE_BLOCK_OVERRIDES.put(Blocks.REDSTONE_ORE, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_redstone_ore";
+            }
+            return "redstone_ore";
+        });
         STATE_BLOCK_OVERRIDES.put(Blocks.REDSTONE_TORCH, state -> {
             if (state.getValue(BlockStateProperties.LIT)) {
                 return "redstone_torch";
             }
             return "unlit_redstone_torch";
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.REDSTONE_LAMP, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_redstone_lamp";
+            }
+            return "redstone_lamp";
         });
         STATE_BLOCK_OVERRIDES.put(Blocks.REDSTONE_WALL_TORCH, state -> {
             if (state.getValue(BlockStateProperties.LIT)) {
@@ -139,20 +157,62 @@ public class BlockGenerator {
         });
         STATE_BLOCK_OVERRIDES.put(Blocks.DAYLIGHT_DETECTOR, state -> {
            if (state.getValue(BlockStateProperties.INVERTED)) {
-               return "daylight_detector";
-           } else {
                return "daylight_detector_inverted";
+           } else {
+               return "daylight_detector";
            }
         });
         STATE_BLOCK_OVERRIDES.put(Blocks.LIGHT, state -> {
             int lightValue = state.getValue(LightBlock.LEVEL);
             return "light_block_" + lightValue;
         });
-        STATE_BLOCK_OVERRIDES.put(Blocks.STONE_SLAB, state -> {
-            if (state.getValue(BlockStateProperties.SLAB_TYPE) == SlabType.DOUBLE) {
-                return "normal_stone_double_slab";
+        STATE_BLOCK_OVERRIDES.put(Blocks.CAVE_VINES_PLANT, state -> {
+           if (state.getValue(CaveVinesPlantBlock.BERRIES)) {
+               return "cave_vines_body_with_berries";
+           } else {
+               return "cave_vines";
+           }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.CAVE_VINES, state -> {
+            if (state.getValue(CaveVinesPlantBlock.BERRIES)) {
+                return "cave_vines_head_with_berries";
             } else {
-                return "normal_stone_slab";
+                return "cave_vines";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.WATER, state -> {
+            if (state.getValue(LiquidBlock.LEVEL) == 0) {
+                return "water";
+            } else {
+                return "flowing_water";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.LAVA, state -> {
+            if (state.getValue(LiquidBlock.LEVEL) == 0) {
+                return "lava";
+            } else {
+                return "flowing_lava";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.FURNACE, state -> {
+           if (state.getValue(BlockStateProperties.LIT)) {
+               return "lit_furnace";
+           } else {
+               return "furnace";
+           }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.SMOKER, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_smoker";
+            } else {
+                return "smoker";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.BLAST_FURNACE, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_blast_furnace";
+            } else {
+                return "blast_furnace";
             }
         });
     }
@@ -198,6 +258,8 @@ public class BlockGenerator {
         List<String> missed = new ArrayList<>();
         int missedStates = 0;
 
+        List<Pair<BlockState, BlockEntry>> newMappings = new ArrayList<>(Block.BLOCK_STATE_REGISTRY.size());
+
         for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
             String name = getName(state);
             // unknown blocks aren't hashed
@@ -220,18 +282,46 @@ public class BlockGenerator {
             Integer version = stateToHash.get(map);
             if (version == null) {
                 missedStates++;
-                if (!missed.contains(name)) {
-                    missed.add(name);
+                if (!missed.contains(state.getBlock().getDescriptionId())) {
+                    missed.add(state.getBlock().getDescriptionId());
                 }
 
+                newMappings.add(Pair.of(state, new BlockEntry(name, new CompoundTag())));
+
+                //if (name.contains("slab")) {
+                //    throw new RuntimeException("Unknown block state: " + name + " state: " + blockStateToString(state) + " our bedrock state: " + map);
+                //}
                 continue;
-                //throw new RuntimeException("Unknown block state: " + name + " state: " + blockStateToString(state) + " our bedrock state: " + map);
             }
 
+            if (state.getBlock() instanceof HugeMushroomBlock) {
+                System.out.println(blockStateToString(state) + " " + map);
+            }
+
+            newMappings.add(Pair.of(state, new BlockEntry(name, states)));
+
             networkIds.add(version.intValue());
-            System.out.printf("Matched %s to %s (%s) \n", state.getBlock().getDescriptionId(),
-                    name, version);
+            //System.out.printf("Matched %s to %s (%s) \n", state.getBlock().getDescriptionId(), name, version);
         }
+
+        DataResult<JsonElement> generatorResult = BlockEntry.GENERATOR_CODEC.encodeStart(BlockEntry.JSON_OPS_WITH_BYTE_BOOLEAN, newMappings);
+        generatorResult.ifSuccess(json -> {
+            JsonObject rootObject = new JsonObject();
+            rootObject.add("mappings", json);
+            rootObject.addProperty("DataVersion", SharedConstants.getCurrentVersion().getDataVersion().getVersion());
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
+            try {
+                FileWriter writer = new FileWriter("generator_blocks_new.json");
+                builder.create().toJson(rootObject, writer);
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).ifError(error -> {
+            System.out.println("Failed to save mappings generator copy of blocks mappings.");
+            System.out.println(error.message());
+        });
 
         for (String missing : missed) {
             System.out.printf("Missed %s\n", missing);
@@ -269,6 +359,13 @@ public class BlockGenerator {
             return blockName.replace("wall_", "");
         }
 
+        if (block instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) {
+            if (blockName.contains("cut_copper")) {
+                return blockName.replace("cut", "double_cut");
+            }
+            return blockName.replace("slab", "double_slab");
+        }
+
         if (block instanceof AbstractBannerBlock) {
             if (block instanceof WallBannerBlock) {
                 return "wall_banner";
@@ -280,7 +377,7 @@ public class BlockGenerator {
         return blockName;
     }
 
-    static String blockStateToString(BlockState blockState) {
+    public static String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()));
         if (!blockState.getValues().isEmpty()) {

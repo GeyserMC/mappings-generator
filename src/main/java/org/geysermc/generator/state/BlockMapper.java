@@ -5,7 +5,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 
@@ -103,7 +102,7 @@ public class BlockMapper {
     /**
      * Bedrock name is a numeric "facing_direction", and all 6 directions are used
      */
-    public BlockMapper mapFacingDirection(EnumProperty<Direction> property) {
+    public BlockMapper mapFacingDirectionNorthThree(EnumProperty<Direction> property) {
         return this.transform(property, "facing_direction", value -> switch (value) {
             case DOWN -> 0;
             case UP -> 1;
@@ -112,6 +111,29 @@ public class BlockMapper {
             case EAST -> 4;
             case WEST -> 5;
         });
+    }
+
+    /**
+     * Bedrock name is a numeric "facing_direction", and all 6 directions are used
+     */
+    public BlockMapper mapFacingDirectionNorthTwo(EnumProperty<Direction> property) {
+        return this.transform(property, "facing_direction", value -> switch (value) {
+            case DOWN -> 0;
+            case UP -> 1;
+            case NORTH -> 2;
+            case SOUTH -> 3;
+            case WEST -> 4;
+            case EAST -> 5;
+        });
+    }
+
+    /**
+     * Add a "raw" mapper. Used for jigsaw blocks where one block property corresponds to
+     * multiple properties on Bedrock.
+     */
+    public BlockMapper addMapper(BiConsumer<BlockState, CompoundTag> mapper) {
+        this.blockStateMappers.add(mapper);
+        return this;
     }
 
     /**
