@@ -4,17 +4,14 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.codecs.PairCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.*;
@@ -26,6 +23,7 @@ import org.geysermc.generator.state.BlockMapper;
 import org.geysermc.generator.state.BlockMappers;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -105,7 +103,6 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.OAK_PRESSURE_PLATE, "wooden_pressure_plate");
         NAME_OVERRIDES.put(Blocks.OAK_BUTTON, "wooden_button");
 
-
         STATE_BLOCK_OVERRIDES.put(Blocks.STONE_SLAB, state -> {
             if (state.getValue(BlockStateProperties.SLAB_TYPE) == SlabType.DOUBLE) {
                 return "normal_stone_double_slab";
@@ -156,7 +153,6 @@ public class BlockGenerator {
                 return "unpowered_repeater";
             }
         });
-        // TODO test there are some confusing blockstates
         STATE_BLOCK_OVERRIDES.put(Blocks.COMPARATOR, state -> {
             if (state.getValue(BlockStateProperties.POWERED)) {
                 return "powered_comparator";
@@ -238,6 +234,7 @@ public class BlockGenerator {
         File blockPalette = new File("palettes/block_palette.nbt");
         if (!blockPalette.exists()) {
             System.out.println("Could not find block palette (block_palette.nbt), won't be able to confirm block mappings!");
+            return;
         }
 
         try {
@@ -261,15 +258,10 @@ public class BlockGenerator {
             vanillaStates.add(builder.build());
         }
 
-        // These are ordered by java block state runtime ids.
-        List<String> missed = new ArrayList<>();
-        int missedStates = 0;
-
         List<Pair<BlockState, BlockEntry>> newMappings = new ArrayList<>(Block.BLOCK_STATE_REGISTRY.size());
 
         for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
             String name = getName(state);
-
             CompoundTag states = new CompoundTag();
 
             for (BlockMapper blockMapper : BlockMapper.ALL_MAPPERS) {
@@ -281,7 +273,7 @@ public class BlockGenerator {
                 .putCompound("states", (NbtMap) NbtOps.INSTANCE.convertTo(CloudburstNbtOps.INSTANCE, states))
                 .build();
 
-            // Now we play matchmaker.
+            // Verify states exist in the provided vanilla block palette
             if (!vanillaStates.contains(map)) {
                 throw new RuntimeException("Unknown block state: " + name + " state: " + blockStateToString(state) + " our bedrock state: " + map);
             }
@@ -296,7 +288,7 @@ public class BlockGenerator {
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             try {
-                FileWriter writer = new FileWriter("generator_blocks_new.json");
+                FileWriter writer = new FileWriter("new_generator_blocks.json");
                 builder.create().toJson(rootObject, writer);
                 writer.close();
             } catch (IOException e) {
@@ -306,6 +298,36 @@ public class BlockGenerator {
             System.out.println("Failed to save mappings generator copy of blocks mappings.");
             System.out.println(error.message());
         });
+
+        List<BlockEntry> entries = newMappings.stream()
+                .map(pair -> {
+                    String javaIdentifier = BuiltInRegistries.BLOCK.getKey(pair.key().getBlock()).getPath();
+                    String bedrockIdentifier = pair.value().bedrockIdentifier();
+                    if (javaIdentifier.equals(bedrockIdentifier)) {
+                        // We don't need to store the name if it's the same between both platforms
+                        return Pair.of(pair.key(), new BlockEntry(null, pair.value().state()));
+                    }
+                    return pair;
+                })
+                .map(Pair::value)
+                .toList();
+        DataResult<Tag> result = BlockEntry.LIST_CODEC.encodeStart(NbtOps.INSTANCE, entries);
+        result.ifSuccess(tag -> {
+            try {
+                CompoundTag rootTag = new CompoundTag();
+                rootTag.put("bedrock_mappings", tag);
+                NbtIo.writeCompressed(rootTag, Path.of("mappings").resolve("blocks.nbt"));
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+            System.out.println("Finished writing blocks NBT!");
+        }).ifError(error -> {
+            System.out.println("Failed to encode blocks to NBT!");
+            System.out.println(error.message());
+        });
+
+        System.out.println("Finished block writing process!");
 
         // TODO temporary: comparing mappings
         List<Pair<BlockState, BlockEntry>> previous = new ArrayList<>();
