@@ -3,7 +3,12 @@ package org.geysermc.generator;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.codecs.PairCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.SharedConstants;
@@ -21,10 +26,7 @@ import org.geysermc.generator.state.BlockMapper;
 import org.geysermc.generator.state.BlockMappers;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -37,8 +39,12 @@ public class BlockGenerator {
     static {
         Util.initialize();
 
+        // These don't exist on Bedrock
         NAME_OVERRIDES.put(Blocks.TEST_BLOCK, "unknown");
         NAME_OVERRIDES.put(Blocks.TEST_INSTANCE_BLOCK, "unknown");
+        NAME_OVERRIDES.put(Blocks.VOID_AIR, "air");
+        NAME_OVERRIDES.put(Blocks.CAVE_AIR, "air");
+
         NAME_OVERRIDES.put(Blocks.POWERED_RAIL, "golden_rail");
         NAME_OVERRIDES.put(Blocks.DIRT_PATH, "grass_path");
         NAME_OVERRIDES.put(Blocks.SMALL_DRIPLEAF, "small_dripleaf_block");
@@ -70,21 +76,10 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.ATTACHED_MELON_STEM, "melon_stem");
         NAME_OVERRIDES.put(Blocks.LILY_PAD, "waterlily");
         NAME_OVERRIDES.put(Blocks.TERRACOTTA, "hardened_clay");
-
-        // oak -> wooden / no prefix
-        NAME_OVERRIDES.put(Blocks.OAK_SIGN, "standing_sign");
-        NAME_OVERRIDES.put(Blocks.OAK_WALL_SIGN, "wall_sign");
-        NAME_OVERRIDES.put(Blocks.OAK_DOOR, "wooden_door");
-        NAME_OVERRIDES.put(Blocks.OAK_PRESSURE_PLATE, "wooden_pressure_plate");
-        NAME_OVERRIDES.put(Blocks.OAK_TRAPDOOR, "trapdoor");
-        NAME_OVERRIDES.put(Blocks.OAK_FENCE_GATE, "fence_gate");
-        NAME_OVERRIDES.put(Blocks.OAK_BUTTON, "wooden_button");
-
         NAME_OVERRIDES.put(Blocks.DARK_OAK_SIGN, "darkoak_standing_sign");
         NAME_OVERRIDES.put(Blocks.DARK_OAK_WALL_SIGN, "darkoak_wall_sign");
         NAME_OVERRIDES.put(Blocks.COBBLESTONE_STAIRS, "stone_stairs");
         NAME_OVERRIDES.put(Blocks.STONE_STAIRS, "normal_stone_stairs");
-        NAME_OVERRIDES.put(Blocks.STONE_SLAB, "normal_stone_slab");
         NAME_OVERRIDES.put(Blocks.NETHER_BRICKS, "nether_brick");
         NAME_OVERRIDES.put(Blocks.NETHER_QUARTZ_ORE, "quartz_ore");
         NAME_OVERRIDES.put(Blocks.SLIME_BLOCK, "slime");
@@ -97,12 +92,26 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.SHULKER_BOX, "undyed_shulker_box");
         NAME_OVERRIDES.put(Blocks.KELP_PLANT, "kelp");
         NAME_OVERRIDES.put(Blocks.FROGSPAWN, "frog_spawn");
-        NAME_OVERRIDES.put(Blocks.VOID_AIR, "air");
-        NAME_OVERRIDES.put(Blocks.CAVE_AIR, "air");
         NAME_OVERRIDES.put(Blocks.STONECUTTER, "stonecutter_block");
         NAME_OVERRIDES.put(Blocks.WEEPING_VINES_PLANT, "weeping_vines");
         NAME_OVERRIDES.put(Blocks.TWISTING_VINES_PLANT, "twisting_vines");
 
+        // oak -> wooden / no prefix
+        NAME_OVERRIDES.put(Blocks.OAK_SIGN, "standing_sign");
+        NAME_OVERRIDES.put(Blocks.OAK_WALL_SIGN, "wall_sign");
+        NAME_OVERRIDES.put(Blocks.OAK_TRAPDOOR, "trapdoor");
+        NAME_OVERRIDES.put(Blocks.OAK_FENCE_GATE, "fence_gate");
+        NAME_OVERRIDES.put(Blocks.OAK_DOOR, "wooden_door");
+        NAME_OVERRIDES.put(Blocks.OAK_PRESSURE_PLATE, "wooden_pressure_plate");
+        NAME_OVERRIDES.put(Blocks.OAK_BUTTON, "wooden_button");
+
+
+        STATE_BLOCK_OVERRIDES.put(Blocks.STONE_SLAB, state -> {
+            if (state.getValue(BlockStateProperties.SLAB_TYPE) == SlabType.DOUBLE) {
+                return "normal_stone_double_slab";
+            }
+            return "normal_stone_slab";
+        });
         STATE_BLOCK_OVERRIDES.put(Blocks.DEEPSLATE_REDSTONE_ORE, state -> {
             if (state.getValue(BlockStateProperties.LIT)) {
                 return "lit_deepslate_redstone_ore";
@@ -137,7 +146,7 @@ public class BlockGenerator {
             if (state.getValue(BlockStateProperties.PISTON_TYPE) == PistonType.STICKY) {
                 return "sticky_piston_arm_collision";
             } else {
-                return  "piston_arm_collision";
+                return "piston_arm_collision";
             }
         });
         STATE_BLOCK_OVERRIDES.put(Blocks.REPEATER, state -> {
@@ -228,8 +237,7 @@ public class BlockGenerator {
         NbtList<NbtMap> palette;
         File blockPalette = new File("palettes/block_palette.nbt");
         if (!blockPalette.exists()) {
-            System.out.println("Could not find block palette (block_palette.nbt), please refer to the README in the palettes directory.");
-            return;
+            System.out.println("Could not find block palette (block_palette.nbt), won't be able to confirm block mappings!");
         }
 
         try {
@@ -243,18 +251,17 @@ public class BlockGenerator {
             throw new RuntimeException("Unable to get blocks from block palette", e);
         }
 
-        Map<NbtMap, Integer> stateToHash = new HashMap<>();
+        Set<NbtMap> vanillaStates = new HashSet<>();
         for (NbtMap map : palette) {
             var builder = map.toBuilder();
             builder.remove("name_hash");
             builder.remove("version");
             builder.remove("block_id");
-            int paletteVersion = (int) builder.remove("network_id");
-            stateToHash.put(builder.build(), paletteVersion);
+            builder.remove("network_id");
+            vanillaStates.add(builder.build());
         }
 
         // These are ordered by java block state runtime ids.
-        IntArrayList networkIds = new IntArrayList();
         List<String> missed = new ArrayList<>();
         int missedStates = 0;
 
@@ -262,10 +269,6 @@ public class BlockGenerator {
 
         for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
             String name = getName(state);
-            // unknown blocks aren't hashed
-            if (name.equals("unknown")) {
-                networkIds.add(-2);
-            }
 
             CompoundTag states = new CompoundTag();
 
@@ -279,29 +282,10 @@ public class BlockGenerator {
                 .build();
 
             // Now we play matchmaker.
-            Integer version = stateToHash.get(map);
-            if (version == null) {
-                missedStates++;
-                if (!missed.contains(state.getBlock().getDescriptionId())) {
-                    missed.add(state.getBlock().getDescriptionId());
-                }
-
-                newMappings.add(Pair.of(state, new BlockEntry(name, new CompoundTag())));
-
-                //if (name.contains("slab")) {
-                //    throw new RuntimeException("Unknown block state: " + name + " state: " + blockStateToString(state) + " our bedrock state: " + map);
-                //}
-                continue;
+            if (!vanillaStates.contains(map)) {
+                throw new RuntimeException("Unknown block state: " + name + " state: " + blockStateToString(state) + " our bedrock state: " + map);
             }
-
-            if (state.getBlock() instanceof HugeMushroomBlock) {
-                System.out.println(blockStateToString(state) + " " + map);
-            }
-
             newMappings.add(Pair.of(state, new BlockEntry(name, states)));
-
-            networkIds.add(version.intValue());
-            //System.out.printf("Matched %s to %s (%s) \n", state.getBlock().getDescriptionId(), name, version);
         }
 
         DataResult<JsonElement> generatorResult = BlockEntry.GENERATOR_CODEC.encodeStart(BlockEntry.JSON_OPS_WITH_BYTE_BOOLEAN, newMappings);
@@ -323,12 +307,70 @@ public class BlockGenerator {
             System.out.println(error.message());
         });
 
-        for (String missing : missed) {
-            System.out.printf("Missed %s\n", missing);
+        // TODO temporary: comparing mappings
+        List<Pair<BlockState, BlockEntry>> previous = new ArrayList<>();
+
+        try (FileReader reader = new FileReader("generator_blocks.json")) {
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+
+            JsonElement mappingsElement = root.get("mappings");
+            DataResult<List<Pair<BlockState, BlockEntry>>> decodeResult =
+                    BlockEntry.GENERATOR_CODEC
+                            .decode(BlockEntry.JSON_OPS_WITH_BYTE_BOOLEAN, mappingsElement)
+                            .map(com.mojang.datafixers.util.Pair::getFirst); // Discard remainder
+
+            decodeResult.ifSuccess(previous::addAll);
+            decodeResult.ifError(error -> {
+                System.out.println("Failed to read mappings generator copy of old blocks mappings.");
+                System.out.println(error.message());
+                return;
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        System.out.printf("Missing block mappings: %s (%s blocks total), states missing: %s (%s total)",
-                missed.size(), BuiltInRegistries.BLOCK.size(), missedStates, Block.BLOCK_STATE_REGISTRY.size());
+        for (int i = 0; i < newMappings.size(); i++) {
+            var a = newMappings.get(i);
+            var b = previous.get(i);
+
+            if (!Objects.equals(a.left(), b.left())) {
+                throw new RuntimeException("Weird block mapping " + a.left() + " vs " + b.left());
+            }
+
+            // compare name
+            String nameA, nameB;
+            nameA = a.right().bedrockIdentifier();
+            nameB = b.right().bedrockIdentifier();
+
+            if (!nameA.equals(nameB)) {
+                System.out.println("Name differs between " + nameA + " vs " + nameB + " " + blockStateToString(a.left()));
+                continue;
+            }
+
+            // check amount of states
+            var compoundA = a.right().state();
+            var compoundB = b.right().state();
+
+            if (compoundA.size() != compoundB.size()) {
+                System.out.println("Size mismatch! " + compoundA.size() + " vs " + compoundB.size());
+            }
+
+            // check keys
+            var keyListA = new ArrayList<>(compoundA.keySet());
+            var keyListB = new ArrayList<>(compoundB.keySet());
+
+            keyListA.sort(Comparator.naturalOrder());
+            keyListB.sort(Comparator.naturalOrder());
+
+            for (String key : keyListA) {
+                Object valueA = compoundA.get(key);
+                Object valueB = compoundB.get(key);
+
+                if (!Objects.equals(valueA, valueB)) {
+                    System.out.println(blockStateToString(a.left()) + ": key/value mismatch! " + key + ": " + valueA + " vs " + valueB);
+                }
+            }
+        }
     }
 
     private static String getName(BlockState state) {
