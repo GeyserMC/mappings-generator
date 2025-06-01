@@ -130,7 +130,8 @@ public final class BlockMappers {
                 Blocks.STONECUTTER,
                 Blocks.TRAPPED_CHEST,
                 Blocks.CARVED_PUMPKIN,
-                Blocks.JACK_O_LANTERN
+                Blocks.JACK_O_LANTERN,
+                Blocks.DRIED_GHAST
         ).mapCardinalDirection(HorizontalDirectionalBlock.FACING);
         register(Blocks.REPEATER)
                 .transform(RepeaterBlock.DELAY, "repeater_delay", value -> value -1);
@@ -786,6 +787,7 @@ public final class BlockMappers {
             addToTag(tag, "rotation", rotation);
         });
         register(Blocks.SCAFFOLDING).map(ScaffoldingBlock.DISTANCE, "stability").addBedrockProperty("stability_check", true);
+        register(Blocks.DRIED_GHAST).map(DriedGhastBlock.HYDRATION_LEVEL, "rehydration_level");
 
         // quirky fun bedrock things
         register(Blocks.WEEPING_VINES_PLANT).addBedrockProperty("weeping_vines_age", 0);

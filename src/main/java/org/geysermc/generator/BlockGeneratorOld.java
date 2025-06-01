@@ -113,7 +113,7 @@ public final class BlockGeneratorOld {
             generatorResult.ifSuccess(json -> {
                 JsonObject rootObject = new JsonObject();
                 rootObject.add("mappings", json);
-                rootObject.addProperty("DataVersion", SharedConstants.getCurrentVersion().getDataVersion().getVersion());
+                rootObject.addProperty("DataVersion", SharedConstants.getCurrentVersion().dataVersion().version());
 
                 GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
                 try {
