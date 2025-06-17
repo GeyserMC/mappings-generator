@@ -284,7 +284,7 @@ public class BlockGenerator {
         generatorResult.ifSuccess(json -> {
             JsonObject rootObject = new JsonObject();
             rootObject.add("mappings", json);
-            rootObject.addProperty("DataVersion", SharedConstants.getCurrentVersion().getDataVersion().getVersion());
+            rootObject.addProperty("DataVersion", SharedConstants.getCurrentVersion().dataVersion().version());
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             try {
@@ -328,71 +328,6 @@ public class BlockGenerator {
         });
 
         System.out.println("Finished block writing process!");
-
-        // TODO temporary: comparing mappings
-        List<Pair<BlockState, BlockEntry>> previous = new ArrayList<>();
-
-        try (FileReader reader = new FileReader("generator_blocks.json")) {
-            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-
-            JsonElement mappingsElement = root.get("mappings");
-            DataResult<List<Pair<BlockState, BlockEntry>>> decodeResult =
-                    BlockEntry.GENERATOR_CODEC
-                            .decode(BlockEntry.JSON_OPS_WITH_BYTE_BOOLEAN, mappingsElement)
-                            .map(com.mojang.datafixers.util.Pair::getFirst); // Discard remainder
-
-            decodeResult.ifSuccess(previous::addAll);
-            decodeResult.ifError(error -> {
-                System.out.println("Failed to read mappings generator copy of old blocks mappings.");
-                System.out.println(error.message());
-                return;
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        for (int i = 0; i < newMappings.size(); i++) {
-            var a = newMappings.get(i);
-            var b = previous.get(i);
-
-            if (!Objects.equals(a.left(), b.left())) {
-                throw new RuntimeException("Weird block mapping " + a.left() + " vs " + b.left());
-            }
-
-            // compare name
-            String nameA, nameB;
-            nameA = a.right().bedrockIdentifier();
-            nameB = b.right().bedrockIdentifier();
-
-            if (!nameA.equals(nameB)) {
-                System.out.println("Name differs between " + nameA + " vs " + nameB + " " + blockStateToString(a.left()));
-                continue;
-            }
-
-            // check amount of states
-            var compoundA = a.right().state();
-            var compoundB = b.right().state();
-
-            if (compoundA.size() != compoundB.size()) {
-                System.out.println("Size mismatch! " + compoundA.size() + " vs " + compoundB.size());
-            }
-
-            // check keys
-            var keyListA = new ArrayList<>(compoundA.keySet());
-            var keyListB = new ArrayList<>(compoundB.keySet());
-
-            keyListA.sort(Comparator.naturalOrder());
-            keyListB.sort(Comparator.naturalOrder());
-
-            for (String key : keyListA) {
-                Object valueA = compoundA.get(key);
-                Object valueB = compoundB.get(key);
-
-                if (!Objects.equals(valueA, valueB)) {
-                    System.out.println(blockStateToString(a.left()) + ": key/value mismatch! " + key + ": " + valueA + " vs " + valueB);
-                }
-            }
-        }
     }
 
     private static String getName(BlockState state) {

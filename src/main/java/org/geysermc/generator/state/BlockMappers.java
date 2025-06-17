@@ -551,25 +551,79 @@ public final class BlockMappers {
              * 15-> stem on all sides
              */
         });
-        // TODO
+        /*
+         * Copied from old mappings :)
+         * 0  -> UP
+         * 1  -> SOUTH UP
+         * 2  -> WEST
+         * 3  -> SOUTH WEST
+         * 4  -> NORTH (UP)
+         * 5  -> NORTH SOUTH (UP)
+         * 6  -> NORTH WEST (UP)
+         * 7  -> NORTH SOUTH (UP) WEST
+         * 8  -> EAST (UP)
+         * 9  -> EAST SOUTH (UP)
+         * 10 -> EAST (UP) WEST
+         * 11 -> EAST SOUTH (UP) WEST
+         * 12 -> EAST NORTH (UP)
+         * 13 -> EAST NORTH SOUTH (UP)
+         * 14 -> EAST NORTH (UP) WEST
+         * 15 -> EAST NORTH SOUTH (UP) WEST
+         */
         register(Blocks.VINE).transform("vine_direction_bits", state -> {
-            int count = 0;
-            if (state.getValue(BlockStateProperties.UP)) {
-                count++;
+            boolean north = state.getValue(BlockStateProperties.NORTH);
+            boolean south = state.getValue(BlockStateProperties.SOUTH);
+            boolean east = state.getValue(BlockStateProperties.EAST);
+            boolean west = state.getValue(BlockStateProperties.WEST);
+
+            if (east) {
+                if (north) {
+                    if (south) {
+                        if (west) {
+                            return 15;
+                        } else {
+                            return 13;
+                        }
+                    }
+                    if (west) {
+                        return 14;
+                    }
+                    return 12;
+                }
+                if (south) {
+                    if (west) {
+                        return 11;
+                    }
+                    return 9;
+                }
+                if (west) {
+                    return 10;
+                }
+                return 8;
             }
-            if (state.getValue(BlockStateProperties.SOUTH)) {
-                count++;
+            if (north) {
+                if (south) {
+                    if (west) {
+                        return 7;
+                    } else {
+                        return 5;
+                    }
+                }
+                if (west) {
+                    return 6;
+                }
+                return 4;
             }
-            if (state.getValue(BlockStateProperties.WEST)) {
-                count++;
+            if (south) {
+                if (west) {
+                    return 3;
+                }
+                return 1;
             }
-            if (state.getValue(BlockStateProperties.NORTH)) {
-                count++;
+            if (west) {
+                return 2;
             }
-            if (state.getValue(BlockStateProperties.EAST)) {
-                count++;
-            }
-            return count;
+            return 0;
         });
         register(Blocks.NETHER_WART).directMap(NetherWartBlock.AGE);
         register(Blocks.BREWING_STAND)

@@ -6,7 +6,7 @@ After obtaining, place the block palette here. You can get Bedrock block palette
 
 # Bedrock Item Palettes
 
-mappings-generator uses the item palette dumped from Minecraft Bedrock using [ProxyPass](https://github.com/NukkitX/ProxyPass).
+mappings-generator uses the item palette dumped from Minecraft Bedrock using [ProxyPass](https://github.com/CloudburstMC/ProxyPass).
 
 The required palette is included in this repository, however if you would like to dump your own, follow these steps:
 
