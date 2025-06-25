@@ -491,6 +491,13 @@ public final class BlockMappers {
            return 0;
         });
         register(Blocks.BROWN_MUSHROOM_BLOCK, Blocks.RED_MUSHROOM_BLOCK).transform("huge_mushroom_bits", state -> {
+            if (true) {
+                // TODO figure out
+                // Bedrock updates the states client-side; and the below mappings look odd on large mushrooms
+                // 14 will just make all sides red/brown; as pre-rewrite
+                return 14;
+            }
+
             boolean down = state.getValue(BlockStateProperties.DOWN);
             boolean up = state.getValue(BlockStateProperties.UP);
             boolean north = state.getValue(BlockStateProperties.NORTH);
