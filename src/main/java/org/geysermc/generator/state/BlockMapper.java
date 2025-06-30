@@ -100,6 +100,43 @@ public class BlockMapper {
     }
 
     /**
+     * Bedrock name is a numeric "facing_direction", and all 6 directions are used
+     */
+    public BlockMapper mapFacingDirectionNorthThree(EnumProperty<Direction> property) {
+        return this.transform(property, "facing_direction", value -> switch (value) {
+            case DOWN -> 0;
+            case UP -> 1;
+            case SOUTH -> 2;
+            case NORTH -> 3;
+            case EAST -> 4;
+            case WEST -> 5;
+        });
+    }
+
+    /**
+     * Bedrock name is a numeric "facing_direction", and all 6 directions are used
+     */
+    public BlockMapper mapFacingDirectionNorthTwo(EnumProperty<Direction> property) {
+        return this.transform(property, "facing_direction", value -> switch (value) {
+            case DOWN -> 0;
+            case UP -> 1;
+            case NORTH -> 2;
+            case SOUTH -> 3;
+            case WEST -> 4;
+            case EAST -> 5;
+        });
+    }
+
+    /**
+     * Add a "raw" mapper. Used for jigsaw blocks where one block property corresponds to
+     * multiple properties on Bedrock.
+     */
+    public BlockMapper addMapper(BiConsumer<BlockState, CompoundTag> mapper) {
+        this.blockStateMappers.add(mapper);
+        return this;
+    }
+
+    /**
      * Java name and Bedrock name are same, as well as possible values
      */
     public BlockMapper directMap(Property<?> property) {
@@ -124,6 +161,16 @@ public class BlockMapper {
     public BlockMapper transform(String bedrockName, Function<BlockState, Object> function) {
         this.blockStateMappers.add((state, tag) -> {
             Object value = function.apply(state);
+            addToTag(tag, bedrockName, value);
+        });
+        return this;
+    }
+
+    /**
+     * Add additional Bedrock tag. update_bit says hi!
+     */
+    public BlockMapper addBedrockProperty(String bedrockName, Object value) {
+        this.blockStateMappers.add((state, tag) -> {
             addToTag(tag, bedrockName, value);
         });
         return this;

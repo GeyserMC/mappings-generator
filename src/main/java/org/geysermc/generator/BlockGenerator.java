@@ -1,6 +1,9 @@
 package org.geysermc.generator;
 
-import com.google.gson.*;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.serialization.DataResult;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.SharedConstants;
@@ -9,16 +12,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.world.flag.FeatureFlags;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.PistonType;
-import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.block.state.properties.SlabType;
-import org.cloudburstmc.blockstateupdater.util.tagupdater.CompoundTagUpdaterContext;
-import org.cloudburstmc.nbt.*;
+import net.minecraft.world.level.block.state.properties.*;
+import org.cloudburstmc.nbt.NBTInputStream;
+import org.cloudburstmc.nbt.NbtList;
+import org.cloudburstmc.nbt.NbtMap;
+import org.cloudburstmc.nbt.NbtType;
 import org.geysermc.generator.state.BlockMapper;
 import org.geysermc.generator.state.BlockMappers;
 
@@ -29,333 +29,354 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
-public final class BlockGenerator {
-    public static final Map<BlockState, BlockEntry> BLOCK_ENTRIES = new HashMap<>();
+public class BlockGenerator {
 
-    /**
-     * Java to Bedrock block identifier overrides
-     */
-    public static final Map<Block, String> BLOCK_OVERRIDES = new HashMap<>();
+    public static final Map<Block, String> NAME_OVERRIDES = new HashMap<>();
+    public static final Map<Block, Function<BlockState, String>> STATE_BLOCK_OVERRIDES = new HashMap<>();
 
     static {
-        // Register BLOCK_OVERRIDES here
-        BLOCK_OVERRIDES.put(Blocks.TEST_BLOCK, "unknown");
-        BLOCK_OVERRIDES.put(Blocks.TEST_INSTANCE_BLOCK, "unknown");
+        Util.initialize();
+
+        // These don't exist on Bedrock
+        NAME_OVERRIDES.put(Blocks.TEST_BLOCK, "unknown");
+        NAME_OVERRIDES.put(Blocks.TEST_INSTANCE_BLOCK, "unknown");
+        NAME_OVERRIDES.put(Blocks.VOID_AIR, "air");
+        NAME_OVERRIDES.put(Blocks.CAVE_AIR, "air");
+
+        NAME_OVERRIDES.put(Blocks.POWERED_RAIL, "golden_rail");
+        NAME_OVERRIDES.put(Blocks.DIRT_PATH, "grass_path");
+        NAME_OVERRIDES.put(Blocks.SMALL_DRIPLEAF, "small_dripleaf_block");
+        NAME_OVERRIDES.put(Blocks.BIG_DRIPLEAF_STEM, "big_dripleaf");
+        NAME_OVERRIDES.put(Blocks.FLOWERING_AZALEA_LEAVES, "azalea_leaves_flowered");
+        NAME_OVERRIDES.put(Blocks.ROOTED_DIRT, "dirt_with_roots");
+        NAME_OVERRIDES.put(Blocks.POWDER_SNOW_CAULDRON, "cauldron");
+        NAME_OVERRIDES.put(Blocks.WATER_CAULDRON, "cauldron");
+        NAME_OVERRIDES.put(Blocks.LAVA_CAULDRON, "cauldron");
+        NAME_OVERRIDES.put(Blocks.WAXED_COPPER_BLOCK, "waxed_copper");
+        NAME_OVERRIDES.put(Blocks.TRIPWIRE, "trip_wire");
+        NAME_OVERRIDES.put(Blocks.MOVING_PISTON, "moving_block");
+        NAME_OVERRIDES.put(Blocks.NOTE_BLOCK, "noteblock");
+        NAME_OVERRIDES.put(Blocks.LIGHT_GRAY_GLAZED_TERRACOTTA, "silver_glazed_terracotta");
+        NAME_OVERRIDES.put(Blocks.COBWEB, "web");
+        NAME_OVERRIDES.put(Blocks.DEAD_BUSH, "deadbush");
+        NAME_OVERRIDES.put(Blocks.TALL_SEAGRASS, "seagrass");
+        NAME_OVERRIDES.put(Blocks.BRICKS, "brick_block");
+        NAME_OVERRIDES.put(Blocks.WALL_TORCH, "torch");
+        NAME_OVERRIDES.put(Blocks.SOUL_WALL_TORCH, "soul_torch");
+        NAME_OVERRIDES.put(Blocks.SPAWNER, "mob_spawner");
+        NAME_OVERRIDES.put(Blocks.SNOW_BLOCK, "snow");
+        NAME_OVERRIDES.put(Blocks.SNOW, "snow_layer");
+        NAME_OVERRIDES.put(Blocks.SUGAR_CANE, "reeds");
+        NAME_OVERRIDES.put(Blocks.NETHER_PORTAL, "portal");
+        NAME_OVERRIDES.put(Blocks.JACK_O_LANTERN, "lit_pumpkin");
+        NAME_OVERRIDES.put(Blocks.MELON, "melon_block");
+        NAME_OVERRIDES.put(Blocks.ATTACHED_PUMPKIN_STEM, "pumpkin_stem");
+        NAME_OVERRIDES.put(Blocks.ATTACHED_MELON_STEM, "melon_stem");
+        NAME_OVERRIDES.put(Blocks.LILY_PAD, "waterlily");
+        NAME_OVERRIDES.put(Blocks.TERRACOTTA, "hardened_clay");
+        NAME_OVERRIDES.put(Blocks.DARK_OAK_SIGN, "darkoak_standing_sign");
+        NAME_OVERRIDES.put(Blocks.DARK_OAK_WALL_SIGN, "darkoak_wall_sign");
+        NAME_OVERRIDES.put(Blocks.COBBLESTONE_STAIRS, "stone_stairs");
+        NAME_OVERRIDES.put(Blocks.STONE_STAIRS, "normal_stone_stairs");
+        NAME_OVERRIDES.put(Blocks.NETHER_BRICKS, "nether_brick");
+        NAME_OVERRIDES.put(Blocks.NETHER_QUARTZ_ORE, "quartz_ore");
+        NAME_OVERRIDES.put(Blocks.SLIME_BLOCK, "slime");
+        NAME_OVERRIDES.put(Blocks.PRISMARINE_BRICK_STAIRS, "prismarine_bricks_stairs");
+        NAME_OVERRIDES.put(Blocks.END_STONE_BRICKS, "end_bricks");
+        NAME_OVERRIDES.put(Blocks.END_STONE_BRICK_STAIRS, "end_brick_stairs");
+        NAME_OVERRIDES.put(Blocks.BEETROOTS, "beetroot");
+        NAME_OVERRIDES.put(Blocks.MAGMA_BLOCK, "magma");
+        NAME_OVERRIDES.put(Blocks.RED_NETHER_BRICKS, "red_nether_brick");
+        NAME_OVERRIDES.put(Blocks.SHULKER_BOX, "undyed_shulker_box");
+        NAME_OVERRIDES.put(Blocks.KELP_PLANT, "kelp");
+        NAME_OVERRIDES.put(Blocks.FROGSPAWN, "frog_spawn");
+        NAME_OVERRIDES.put(Blocks.STONECUTTER, "stonecutter_block");
+        NAME_OVERRIDES.put(Blocks.WEEPING_VINES_PLANT, "weeping_vines");
+        NAME_OVERRIDES.put(Blocks.TWISTING_VINES_PLANT, "twisting_vines");
+
+        // oak -> wooden / no prefix
+        NAME_OVERRIDES.put(Blocks.OAK_SIGN, "standing_sign");
+        NAME_OVERRIDES.put(Blocks.OAK_WALL_SIGN, "wall_sign");
+        NAME_OVERRIDES.put(Blocks.OAK_TRAPDOOR, "trapdoor");
+        NAME_OVERRIDES.put(Blocks.OAK_FENCE_GATE, "fence_gate");
+        NAME_OVERRIDES.put(Blocks.OAK_DOOR, "wooden_door");
+        NAME_OVERRIDES.put(Blocks.OAK_PRESSURE_PLATE, "wooden_pressure_plate");
+        NAME_OVERRIDES.put(Blocks.OAK_BUTTON, "wooden_button");
+
+        STATE_BLOCK_OVERRIDES.put(Blocks.STONE_SLAB, state -> {
+            if (state.getValue(BlockStateProperties.SLAB_TYPE) == SlabType.DOUBLE) {
+                return "normal_stone_double_slab";
+            }
+            return "normal_stone_slab";
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.DEEPSLATE_REDSTONE_ORE, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_deepslate_redstone_ore";
+            }
+            return "deepslate_redstone_ore";
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.REDSTONE_ORE, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_redstone_ore";
+            }
+            return "redstone_ore";
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.REDSTONE_TORCH, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "redstone_torch";
+            }
+            return "unlit_redstone_torch";
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.REDSTONE_LAMP, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_redstone_lamp";
+            }
+            return "redstone_lamp";
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.REDSTONE_WALL_TORCH, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "redstone_torch";
+            }
+            return "unlit_redstone_torch";
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.PISTON_HEAD, state -> {
+            if (state.getValue(BlockStateProperties.PISTON_TYPE) == PistonType.STICKY) {
+                return "sticky_piston_arm_collision";
+            } else {
+                return "piston_arm_collision";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.REPEATER, state -> {
+            if (state.getValue(BlockStateProperties.POWERED)) {
+                return "powered_repeater";
+            } else {
+                return "unpowered_repeater";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.COMPARATOR, state -> {
+            if (state.getValue(BlockStateProperties.POWERED)) {
+                return "powered_comparator";
+            } else {
+                return "unpowered_comparator";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.DAYLIGHT_DETECTOR, state -> {
+           if (state.getValue(BlockStateProperties.INVERTED)) {
+               return "daylight_detector_inverted";
+           } else {
+               return "daylight_detector";
+           }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.LIGHT, state -> {
+            int lightValue = state.getValue(LightBlock.LEVEL);
+            return "light_block_" + lightValue;
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.CAVE_VINES_PLANT, state -> {
+           if (state.getValue(CaveVinesPlantBlock.BERRIES)) {
+               return "cave_vines_body_with_berries";
+           } else {
+               return "cave_vines";
+           }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.CAVE_VINES, state -> {
+            if (state.getValue(CaveVinesPlantBlock.BERRIES)) {
+                return "cave_vines_head_with_berries";
+            } else {
+                return "cave_vines";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.WATER, state -> {
+            if (state.getValue(LiquidBlock.LEVEL) == 0) {
+                return "water";
+            } else {
+                return "flowing_water";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.LAVA, state -> {
+            if (state.getValue(LiquidBlock.LEVEL) == 0) {
+                return "lava";
+            } else {
+                return "flowing_lava";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.FURNACE, state -> {
+           if (state.getValue(BlockStateProperties.LIT)) {
+               return "lit_furnace";
+           } else {
+               return "furnace";
+           }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.SMOKER, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_smoker";
+            } else {
+                return "smoker";
+            }
+        });
+        STATE_BLOCK_OVERRIDES.put(Blocks.BLAST_FURNACE, state -> {
+            if (state.getValue(BlockStateProperties.LIT)) {
+                return "lit_blast_furnace";
+            } else {
+                return "blast_furnace";
+            }
+        });
     }
 
-    public static final Map<String, List<String>> STATES = new HashMap<>();
+    public static void main(String[] args) {
+        generate();
+    }
 
     public static void generate() {
         BlockMappers.registerMappers();
 
+        // Read block states that we know exist to confirm our mapping
+        NbtList<NbtMap> palette;
+        File blockPalette = new File("palettes/block_palette.nbt");
+        if (!blockPalette.exists()) {
+            System.out.println("Could not find block palette (block_palette.nbt), won't be able to confirm block mappings!");
+            return;
+        }
+
         try {
-            NbtList<NbtMap> palette;
-            File blockPalette = new File("palettes/block_palette.nbt");
-            if (!blockPalette.exists()) {
-                System.out.println("Could not find block palette (block_palette.nbt), please refer to the README in the palettes directory.");
-                return;
+            InputStream stream = new FileInputStream(blockPalette);
+
+            try (NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(new GZIPInputStream(stream)))) {
+                NbtMap ret = (NbtMap) nbtInputStream.readTag();
+                palette = (NbtList<NbtMap>) ret.getList("blocks", NbtType.COMPOUND);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to get blocks from block palette", e);
+        }
+
+        Set<NbtMap> vanillaStates = new HashSet<>();
+        for (NbtMap map : palette) {
+            var builder = map.toBuilder();
+            builder.remove("name_hash");
+            builder.remove("version");
+            builder.remove("block_id");
+            builder.remove("network_id");
+            vanillaStates.add(builder.build());
+        }
+
+        List<Pair<BlockState, BlockEntry>> newMappings = new ArrayList<>(Block.BLOCK_STATE_REGISTRY.size());
+
+        for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
+            String name = getName(state);
+            CompoundTag states = new CompoundTag();
+
+            for (BlockMapper blockMapper : BlockMapper.ALL_MAPPERS) {
+                blockMapper.apply(state, states);
             }
 
+            NbtMap map = NbtMap.builder()
+                .putString("name", "minecraft:" + name)
+                .putCompound("states", (NbtMap) NbtOps.INSTANCE.convertTo(CloudburstNbtOps.INSTANCE, states))
+                .build();
+
+            // Verify states exist in the provided vanilla block palette
+            if (!vanillaStates.contains(map)) {
+                throw new RuntimeException("Unknown block state: " + name + " state: " + blockStateToString(state) + " our bedrock state: " + map);
+            }
+            newMappings.add(Pair.of(state, new BlockEntry(name, states)));
+        }
+
+        DataResult<JsonElement> generatorResult = BlockEntry.GENERATOR_CODEC.encodeStart(BlockEntry.JSON_OPS_WITH_BYTE_BOOLEAN, newMappings);
+        generatorResult.ifSuccess(json -> {
+            JsonObject rootObject = new JsonObject();
+            rootObject.add("mappings", json);
+            rootObject.addProperty("DataVersion", SharedConstants.getCurrentVersion().dataVersion().version());
+
+            GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             try {
-                InputStream stream = new FileInputStream(blockPalette);
-
-                try (NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(new GZIPInputStream(stream)))) {
-                    NbtMap ret = (NbtMap) nbtInputStream.readTag();
-                    palette = (NbtList<NbtMap>) ret.getList("blocks", NbtType.COMPOUND);
-                }
+                FileWriter writer = new FileWriter("new_generator_blocks.json");
+                builder.create().toJson(rootObject, writer);
+                writer.close();
             } catch (IOException e) {
-                throw new RuntimeException("Unable to get blocks from block palette", e);
+                e.printStackTrace();
             }
+        }).ifError(error -> {
+            System.out.println("Failed to save mappings generator copy of blocks mappings.");
+            System.out.println(error.message());
+        });
 
-            File mappings = new File("generator_blocks.json");
-            if (!mappings.exists()) {
-                System.out.println("Couldn't find blocks JSON! What is wrong, dear coder?");
-                return;
+        List<BlockEntry> entries = newMappings.stream()
+                .map(pair -> {
+                    String javaIdentifier = BuiltInRegistries.BLOCK.getKey(pair.key().getBlock()).getPath();
+                    String bedrockIdentifier = pair.value().bedrockIdentifier();
+                    if (javaIdentifier.equals(bedrockIdentifier)) {
+                        // We don't need to store the name if it's the same between both platforms
+                        return Pair.of(pair.key(), new BlockEntry(null, pair.value().state()));
+                    }
+                    return pair;
+                })
+                .map(Pair::value)
+                .toList();
+        DataResult<Tag> result = BlockEntry.LIST_CODEC.encodeStart(NbtOps.INSTANCE, entries);
+        result.ifSuccess(tag -> {
+            try {
+                CompoundTag rootTag = new CompoundTag();
+                rootTag.put("bedrock_mappings", tag);
+                NbtIo.writeCompressed(rootTag, Path.of("mappings").resolve("blocks.nbt"));
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
             }
+            System.out.println("Finished writing blocks NBT!");
+        }).ifError(error -> {
+            System.out.println("Failed to encode blocks to NBT!");
+            System.out.println(error.message());
+        });
 
-            JsonObject currentRootObject = (JsonObject) JsonParser.parseReader(new FileReader(mappings));
-            List<Pair<BlockState, BlockEntry>> currentBlockMappings = BlockEntry.GENERATOR_CODEC.decode(BlockEntry.JSON_OPS_WITH_BYTE_BOOLEAN, currentRootObject.get("mappings"))
-                    .result().orElseThrow().getFirst();
-            currentBlockMappings.forEach(pair -> BLOCK_ENTRIES.put(pair.key(), pair.value()));
-
-            // Redned, when you see this... I am going down a dark, dark path.
-            // If it works sometime in the future, though, it'll be super helpful!
-//            int dataVersion = currentRootObject.get("DataVersion").getAsInt();
-//            var output = DataFixers.getDataFixer()
-//                    .update(References.BLOCK_STATE,
-//                            new Dynamic<>(JsonOps.INSTANCE, currentRootObject.getAsJsonArray("mappings")),
-//                            dataVersion, SharedConstants.getCurrentVersion().getDataVersion().getVersion());
-
-            for (NbtMap entry : palette) {
-                String identifier = entry.getString("name");
-                if (!STATES.containsKey(identifier)) {
-                    NbtMap states = entry.getCompound("states");
-                    List<String> stateKeys = new ArrayList<>(states.keySet());
-                    // ignore some useless keys
-                    stateKeys.remove("stone_slab_type");
-                    stateKeys.remove("stone_type"); // added to minecraft:stone
-                    STATES.put(identifier, stateKeys);
-                }
-            }
-            // Some State Corrections
-            STATES.put("minecraft:attached_pumpkin_stem", Arrays.asList("growth", "facing_direction"));
-            STATES.put("minecraft:attached_melon_stem", Arrays.asList("growth", "facing_direction"));
-
-            List<Pair<BlockState, BlockEntry>> newMappings = new ArrayList<>(Block.BLOCK_STATE_REGISTRY.size());
-
-            for (BlockState blockState : Block.BLOCK_STATE_REGISTRY) {
-                newMappings.add(Pair.of(blockState, getRemapBlock(blockState)));
-            }
-
-            // Write this in JSON so it's easily human-parseable and Git-diff-able.
-            // Well, you know, for the file being 10MB.
-            DataResult<JsonElement> generatorResult = BlockEntry.GENERATOR_CODEC.encodeStart(BlockEntry.JSON_OPS_WITH_BYTE_BOOLEAN, newMappings);
-            generatorResult.ifSuccess(json -> {
-                JsonObject rootObject = new JsonObject();
-                rootObject.add("mappings", json);
-                rootObject.addProperty("DataVersion", SharedConstants.getCurrentVersion().getDataVersion().getVersion());
-
-                GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
-                try {
-                    FileWriter writer = new FileWriter("generator_blocks.json");
-                    builder.create().toJson(rootObject, writer);
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).ifError(error -> {
-                System.out.println("Failed to save mappings generator copy of blocks mappings.");
-                System.out.println(error.message());
-            });
-
-            List<BlockEntry> entries = newMappings.stream()
-                    .map(pair -> {
-                        String javaIdentifier = BuiltInRegistries.BLOCK.getKey(pair.key().getBlock()).getPath();
-                        String bedrockIdentifier = pair.value().bedrockIdentifier();
-                        if (javaIdentifier.equals(bedrockIdentifier)) {
-                            // We don't need to store the name if it's the same between both platforms
-                            return Pair.of(pair.key(), new BlockEntry(null, pair.value().state()));
-                        }
-                        return pair;
-                    })
-                    .map(Pair::value)
-                    .toList();
-            DataResult<Tag> result = BlockEntry.LIST_CODEC.encodeStart(NbtOps.INSTANCE, entries);
-            result.ifSuccess(tag -> {
-                try {
-                    CompoundTag rootTag = new CompoundTag();
-                    rootTag.put("bedrock_mappings", tag);
-                    NbtIo.writeCompressed(rootTag, Path.of("mappings").resolve("blocks.nbt"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
-                }
-                System.out.println("Finished writing blocks NBT!");
-            }).ifError(error -> {
-                System.out.println("Failed to encode blocks to NBT!");
-                System.out.println(error.message());
-            });
-
-            System.out.println("Some block states need to be manually mapped, please search for MANUALMAP in blocks.json, if there are no occurrences you do not need to do anything.");
-            System.out.println("Finished block writing process!");
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        System.out.println("Finished block writing process!");
     }
 
-    private static BlockEntry getRemapBlock(BlockState state) {
-        BlockEntry blockEntry = BLOCK_ENTRIES.get(state);
-        String trimmedIdentifier = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+    private static String getName(BlockState state) {
+        if (NAME_OVERRIDES.containsKey(state.getBlock())) {
+            return NAME_OVERRIDES.get(state.getBlock());
+        }
+
+        if (STATE_BLOCK_OVERRIDES.containsKey(state.getBlock())) {
+            return STATE_BLOCK_OVERRIDES.get(state.getBlock()).apply(state);
+        }
+
         Block block = state.getBlock();
-        if (FeatureFlags.isExperimental(block.requiredFeatures())) {
-            return new BlockEntry("unknown", new CompoundTag());
+        if (block instanceof BedBlock) {
+            return "bed";
         }
 
-        String bedrockIdentifier;
-        if (BLOCK_OVERRIDES.containsKey(block)) {
-            // handle any special cases first
-            bedrockIdentifier = BLOCK_OVERRIDES.get(block);
-        } else if (block == Blocks.POWERED_RAIL) {
-            bedrockIdentifier = "golden_rail";
-        } else if (block == Blocks.DIRT_PATH) {
-            bedrockIdentifier = "grass_path";
-        } else if (block == Blocks.SMALL_DRIPLEAF) {
-            bedrockIdentifier = "small_dripleaf_block";
-        } else if (block == Blocks.BIG_DRIPLEAF_STEM) {
-            // Includes the head and stem
-            bedrockIdentifier = "big_dripleaf";
-        } else if (block == Blocks.FLOWERING_AZALEA_LEAVES) {
-            bedrockIdentifier = "azalea_leaves_flowered";
-        } else if (block == Blocks.ROOTED_DIRT) {
-            bedrockIdentifier = "dirt_with_roots";
-        } else if (trimmedIdentifier.contains("powder_snow_cauldron") || trimmedIdentifier.contains("water_cauldron")) {
-            bedrockIdentifier = "cauldron";
-        } else if (block == Blocks.WAXED_COPPER_BLOCK) {
-            bedrockIdentifier = "waxed_copper";
-        } else if (trimmedIdentifier.contains("candle")) {
-            // Resetting old identifiers
-            bedrockIdentifier = trimmedIdentifier.substring("minecraft:".length());
-        } else if (block == Blocks.DEEPSLATE_REDSTONE_ORE && state.getValue(BlockStateProperties.LIT)) {
-            bedrockIdentifier = "lit_deepslate_redstone_ore";
-        } else if (trimmedIdentifier.endsWith("_slab") && state.getValue(BlockStateProperties.SLAB_TYPE) == SlabType.DOUBLE) {
-            // Fixes 1.16 double slabs
-            if (blockEntry != null) {
-                if (blockEntry.bedrockIdentifier().contains("double") && !blockEntry.bedrockIdentifier().contains("copper")) {
-                    bedrockIdentifier = blockEntry.bedrockIdentifier();
-                } else {
-                    bedrockIdentifier = formatDoubleSlab(trimmedIdentifier);
-                }
+        if (block instanceof FlowerPotBlock) {
+            return "flower_pot";
+        }
+
+        String blockName = BuiltInRegistries.BLOCK.getKey(block).getPath();
+
+        if (block instanceof StandingSignBlock) {
+            return blockName.replace("sign", "standing_sign");
+        }
+
+        if (block instanceof WallHangingSignBlock || block instanceof WallSkullBlock) {
+            return blockName.replace("wall_", "");
+        }
+
+        if (block instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) {
+            if (blockName.contains("cut_copper")) {
+                return blockName.replace("cut", "double_cut");
+            }
+            return blockName.replace("slab", "double_slab");
+        }
+
+        if (block instanceof AbstractBannerBlock) {
+            if (block instanceof WallBannerBlock) {
+                return "wall_banner";
             } else {
-                bedrockIdentifier = formatDoubleSlab(trimmedIdentifier);
-            }
-        } else if (block == Blocks.MANGROVE_SIGN) {
-            bedrockIdentifier = "mangrove_standing_sign";
-        } else if (block == Blocks.PALE_OAK_SIGN) {
-            bedrockIdentifier = "pale_oak_standing_sign";
-        } else if (block == Blocks.TRIPWIRE) {
-            bedrockIdentifier = "trip_wire";
-        } else if (trimmedIdentifier.startsWith("minecraft:potted")) {
-            // Pots are block entities on Bedrock
-            bedrockIdentifier = "flower_pot";
-        } else if (trimmedIdentifier.endsWith("piston_head")) {
-            if (state.getValue(BlockStateProperties.PISTON_TYPE) == PistonType.STICKY) {
-                bedrockIdentifier = "sticky_piston_arm_collision";
-            } else {
-                bedrockIdentifier = "piston_arm_collision";
-            }
-        } else if (trimmedIdentifier.endsWith("moving_piston")) {
-            bedrockIdentifier = "moving_block";
-        } else if (trimmedIdentifier.endsWith("note_block")) {
-            bedrockIdentifier = "noteblock";
-        } else if (trimmedIdentifier.endsWith("_wall_hanging_sign")) {
-            // "wall hanging" signs do not exist on BE. they are just hanging signs.
-            bedrockIdentifier = trimmedIdentifier.replace("_wall", "").substring("minecraft:".length());
-        } else if (trimmedIdentifier.endsWith("_hanging_sign")) {
-            bedrockIdentifier = trimmedIdentifier.substring("minecraft:".length());
-        } else if (isSkull(trimmedIdentifier)) {
-            bedrockIdentifier = trimmedIdentifier.replace("minecraft:", "").replace("_wall", "");
-        } else if (trimmedIdentifier.endsWith("light_gray_glazed_terracotta")) {
-            bedrockIdentifier = "silver_glazed_terracotta";
-        } else {
-            // Default to trimmed identifier, or the existing identifier
-            bedrockIdentifier = (blockEntry != null && !blockEntry.bedrockIdentifier().equals("unknown")) ?
-                    blockEntry.bedrockIdentifier() : trimmedIdentifier.replace("minecraft:", "");
-        }
-
-        if (bedrockIdentifier.startsWith("stone_slab") || bedrockIdentifier.startsWith("double_stone_slab")) {
-            bedrockIdentifier = bedrockIdentifier.replace("stone_slab", "stone_block_slab");
-        }
-
-        // BlockEntry#state() should never be null
-        CompoundTag bedrockStates = blockEntry != null ? blockEntry.state() : new CompoundTag();
-
-        if (blockEntry != null && STATES.get("minecraft:" + blockEntry.bedrockIdentifier()) != null) {
-            List<String> toRemove = new ArrayList<>();
-            // Since we now rely on block states being exact after 1.16.100, we need to remove any old states
-            for (String key : bedrockStates.keySet()) {
-                List<String> states = STATES.get("minecraft:" + blockEntry.bedrockIdentifier());
-                if (!states.contains(key) &&
-                        !key.contains("stone_slab_type")) { // Ignore the stone slab types since we ignore them above
-                    toRemove.add(key);
-                }
-            }
-            for (String key : toRemove) {
-                bedrockStates.remove(key);
-            }
-        } else if (blockEntry != null) {
-            System.out.println("States for " + blockEntry.bedrockIdentifier() + " not found!");
-        } else {
-            System.out.println("Block entry for " + blockStateToString(state) + " is null?");
-        }
-
-        for (BlockMapper blockMapper : BlockMapper.ALL_MAPPERS) {
-            blockMapper.apply(state, bedrockStates);
-        }
-
-        if (block == Blocks.GLOW_LICHEN || block == Blocks.SCULK_VEIN || block == Blocks.RESIN_CLUMP) {
-            int bitset = 0;
-            if (state.getValue(BlockStateProperties.DOWN)) {
-                bitset |= 1;
-            }
-            if (state.getValue(BlockStateProperties.UP)) {
-                bitset |= 1 << 1;
-            }
-            if (state.getValue(BlockStateProperties.SOUTH)) {
-                bitset |= 1 << 2;
-            }
-            if (state.getValue(BlockStateProperties.WEST)) {
-                bitset |= 1 << 3;
-            }
-            if (state.getValue(BlockStateProperties.NORTH)) {
-                bitset |= 1 << 4;
-            }
-            if (state.getValue(BlockStateProperties.EAST)) {
-                bitset |= 1 << 5;
-            }
-            bedrockStates.putInt("multi_face_direction_bits", bitset);
-        }
-
-        else if (trimmedIdentifier.endsWith("_cauldron")) {
-            if (trimmedIdentifier.equals("minecraft:lava_cauldron")) {
-                // Only one fill level option
-                bedrockStates.putInt("fill_level", 6);
+                return "standing_banner";
             }
         }
 
-        else if (trimmedIdentifier.contains("big_dripleaf")) {
-            boolean isHead = !trimmedIdentifier.contains("stem");
-            bedrockStates.putBoolean("big_dripleaf_head", isHead);
-            if (!isHead) {
-                bedrockStates.putString("big_dripleaf_tilt", "none");
-            }
-        } else if (trimmedIdentifier.endsWith("_leaves") ||
-                trimmedIdentifier.contains("azalea_leaves")) {
-            bedrockStates.putBoolean("update_bit", false);
-        }
-
-        if (bedrockIdentifier.contains("flower_pot")) {
-            bedrockStates.putBoolean("update_bit", false);
-        }
-
-        List<String> stateKeys = STATES.get(bedrockIdentifier);
-        if (stateKeys != null) {
-            stateKeys.forEach(key -> {
-                if (trimmedIdentifier.contains("minecraft:shulker_box")) return;
-                if (!bedrockStates.contains(key)) {
-                    bedrockStates.putString(key, "MANUALMAP");
-                }
-            });
-        }
-
-        // Use this hacky but handy bit of code to help migrate mappings to new versions!
-//        if (true) {
-//            NbtMap cloudburstStates = (NbtMap) NbtOps.INSTANCE.convertTo(CloudburstNbtOps.INSTANCE, bedrockStates);
-//            NbtMap cloudburstNbt = NbtMap.builder()
-//                    .putString("name", "minecraft:" + bedrockIdentifier)
-//                    .putCompound("states", cloudburstStates)
-//                    .build();
-//            cloudburstNbt = BlockStateUpdaters.updateBlockState(cloudburstNbt, OLD_VERSION);
-//            CompoundTag newStates = (CompoundTag) CloudburstNbtOps.INSTANCE.convertTo(NbtOps.INSTANCE, cloudburstNbt);
-//            newStates.remove("version");
-//            String newName = newStates.getString("name").orElseThrow();
-//            newStates.remove("name");
-//            // TODO temporary fix
-//            if (state.getBlock() instanceof CreakingHeartBlock) {
-//                NbtMapBuilder mapBuilder = cloudburstNbt.toBuilder();
-//                mapBuilder.remove("active");
-//                mapBuilder.putString("creaking_heart_state", newStates.getString("creaking_heart_state").orElseThrow());
-//                newStates = (CompoundTag) CloudburstNbtOps.INSTANCE.convertTo(NbtOps.INSTANCE, mapBuilder.build());
-//                return new BlockEntry(newName.substring("minecraft:".length()), newStates);
-//            }
-//            return new BlockEntry(newName.substring("minecraft:".length()), newStates.getCompound("states").orElseThrow());
-//        }
-
-        return new BlockEntry(bedrockIdentifier, bedrockStates);
+        return blockName;
     }
 
-    private static final int OLD_VERSION = CompoundTagUpdaterContext.makeVersion(1, 21, 40);
-
-    static String blockStateToString(BlockState blockState) {
+    public static String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()));
         if (!blockState.getValues().isEmpty()) {
@@ -382,27 +403,4 @@ public final class BlockGenerator {
             return arg.getName((T) comparable);
         }
     };
-
-    private static boolean isSkull(String identifier) {
-        return identifier.contains("skull") || (identifier.contains("head") && !identifier.contains("piston"));
-    }
-
-    /**
-     * @return the correct double slab identifier for Bedrock
-     */
-    private static String formatDoubleSlab(String identifier) {
-        if (identifier.contains("double")) {
-            return identifier;
-        }
-
-        if (identifier.contains("cut_copper")) {
-            return identifier.replace("cut", "double_cut").replace("minecraft:", "");
-        }
-        return identifier.replace("_slab", "_double_slab").replace("minecraft:", "");
-    }
-
-    private static <T extends Comparable<T>> String getPropertyName(BlockState state, Property<T> property) {
-        T value = state.getValue(property);
-        return property.getName(value);
-    }
 }

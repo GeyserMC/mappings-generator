@@ -567,7 +567,9 @@ public class MappingsGenerator {
         for (Map.Entry<String, ParticleEntry> entry : particles.entrySet()) {
             ResourceLocation location = ResourceLocation.fromNamespaceAndPath("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
             if (BuiltInRegistries.PARTICLE_TYPE.get(location).isEmpty()) {
-                System.out.println("Particle of type " + entry.getKey() + " does not exist in this jar! It will be removed.");
+                if (!entry.getKey().equals("TRIAL_SPAWNER_DETECTED_PLAYER") && !entry.getKey().equals("TRIAL_SPAWNER_DETECTED_PLAYER_OMINOUS")) {
+                    System.out.println("Particle of type " + entry.getKey() + " does not exist in this jar! It will be removed.");
+                }
             }
         }
 
