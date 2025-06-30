@@ -145,8 +145,13 @@ public class MappingsGenerator {
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:small_dripleaf", "minecraft:small_dripleaf_block");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:waxed_copper_block", "minecraft:waxed_copper");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:zombified_piglin_spawn_egg", "minecraft:zombie_pigman_spawn_egg");
+
+                // don't exist on bedrock edition (yet)
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:test_block", "minecraft:unknown");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:test_instance_block", "minecraft:unknown");
+
+                // 1.21.6
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:music_disc_lava_chicken", "minecraft:music_disc_chirp");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
