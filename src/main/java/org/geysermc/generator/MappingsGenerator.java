@@ -149,9 +149,6 @@ public class MappingsGenerator {
                 // don't exist on bedrock edition (yet)
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:test_block", "minecraft:unknown");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:test_instance_block", "minecraft:unknown");
-
-                // 1.21.6
-                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:music_disc_lava_chicken", "minecraft:music_disc_chirp");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
