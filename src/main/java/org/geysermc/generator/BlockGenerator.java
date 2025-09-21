@@ -3,7 +3,6 @@ package org.geysermc.generator;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.mojang.serialization.DataResult;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.SharedConstants;
@@ -63,6 +62,7 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.BRICKS, "brick_block");
         NAME_OVERRIDES.put(Blocks.WALL_TORCH, "torch");
         NAME_OVERRIDES.put(Blocks.SOUL_WALL_TORCH, "soul_torch");
+        NAME_OVERRIDES.put(Blocks.COPPER_WALL_TORCH, "copper_torch");
         NAME_OVERRIDES.put(Blocks.SPAWNER, "mob_spawner");
         NAME_OVERRIDES.put(Blocks.SNOW_BLOCK, "snow");
         NAME_OVERRIDES.put(Blocks.SNOW, "snow_layer");

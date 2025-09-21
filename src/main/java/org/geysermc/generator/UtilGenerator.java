@@ -20,6 +20,7 @@ import java.util.Set;
 
 public class UtilGenerator {
 
+    // TODO sort output to reduce diff
     public static void generate() {
         try {
             JsonObject util = new JsonObject();
