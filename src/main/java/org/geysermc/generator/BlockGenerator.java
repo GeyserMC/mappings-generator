@@ -103,6 +103,9 @@ public class BlockGenerator {
         NAME_OVERRIDES.put(Blocks.OAK_PRESSURE_PLATE, "wooden_pressure_plate");
         NAME_OVERRIDES.put(Blocks.OAK_BUTTON, "wooden_button");
 
+        // TODO remove in 1.21.9
+        NAME_OVERRIDES.put(Blocks.CHAIN, "iron_chain");
+
         STATE_BLOCK_OVERRIDES.put(Blocks.STONE_SLAB, state -> {
             if (state.getValue(BlockStateProperties.SLAB_TYPE) == SlabType.DOUBLE) {
                 return "normal_stone_double_slab";

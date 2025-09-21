@@ -745,7 +745,9 @@ public final class BlockMappers {
         register(Blocks.COMPOSTER).map(ComposterBlock.LEVEL, "composter_fill_level");
         register(Blocks.BUBBLE_COLUMN).map(BubbleColumnBlock.DRAG_DOWN, "drag_down");
         register(Blocks.SWEET_BERRY_BUSH).map(SweetBerryBushBlock.AGE, "growth");
-        register(Blocks.LIGHTNING_ROD).mapFacingDirectionNorthTwo(LightningRodBlock.FACING);
+        register(Blocks.LIGHTNING_ROD)
+                .mapFacingDirectionNorthTwo(LightningRodBlock.FACING)
+                .addBedrockProperty("powered_bit", false);
         register(Blocks.STRUCTURE_BLOCK).map(StructureBlock.MODE, "structure_block_type");
         register(Blocks.LECTERN).map(LecternBlock.POWERED, "powered_bit");
         register(Blocks.POINTED_DRIPSTONE)
