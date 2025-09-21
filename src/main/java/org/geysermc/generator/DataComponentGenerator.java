@@ -11,10 +11,6 @@ import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.RegistryLayer;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.repository.ServerPacksSource;
-import net.minecraft.server.packs.resources.CloseableResourceManager;
-import net.minecraft.server.packs.resources.MultiPackResourceManager;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,7 +21,6 @@ public final class DataComponentGenerator {
     // ripped from https://github.com/AlexProgrammerDE/SoulFire/blob/9b0280b2bca76aa234a2283bf4ab82300150cef6/data-generator/src/main/java/com/soulfiremc/generator/generators/ItemsDataGenerator.java#L43-L58
     // thanks pistonmaster for the permission to use it!
     public static void generate() {
-        CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, List.of(ServerPacksSource.createVanillaPackSource()));
         RegistryAccess.Frozen registryAccess = RegistryLayer.createRegistryAccess().compositeAccess();
 
         var allItemComponents = new JsonArray();
@@ -61,7 +56,7 @@ public final class DataComponentGenerator {
 
         GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
         try {
-            FileWriter writer = new FileWriter("item_data_components.json");
+            FileWriter writer = new FileWriter("mappings/item_data_components.json");
             builder.create().toJson(allItemComponents, writer);
             writer.close();
         } catch (IOException e) {
