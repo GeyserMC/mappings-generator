@@ -149,6 +149,9 @@ public class MappingsGenerator {
                 // don't exist on bedrock edition (yet)
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:test_block", "minecraft:unknown");
                 JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:test_instance_block", "minecraft:unknown");
+
+                // TODO remove in 1.21.9
+                JAVA_TO_BEDROCK_ITEM_OVERRIDE.put("minecraft:chain", "minecraft:iron_chain");
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
