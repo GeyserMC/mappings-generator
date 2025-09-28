@@ -291,7 +291,7 @@ public class BlockGenerator {
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             try {
-                FileWriter writer = new FileWriter("new_generator_blocks.json");
+                FileWriter writer = new FileWriter("generator_blocks.json");
                 builder.create().toJson(rootObject, writer);
                 writer.close();
             } catch (IOException e) {
