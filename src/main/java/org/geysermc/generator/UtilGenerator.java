@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.GameMasterBlock;
@@ -13,6 +14,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class UtilGenerator {
@@ -21,10 +24,10 @@ public class UtilGenerator {
         try {
             JsonObject util = new JsonObject();
 
-            JsonArray gameMasterBlocks = new JsonArray();
+            List<ResourceLocation> gameMasterBlocks = new ArrayList<>();
             for (Block block : BuiltInRegistries.BLOCK) {
                 if (block instanceof GameMasterBlock) {
-                    gameMasterBlocks.add(BuiltInRegistries.BLOCK.getKey(block).toString());
+                    gameMasterBlocks.add(BuiltInRegistries.BLOCK.getKey(block));
                 }
             }
 
@@ -36,25 +39,31 @@ public class UtilGenerator {
             dangerousEntitiesField.setAccessible(true);
             Set<EntityType<?>> dangerousEntityTypes = (Set<EntityType<?>>) dangerousEntitiesField.get(null);
 
-            JsonArray dangerousBlockEntities = new JsonArray();
+            List<ResourceLocation> dangerousBlockEntities = new ArrayList<>();
             for (BlockEntityType<?> entityType : dangerousBlockEntityTypes) {
-                dangerousBlockEntities.add(BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(entityType).toString());
+                dangerousBlockEntities.add(BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(entityType));
             }
 
-            JsonArray dangerousEntities = new JsonArray();
+            List<ResourceLocation> dangerousEntities = new ArrayList<>();
             for (EntityType<?> entityType : dangerousEntityTypes) {
-                dangerousEntities.add(BuiltInRegistries.ENTITY_TYPE.getKey(entityType).toString());
+                dangerousEntities.add(BuiltInRegistries.ENTITY_TYPE.getKey(entityType));
             }
 
-            util.add("game_master_blocks", gameMasterBlocks);
-            util.add("dangerous_block_entities", dangerousBlockEntities);
-            util.add("dangerous_entities", dangerousEntities);
+            util.add("game_master_blocks", sortAndToJson(gameMasterBlocks));
+            util.add("dangerous_block_entities", sortAndToJson(dangerousBlockEntities));
+            util.add("dangerous_entities", sortAndToJson(dangerousEntities));
 
             GsonBuilder builder = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping();
             Files.writeString(Path.of("mappings/util.json"), builder.create().toJson(util));
         } catch (NoSuchFieldException | IllegalAccessException | IOException exception) {
             exception.printStackTrace();
         }
+    }
+
+    private static JsonArray sortAndToJson(List<ResourceLocation> list) {
+        JsonArray array = new JsonArray();
+        list.stream().sorted().forEach(location -> array.add(location.toString()));
+        return array;
     }
 
     public static void main(String[] args) {
