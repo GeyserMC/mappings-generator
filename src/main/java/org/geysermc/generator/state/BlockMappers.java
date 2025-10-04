@@ -131,7 +131,15 @@ public final class BlockMappers {
                 Blocks.TRAPPED_CHEST,
                 Blocks.CARVED_PUMPKIN,
                 Blocks.JACK_O_LANTERN,
-                Blocks.DRIED_GHAST
+                Blocks.DRIED_GHAST,
+                Blocks.COPPER_CHEST,
+                Blocks.EXPOSED_COPPER_CHEST,
+                Blocks.WEATHERED_COPPER_CHEST,
+                Blocks.OXIDIZED_COPPER_CHEST,
+                Blocks.WAXED_COPPER_CHEST,
+                Blocks.WAXED_EXPOSED_COPPER_CHEST,
+                Blocks.WAXED_WEATHERED_COPPER_CHEST,
+                Blocks.WAXED_OXIDIZED_COPPER_CHEST
         ).mapCardinalDirection(HorizontalDirectionalBlock.FACING);
         register(Blocks.REPEATER)
                 .transform(RepeaterBlock.DELAY, "repeater_delay", value -> value -1);
@@ -246,7 +254,7 @@ public final class BlockMappers {
             case EAST -> "west";
             default -> throw new IllegalStateException("Unexpected value: " + value);
         });
-        register(Blocks.TORCH, Blocks.REDSTONE_TORCH, Blocks.SOUL_TORCH).addBedrockProperty("torch_facing_direction", "top");
+        register(Blocks.TORCH, Blocks.REDSTONE_TORCH, Blocks.SOUL_TORCH, Blocks.COPPER_TORCH).addBedrockProperty("torch_facing_direction", "top");
         register(Blocks.FIRE).directMap(FireBlock.AGE);
         register(Blocks.SOUL_FIRE).addBedrockProperty("age", 0);
         register(TrapDoorBlock.class)
@@ -745,9 +753,9 @@ public final class BlockMappers {
         register(Blocks.COMPOSTER).map(ComposterBlock.LEVEL, "composter_fill_level");
         register(Blocks.BUBBLE_COLUMN).map(BubbleColumnBlock.DRAG_DOWN, "drag_down");
         register(Blocks.SWEET_BERRY_BUSH).map(SweetBerryBushBlock.AGE, "growth");
-        register(Blocks.LIGHTNING_ROD)
+        register(LightningRodBlock.class, WeatheringLightningRodBlock.class)
                 .mapFacingDirectionNorthTwo(LightningRodBlock.FACING)
-                .addBedrockProperty("powered_bit", false);
+                .map(LightningRodBlock.POWERED, "powered_bit");
         register(Blocks.STRUCTURE_BLOCK).map(StructureBlock.MODE, "structure_block_type");
         register(Blocks.LECTERN).map(LecternBlock.POWERED, "powered_bit");
         register(Blocks.POINTED_DRIPSTONE)
@@ -883,5 +891,15 @@ public final class BlockMappers {
         register(LeavesBlock.class).addBedrockProperty("update_bit", false);
         register(Blocks.PUMPKIN).addBedrockProperty("minecraft:cardinal_direction", "north");
         register(Blocks.HAY_BLOCK, Blocks.BONE_BLOCK).addBedrockProperty("deprecated", 0);
+        register(ShelfBlock.class)
+                .mapCardinalDirection(ShelfBlock.FACING)
+                .map(ShelfBlock.POWERED, "powered_bit")
+                .transform(ShelfBlock.SIDE_CHAIN_PART, "powered_shelf_type", sideChainPart -> switch (sideChainPart) {
+                    case UNCONNECTED -> 0;
+                    case RIGHT -> 1;
+                    case CENTER -> 2;
+                    case LEFT -> 3;
+                });
+        register(CopperGolemStatueBlock.class).mapCardinalDirection(CopperGolemStatueBlock.FACING);
     }
 }
