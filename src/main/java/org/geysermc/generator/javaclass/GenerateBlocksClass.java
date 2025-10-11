@@ -34,8 +34,8 @@ public final class GenerateBlocksClass {
         classOverrides.put(Blocks.WATER, "WaterBlock");
 
         List<Class<? extends Block>> mirroredClasses = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
-                FlowerPotBlock.class, FurnaceBlock.class, HoneyBlock.class, LecternBlock.class, MovingPistonBlock.class,
-                PistonHeadBlock.class, SpawnerBlock.class, TrapDoorBlock.class, WallSkullBlock.class, ButtonBlock.class);
+                FlowerPotBlock.class, FurnaceBlock.class, LecternBlock.class, MovingPistonBlock.class,
+                TrapDoorBlock.class, WallSkullBlock.class, ButtonBlock.class);
 
         StringBuilder builder = new StringBuilder();
         var it = BuiltInRegistries.BLOCK.iterator();
@@ -128,9 +128,6 @@ public final class GenerateBlocksClass {
                         item = null;
                         break;
                     }
-                }
-                if (item != null && block.asItem() != item) {
-                    constructor.addMethod("pickItem", "() -> Items." + BuiltInRegistries.ITEM.getKey(item).getPath().toUpperCase(Locale.ROOT));
                 }
             }
 
