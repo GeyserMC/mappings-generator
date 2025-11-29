@@ -4,7 +4,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.GameMasterBlock;
@@ -24,7 +24,7 @@ public class UtilGenerator {
         try {
             JsonObject util = new JsonObject();
 
-            List<ResourceLocation> gameMasterBlocks = new ArrayList<>();
+            List<Identifier> gameMasterBlocks = new ArrayList<>();
             for (Block block : BuiltInRegistries.BLOCK) {
                 if (block instanceof GameMasterBlock) {
                     gameMasterBlocks.add(BuiltInRegistries.BLOCK.getKey(block));
@@ -39,12 +39,12 @@ public class UtilGenerator {
             dangerousEntitiesField.setAccessible(true);
             Set<EntityType<?>> dangerousEntityTypes = (Set<EntityType<?>>) dangerousEntitiesField.get(null);
 
-            List<ResourceLocation> dangerousBlockEntities = new ArrayList<>();
+            List<Identifier> dangerousBlockEntities = new ArrayList<>();
             for (BlockEntityType<?> entityType : dangerousBlockEntityTypes) {
                 dangerousBlockEntities.add(BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(entityType));
             }
 
-            List<ResourceLocation> dangerousEntities = new ArrayList<>();
+            List<Identifier> dangerousEntities = new ArrayList<>();
             for (EntityType<?> entityType : dangerousEntityTypes) {
                 dangerousEntities.add(BuiltInRegistries.ENTITY_TYPE.getKey(entityType));
             }
@@ -60,7 +60,7 @@ public class UtilGenerator {
         }
     }
 
-    private static JsonArray sortAndToJson(List<ResourceLocation> list) {
+    private static JsonArray sortAndToJson(List<Identifier> list) {
         JsonArray array = new JsonArray();
         list.stream().sorted().forEach(location -> array.add(location.toString()));
         return array;

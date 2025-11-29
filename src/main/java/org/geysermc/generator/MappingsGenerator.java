@@ -13,7 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -213,7 +213,7 @@ public class MappingsGenerator {
             JsonObject rootObject = new JsonObject();
 
             for (SoundEvent soundEvent : BuiltInRegistries.SOUND_EVENT) {
-                ResourceLocation key = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent);
+                Identifier key = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent);
 
                 String path = key.getPath();
                 SoundEntry entry = SOUND_ENTRIES.get(key.getPath());
@@ -236,7 +236,7 @@ public class MappingsGenerator {
                 // Auto map place block sounds
                 if (!validPlaySound && isBlank(entry.getEventSound()) && path.startsWith("block") && path.endsWith("place")) {
                     if (entry.getIdentifier() == null || entry.getIdentifier().isEmpty()) {
-                        Block block = BuiltInRegistries.BLOCK.getValue(ResourceLocation.parse("minecraft:" + path.split("\\.")[1]));
+                        Block block = BuiltInRegistries.BLOCK.getValue(Identifier.parse("minecraft:" + path.split("\\.")[1]));
                         entry.setEventSound("PLACE");
                         if (block != Blocks.AIR) {
                             entry.setIdentifier(blockStateToString(block.defaultBlockState()));
@@ -451,11 +451,11 @@ public class MappingsGenerator {
             // Used to know if a biome is valid or not for Bedrock
             JsonObject bedrockBiomes = JsonParser.parseReader(new FileReader(biomeIdMap)).getAsJsonObject();
 
-            Set<ResourceLocation> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).orElseThrow()
-                .listElements().map(ref -> ref.key().location()).collect(Collectors.toSet());
+            Set<Identifier> javaBiomes = VanillaRegistries.createLookup().lookup(Registries.BIOME).orElseThrow()
+                .listElements().map(ref -> ref.key().identifier()).collect(Collectors.toSet());
 
             // Check for outdated fallback biomes
-            Set<String> biomeNames = javaBiomes.stream().map(ResourceLocation::getPath).collect(Collectors.toSet());
+            Set<String> biomeNames = javaBiomes.stream().map(Identifier::getPath).collect(Collectors.toSet());
             for (String javaBiome : FALLBACK_BIOMES.keySet()) {
                 if (!biomeNames.contains(javaBiome)) {
                     System.out.println("Fallback " + javaBiome + " -> " + FALLBACK_BIOMES.get(javaBiome) + " will never be used because the java biome doesn't actually exist.");
@@ -463,7 +463,7 @@ public class MappingsGenerator {
             }
 
             int i = -1;
-            for (ResourceLocation javaBiome : javaBiomes) {
+            for (Identifier javaBiome : javaBiomes) {
                 i++;
                 JsonElement biomeId = bedrockBiomes.get(javaBiome.getPath());
                 if (biomeId == null) {
@@ -570,7 +570,7 @@ public class MappingsGenerator {
         Map<String, ParticleEntry> newParticles = new TreeMap<>();
 
         for (Map.Entry<String, ParticleEntry> entry : particles.entrySet()) {
-            ResourceLocation location = ResourceLocation.fromNamespaceAndPath("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
+            Identifier location = Identifier.fromNamespaceAndPath("minecraft", entry.getKey().toLowerCase(Locale.ROOT));
             if (BuiltInRegistries.PARTICLE_TYPE.get(location).isEmpty()) {
                 if (!entry.getKey().equals("TRIAL_SPAWNER_DETECTED_PLAYER") && !entry.getKey().equals("TRIAL_SPAWNER_DETECTED_PLAYER_OMINOUS")) {
                     System.out.println("Particle of type " + entry.getKey() + " does not exist in this jar! It will be removed.");
@@ -579,7 +579,7 @@ public class MappingsGenerator {
         }
 
         for (Map.Entry<ResourceKey<ParticleType<?>>, ParticleType<?>> entry : BuiltInRegistries.PARTICLE_TYPE.entrySet()) {
-            String enumName = entry.getKey().location().getPath().toUpperCase(Locale.ROOT);
+            String enumName = entry.getKey().identifier().getPath().toUpperCase(Locale.ROOT);
             if (enumName.equals("TRIAL_SPAWNER_DETECTION")) {
                 enumName = "TRIAL_SPAWNER_DETECTED_PLAYER";
             } else if (enumName.equals("TRIAL_SPAWNER_DETECTION_OMINOUS")) {
@@ -607,8 +607,8 @@ public class MappingsGenerator {
             }
             if (geyserParticle.cloudburstLevelEventType == null && geyserParticle.bedrockId == null) {
                 System.out.println("No Bedrock particle mapped for " + enumName);
-                if (validParticleIds.contains(entry.getKey().location().toString())) {
-                    System.out.println("But the Bedrock resource pack contains a particle with the ID " + entry.getKey().location());
+                if (validParticleIds.contains(entry.getKey().identifier().toString())) {
+                    System.out.println("But the Bedrock resource pack contains a particle with the ID " + entry.getKey().registry());
                 }
             }
             newParticles.put(enumName, geyserParticle);
