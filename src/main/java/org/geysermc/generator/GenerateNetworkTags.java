@@ -13,9 +13,9 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.PackRepository;
@@ -66,16 +66,16 @@ public class GenerateNetworkTags {
 
         pendingTags.forEach(Registry.PendingTags::apply);
 
-        Map<ResourceKey<?>, Map<ResourceLocation, IntList>> tagMap = RegistrySynchronization.networkSafeRegistries(registryAccess)
+        Map<ResourceKey<?>, Map<Identifier, IntList>> tagMap = RegistrySynchronization.networkSafeRegistries(registryAccess)
                 .map(registryEntry -> Pair.of(registryEntry.key(), serializeToNetwork(registryEntry.value())))
                 .filter(pair -> !pair.getSecond().isEmpty())
                 .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
-        for (Map.Entry<ResourceKey<?>, Map<ResourceLocation, IntList>> registry : tagMap.entrySet()) {
+        for (Map.Entry<ResourceKey<?>, Map<Identifier, IntList>> registry : tagMap.entrySet()) {
             CompoundTag temp = new CompoundTag();
-            for (Map.Entry<ResourceLocation, IntList> tag : registry.getValue().entrySet()) {
+            for (Map.Entry<Identifier, IntList> tag : registry.getValue().entrySet()) {
                 temp.put(tag.getKey().toString(), new IntArrayTag(tag.getValue().toIntArray()));
             }
-            tags.put(registry.getKey().location().toString(), temp);
+            tags.put(registry.getKey().identifier().toString(), temp);
         }
 
         try {
@@ -87,8 +87,8 @@ public class GenerateNetworkTags {
         }
     }
 
-    private static <T> Map<ResourceLocation, IntList> serializeToNetwork(Registry<T> registry) {
-        Map<ResourceLocation, IntList> map = new HashMap<>();
+    private static <T> Map<Identifier, IntList> serializeToNetwork(Registry<T> registry) {
+        Map<Identifier, IntList> map = new HashMap<>();
         registry.getTags().forEach(named -> {
             IntList intList = new IntArrayList(named.size());
             for (Holder<T> holder : named) {
