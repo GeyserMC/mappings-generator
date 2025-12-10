@@ -64,14 +64,14 @@ public class GenerateNetworkCodec {
                             reference -> {
                                 Tag tag = registryData.elementCodec().encodeStart(dynamicOps, reference.value())
                                         .getOrThrow(string -> new IllegalArgumentException("Failed to encode: " + reference.key() + ": " + string));
-                                list.add(new RegistrySynchronization.PackedRegistryEntry(reference.key().location(), Optional.of(tag)));
+                                list.add(new RegistrySynchronization.PackedRegistryEntry(reference.key().identifier(), Optional.of(tag)));
                             }
                         );
 
                     // Credit ViaBackwards: https://github.com/ViaVersion/ViaBackwards/blob/dev/common/src/main/java/com/viaversion/viabackwards/protocol/protocol1_20_3to1_20_5/rewriter/EntityPacketRewriter1_20_5.java
                     final CompoundTag registryTag = new CompoundTag();
                     final ListTag entriesTag = new ListTag();
-                    registryTag.putString("type", registry.key().location().toString());
+                    registryTag.putString("type", registry.key().identifier().toString());
                     registryTag.put("value", entriesTag);
                     for (int i = 0; i < list.size(); i++) {
                         final RegistrySynchronization.PackedRegistryEntry entry = list.get(i);
@@ -82,7 +82,7 @@ public class GenerateNetworkCodec {
                         entriesTag.add(entryCompoundTag);
                     }
 
-                    networkCodec.put(registry.key().location().toString(), registryTag);
+                    networkCodec.put(registry.key().identifier().toString(), registryTag);
                 }
             );
     }
