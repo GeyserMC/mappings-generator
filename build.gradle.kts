@@ -24,10 +24,10 @@ dependencies {
 
     implementation("org.mockito", "mockito-core", "3.+")
 
-    implementation("org.cloudburstmc.protocol", "bedrock-codec", "3.0.0.Beta8-SNAPSHOT")
-    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta8-SNAPSHOT")
+    implementation("org.cloudburstmc.protocol", "bedrock-codec", "3.0.0.Beta11-SNAPSHOT")
+    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta11-SNAPSHOT")
 
-    implementation("org.cloudburstmc", "block-state-updater", "1.21.60-SNAPSHOT")
+    implementation("org.cloudburstmc", "block-state-updater", "1.21.110-SNAPSHOT")
 
     implementation("org.apache.commons", "commons-text", "1.12.0")
 
