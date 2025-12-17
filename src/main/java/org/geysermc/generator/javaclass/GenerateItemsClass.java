@@ -71,7 +71,7 @@ public class GenerateItemsClass {
                 // Filter out llama swag
                 if (equippable.canBeEquippedBy(EntityType.PLAYER)) {
                     if (equippable.assetId().isPresent()
-                            && equippable.assetId().get().location().getPath().equals("leather")) {
+                            && equippable.assetId().get().identifier().getPath().equals("leather")) {
                         clazz = "DyeableArmorItem";
                     } else {
                         clazz = "ArmorItem";
