@@ -487,25 +487,25 @@ public final class BlockMappers {
                 .transform(SnowLayerBlock.LAYERS, "height", value -> value - 1);
         register(Blocks.NETHER_PORTAL).map(NetherPortalBlock.AXIS, "portal_axis");
         register(Blocks.CAKE).map(BlockStateProperties.BITES, "bite_counter");
+        /* Red/Brown Mushroom block
+         * 0 -> -
+         * 1 -> north up west
+         * 2 -> north up
+         * 3 -> north up east
+         * 4 -> up west
+         * 5 -> up
+         * 6 -> up east
+         * 7 -> up west south
+         * 8 -> up south
+         * 9 -> up east south
+         * 10-> white mushroom stem, all horizontal sides
+         * 11-> -
+         * 12-> -
+         * 13-> -
+         * 14-> up down east south west north
+         * 15-> stem on all sides
+         */
         register(Blocks.MUSHROOM_STEM).transform("huge_mushroom_bits", state -> {
-           boolean down = state.getValue(BlockStateProperties.DOWN);
-           boolean up = state.getValue(BlockStateProperties.UP);
-
-           // the only state that we can map correctly
-           if (!down && !up) {
-               return 10;
-           }
-           // fallback: all sides
-           return 0;
-        });
-        register(Blocks.BROWN_MUSHROOM_BLOCK, Blocks.RED_MUSHROOM_BLOCK).transform("huge_mushroom_bits", state -> {
-            if (true) {
-                // TODO figure out
-                // Bedrock updates the states client-side; and the below mappings look odd on large mushrooms
-                // 14 will just make all sides red/brown; as pre-rewrite
-                return 14;
-            }
-
             boolean down = state.getValue(BlockStateProperties.DOWN);
             boolean up = state.getValue(BlockStateProperties.UP);
             boolean north = state.getValue(BlockStateProperties.NORTH);
@@ -513,58 +513,54 @@ public final class BlockMappers {
             boolean east = state.getValue(BlockStateProperties.EAST);
             boolean west = state.getValue(BlockStateProperties.WEST);
 
-            if (up && down && east && south && west && north) {
-                return 14;
+            if (!(up || down || east || south || west || north)) {
+                return 0;
+            }
+            if (!(down || up)) {
+                return 10;
+            }
+            return 15;
+        });
+        register(Blocks.BROWN_MUSHROOM_BLOCK, Blocks.RED_MUSHROOM_BLOCK).transform("huge_mushroom_bits", state -> {
+            boolean down = state.getValue(BlockStateProperties.DOWN);
+            boolean up = state.getValue(BlockStateProperties.UP);
+            boolean north = state.getValue(BlockStateProperties.NORTH);
+            boolean south = state.getValue(BlockStateProperties.SOUTH);
+            boolean east = state.getValue(BlockStateProperties.EAST);
+            boolean west = state.getValue(BlockStateProperties.WEST);
+
+            if (!(up || down || east || south || west || north)) {
+                return 0;
             }
             // Deliberately ignoring up/down as there are no bedrock states with up=false/down=true
-            if (west) {
-                if (north) {
+            if (north) {
+                if (west) {
                     return 1;
                 }
-                if (south) {
+                if (east) {
+                    return 3;
+                }
+                return 2;
+            }
+            if (south) {
+                if (west) {
                     return 7;
                 }
+                if (east) {
+                    return 9;
+                }
+                return 8;
+            }
+            if (west) {
                 return 4;
             }
             if (east) {
-                if (north) {
-                    return 3;
-                }
-                if (south) {
-                    return 9;
-                }
                 return 6;
-            }
-            if (south) {
-                return 8;
             }
             if (up) {
                 return 5;
             }
-            if (north) {
-                return 2;
-            }
-            return 0;
-
-            // Red/Brown Mushroom block
-            /*
-             * 0 -> -
-             * 1 -> north up west
-             * 2 -> north up
-             * 3 -> north up east
-             * 4 -> up west
-             * 5 -> up
-             * 6 -> up east
-             * 7 -> up west south
-             * 8 -> up south
-             * 9 -> up east south
-             * 10-> white mushroom stem, all horizontal sides
-             * 11-> -
-             * 12-> -
-             * 13-> -
-             * 14-> up down east south west north
-             * 15-> stem on all sides
-             */
+            return 14;
         });
         /*
          * Copied from old mappings :)
