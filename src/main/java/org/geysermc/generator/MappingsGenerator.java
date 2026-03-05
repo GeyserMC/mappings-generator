@@ -18,11 +18,14 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.PlayerEquipment;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
@@ -822,6 +825,15 @@ public class MappingsGenerator {
         List<String> armorTypes = List.of("helmet", "leggings", "chestplate", "boots");
         if (armorTypes.contains(armorOrToolType)) {
             object.addProperty("armor_type", armorOrToolType);
+        }
+
+        ItemAttributeModifiers modifiers = item.components().get(DataComponents.ATTRIBUTE_MODIFIERS);
+        Equippable equippable = item.components().get(DataComponents.EQUIPPABLE);
+        if (modifiers != null && equippable != null) {
+            int protectionValue = (int) modifiers.compute(Attributes.ARMOR, 0, equippable.slot());
+            if (protectionValue > 0) {
+                object.addProperty("protection_value", protectionValue);
+            }
         }
 
         if (item instanceof SpawnEggItem || item instanceof MinecartItem || item instanceof FireworkRocketItem || item instanceof BoatItem) {
