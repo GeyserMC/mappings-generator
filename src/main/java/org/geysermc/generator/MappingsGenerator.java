@@ -364,6 +364,10 @@ public class MappingsGenerator {
         } else if (identifier.startsWith("item.brush")) {
             String[] parts = identifier.split("\\.");
             identifier = "brush.suspicious_" + parts[3];
+        } else if (identifier.startsWith("item.spear.lunge")) {
+            // Java: item.spear.lunge_1; Bedrock: item.enchant.lunge1
+            char last = identifier.charAt(identifier.length() - 1);
+            identifier = "item.enchant.lunge" + last;
         } else if (identifier.startsWith("music.")) {
             // a lot of the bedrock names use "game" instead of overworld or nether
             String[] parts = identifier.split("\\.", 3);
