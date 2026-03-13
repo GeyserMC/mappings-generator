@@ -4,8 +4,8 @@ import java.nio.file.Files
 import java.nio.file.FileSystems
 import java.nio.file.StandardCopyOption
 
-val javaMinecraftVersion = "1.21.11"
-val bedrockResourcePackVersion = "1.21.130.3"
+val javaMinecraftVersion = "26.1-snapshot-1"
+val bedrockResourcePackVersion = "1.26.0.2"
 val resourcePack = file("bedrockresourcepack.zip")
 val bedrockSamples = file("bedrock-samples.zip")
 
@@ -20,35 +20,31 @@ plugins {
 }
 
 dependencies {
-    implementation("org.projectlombok", "lombok", "1.18.30")
+    implementation("org.projectlombok:lombok:1.18.44")
 
-    implementation("org.mockito", "mockito-core", "3.+")
+    implementation("org.mockito:mockito-core:3.+")
 
-    implementation("org.cloudburstmc.protocol", "bedrock-codec", "3.0.0.Beta11-SNAPSHOT")
-    implementation("org.cloudburstmc.protocol", "bedrock-connection", "3.0.0.Beta11-SNAPSHOT")
+    implementation("org.cloudburstmc.protocol:bedrock-codec:3.0.0.Beta11-SNAPSHOT")
+    implementation("org.cloudburstmc.protocol:bedrock-connection:3.0.0.Beta11-SNAPSHOT")
 
-    implementation("org.cloudburstmc", "block-state-updater", "1.21.110-SNAPSHOT")
+    implementation("org.cloudburstmc:block-state-updater:1.21.110-SNAPSHOT")
 
-    implementation("org.apache.commons", "commons-text", "1.12.0")
+    implementation("org.apache.commons:commons-text:1.12.0")
 
-    annotationProcessor("org.projectlombok", "lombok", "1.18.30")
+    annotationProcessor("org.projectlombok:lombok:1.18.44")
 }
 
 configure<JavaPluginExtension> {
-    sourceCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
 }
+
+val main by sourceSets
 
 minecraft {
     // https://github.com/SpongePowered/Sponge/blob/3cb480a347a33a424797c0e8f36b91cd1437d21d/build.gradle.kts
     version(javaMinecraftVersion)
     platform(org.spongepowered.gradle.vanilla.repository.MinecraftPlatform.CLIENT)
-    project.sourceSets["main"].resources
-        .filter { it.name.endsWith(".accesswidener") }
-        .files
-        .forEach {
-            accessWideners(it)
-            parent?.minecraft?.accessWideners(it)
-        }
+    accessWideners(main.resources.filter { it.name.endsWith(".accesswidener") })
 }
 
 val samplesTask = tasks.register<DownloadFileTask>("downloadBedrockSamples") {

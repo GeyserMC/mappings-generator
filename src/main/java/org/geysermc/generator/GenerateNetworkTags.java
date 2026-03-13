@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 public class GenerateNetworkTags {
     private static final CompoundTag tags = new CompoundTag();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Util.initialize();
 
         PackRepository packRepository = ServerPacksSource.createVanillaTrustedRepository();
@@ -52,10 +52,10 @@ public class GenerateNetworkTags {
 
         RegistryAccess.Frozen worldgenAccess = initialRegistryAccess.getAccessForLoading(RegistryLayer.WORLDGEN);
         List<HolderLookup.RegistryLookup<?>> worldgenLookups = TagLoader.buildUpdatedLookups(worldgenAccess, pendingTags);
-        worldgenAccess = RegistryDataLoader.load(resourceManager, worldgenLookups, RegistryDataLoader.WORLDGEN_REGISTRIES);
+        worldgenAccess = RegistryDataLoader.load(resourceManager, worldgenLookups, RegistryDataLoader.WORLDGEN_REGISTRIES, net.minecraft.util.Util.backgroundExecutor()).get();
 
         List<HolderLookup.RegistryLookup<?>> worldgenRegistries = Stream.concat(worldgenLookups.stream(), worldgenAccess.listRegistries()).toList();
-        RegistryAccess.Frozen dimensionsAccess = RegistryDataLoader.load(resourceManager, worldgenRegistries, RegistryDataLoader.DIMENSION_REGISTRIES);
+        RegistryAccess.Frozen dimensionsAccess = RegistryDataLoader.load(resourceManager, worldgenRegistries, RegistryDataLoader.DIMENSION_REGISTRIES, net.minecraft.util.Util.backgroundExecutor()).get();
 
         HolderLookup.Provider worldgenLookupProvider = HolderLookup.Provider.create(worldgenRegistries.stream());
         WorldDimensions dimensions = WorldPresets.createNormalWorldDimensions(worldgenLookupProvider);

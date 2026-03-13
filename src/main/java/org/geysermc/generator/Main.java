@@ -13,7 +13,7 @@ public class Main {
         generator.generateBiomes();
         generator.generateMapColors();
         generator.generateParticles();
-        //generator.generateInteractionData();
+        generator.generateInteractionData();
         RecipeGenerator.generate();
         DataComponentGenerator.generate();
         UtilGenerator.generate();

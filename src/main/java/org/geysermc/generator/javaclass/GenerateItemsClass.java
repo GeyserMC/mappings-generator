@@ -69,7 +69,7 @@ public class GenerateItemsClass {
                 Equippable equippable = item.components().get(DataComponents.EQUIPPABLE);
                 assert equippable != null;
                 // Filter out llama swag
-                if (equippable.canBeEquippedBy(EntityType.PLAYER)) {
+                if (equippable.canBeEquippedBy(EntityType.PLAYER.builtInRegistryHolder())) {
                     if (equippable.assetId().isPresent()
                             && equippable.assetId().get().identifier().getPath().equals("leather")) {
                         clazz = "DyeableArmorItem";

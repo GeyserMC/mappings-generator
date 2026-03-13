@@ -20,7 +20,6 @@ import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.tags.TagLoader;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +28,7 @@ import java.util.Optional;
 public class GenerateNetworkCodec {
     private static final CompoundTag networkCodec = new CompoundTag();
 
-    public static void main(String[] args) throws URISyntaxException, IOException {
+    public static void main(String[] args) throws Exception {
         Util.initialize();
 
         PackRepository packRepository = ServerPacksSource.createVanillaTrustedRepository();
@@ -39,7 +38,7 @@ public class GenerateNetworkCodec {
         CloseableResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, packRepository.openAllSelected());
         List<Registry.PendingTags<?>> list = TagLoader.loadTagsForExistingRegistries(resourceManager, RegistryLayer.createRegistryAccess().getLayer(RegistryLayer.STATIC));
         RegistryAccess.Frozen worldGenAccess = RegistryLayer.createRegistryAccess().getAccessForLoading(RegistryLayer.WORLDGEN);
-        RegistryAccess.Frozen loaded = RegistryDataLoader.load(resourceManager, TagLoader.buildUpdatedLookups(worldGenAccess, list), RegistryDataLoader.WORLDGEN_REGISTRIES);
+        RegistryAccess.Frozen loaded = RegistryDataLoader.load(resourceManager, TagLoader.buildUpdatedLookups(worldGenAccess, list), RegistryDataLoader.WORLDGEN_REGISTRIES, net.minecraft.util.Util.backgroundExecutor()).get();
         LayeredRegistryAccess<RegistryLayer> registryAccess = RegistryLayer.createRegistryAccess().replaceFrom(RegistryLayer.WORLDGEN, loaded);
         DynamicOps<Tag> dynamicOps = registryAccess.compositeAccess().createSerializationContext(NbtOps.INSTANCE);
 
