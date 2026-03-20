@@ -9,6 +9,7 @@ public class Main {
         generator.generateItems();
         BlockGenerator.generate();
         CollisionGenerator.generate();
+        BlockShapeGenerator.generate();
         generator.generateSounds();
         generator.generateBiomes();
         generator.generateMapColors();
