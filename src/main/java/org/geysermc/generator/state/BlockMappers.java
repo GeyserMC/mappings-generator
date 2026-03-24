@@ -532,6 +532,11 @@ public final class BlockMappers {
             if (!(up || down || east || south || west || north)) {
                 return 0;
             }
+
+            if (up && east && south && west && north) {
+                return 14;
+            }
+
             // Deliberately ignoring up/down as there are no bedrock states with up=false/down=true
             if (north) {
                 if (west) {
