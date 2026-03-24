@@ -95,7 +95,7 @@ public final class GenerateBlocksClass {
                     }
                 }
 
-                String entityType = type.builtInRegistryHolder().getRegisteredName().toUpperCase();
+                String entityType = type.builtInRegistryHolder().key().identifier().getPath().toUpperCase();
                 constructor.addMethod("setBlockEntity", "BlockEntityType." + entityType);
             }
             if (defaultState.requiresCorrectToolForDrops()) {
