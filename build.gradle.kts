@@ -4,8 +4,8 @@ import java.nio.file.Files
 import java.nio.file.FileSystems
 import java.nio.file.StandardCopyOption
 
-val javaMinecraftVersion = "26.1-snapshot-1"
-val bedrockResourcePackVersion = "1.26.0.2"
+val javaMinecraftVersion = "26.1"
+val bedrockResourcePackVersion = "1.26.10.4"
 val resourcePack = file("bedrockresourcepack.zip")
 val bedrockSamples = file("bedrock-samples.zip")
 
@@ -24,8 +24,8 @@ dependencies {
 
     implementation("org.mockito:mockito-core:3.+")
 
-    implementation("org.cloudburstmc.protocol:bedrock-codec:3.0.0.Beta11-SNAPSHOT")
-    implementation("org.cloudburstmc.protocol:bedrock-connection:3.0.0.Beta11-SNAPSHOT")
+    implementation("org.cloudburstmc.protocol:bedrock-codec:3.0.0.Beta12-SNAPSHOT")
+    implementation("org.cloudburstmc.protocol:bedrock-connection:3.0.0.Beta12-SNAPSHOT")
 
     implementation("org.cloudburstmc:block-state-updater:1.21.110-SNAPSHOT")
 

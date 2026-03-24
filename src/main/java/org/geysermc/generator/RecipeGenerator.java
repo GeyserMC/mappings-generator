@@ -64,30 +64,31 @@ public final class RecipeGenerator {
 //        recipes.add(new MappedRecipes(fireworkTest.getSerializer(), fireworkRecipes));
 
         // Shulker boxes
-        final List<Item> allShulkerBoxes = BuiltInRegistries.ITEM
-                .stream()
-                .filter(item -> Block.byItem(item) instanceof ShulkerBoxBlock)
-                .toList();
-        for (DyeItem dyeItem : allDyes) {
-            final List<GeyserRecipe> shulkerRecipes = new ArrayList<>();
-            final TransmuteRecipe shulkerTest = new TransmuteRecipe(
-                    null,
-                    null,
-                    Ingredient.of(dyeItem),
-                    Ingredient.of(allShulkerBoxes.stream()),
-                    new TransmuteResult(ShulkerBoxBlock.getBlockByColor(dyeItem.getDyeColor()).asItem()));
-            for (Item item : allShulkerBoxes) {
-                validateAndAdd(shulkerRecipes, shulkerTest, item, dyeItem);
-            }
-            recipes.add(new MappedRecipes(shulkerTest.getSerializer(), shulkerRecipes));
-        }
+        // TODO: Fix this for 26.1
+//        final List<Item> allShulkerBoxes = BuiltInRegistries.ITEM
+//                .stream()
+//                .filter(item -> Block.byItem(item) instanceof ShulkerBoxBlock)
+//                .toList();
+//        for (DyeItem dyeItem : allDyes) {
+//            final List<GeyserRecipe> shulkerRecipes = new ArrayList<>();
+//            final TransmuteRecipe shulkerTest = new TransmuteRecipe(
+//                    null,
+//                    null,
+//                    Ingredient.of(dyeItem),
+//                    Ingredient.of(allShulkerBoxes.stream()),
+//                    new TransmuteResult(ShulkerBoxBlock.getBlockByColor(dyeItem.getDyeColor()).asItem()));
+//            for (Item item : allShulkerBoxes) {
+//                validateAndAdd(shulkerRecipes, shulkerTest, item, dyeItem);
+//            }
+//            recipes.add(new MappedRecipes(shulkerTest.getSerializer(), shulkerRecipes));
+//        }
 
         // Firework rockets
         // Suspicious stews
         // Leather armor
         // Tipped arrows
         final List<GeyserRecipe> tippedArrowRecipes = new ArrayList<>();
-        final TippedArrowRecipe tippedArrowTest = new TippedArrowRecipe(null);
+        final ImbueRecipe tippedArrowTest = new ImbueRecipe(null, null, Ingredient.of(Items.LINGERING_POTION), Ingredient.of(Items.ARROW), new ItemStackTemplate(Items.TIPPED_ARROW, 8));
         final ItemStack arrow = new ItemStack(Items.ARROW);
         BuiltInRegistries.POTION.forEach(potion -> {
             final ItemStack potionStack = PotionContents.createItemStack(Items.LINGERING_POTION, Holder.direct(potion));
@@ -124,11 +125,11 @@ public final class RecipeGenerator {
             return;
         }
 
-        final ItemStack result = recipe.assemble(craftingContainer, null);
+        final ItemStack result = recipe.assemble(craftingContainer);
         recipes.add(new GeyserRecipe(result, Arrays.stream(inputItems).map(ItemStack::new).toList()));
     }
 
-    private static void validateAndAddWithShape(final List<GeyserRecipe> recipes, CustomRecipe recipe, ItemStack... inputItems) {
+    private static void validateAndAddWithShape(final List<GeyserRecipe> recipes, ImbueRecipe recipe, ItemStack... inputItems) {
         var craftingContainer = createCraftingInput(List.of(inputItems));
         boolean matches = recipe.matches(craftingContainer, null);
         if (!matches) {
@@ -136,7 +137,7 @@ public final class RecipeGenerator {
             return;
         }
 
-        final ItemStack result = recipe.assemble(craftingContainer, null);
+        final ItemStack result = recipe.assemble(craftingContainer);
         recipes.add(new GeyserRecipe(result, Arrays.stream(inputItems).distinct().toList(), List.of(IntList.of(0, 0, 0), IntList.of(0, 1, 0), IntList.of(0, 0, 0))));
     }
 

@@ -379,22 +379,21 @@ public class BlockGenerator {
     public static String blockStateToString(BlockState blockState) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(BuiltInRegistries.BLOCK.getKey(blockState.getBlock()));
-        if (!blockState.getValues().isEmpty()) {
+        if (!blockState.isSingletonState()) {
             stringBuilder.append('[');
-            stringBuilder.append(blockState.getValues().entrySet().stream().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
+            stringBuilder.append(blockState.getValues().map(PROPERTY_MAP_PRINTER).collect(Collectors.joining(",")));
             stringBuilder.append(']');
         }
         return stringBuilder.toString();
     }
 
-    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_MAP_PRINTER = new Function<>() {
+    private static final Function<Property.Value<?>, String> PROPERTY_MAP_PRINTER = new Function<>() {
 
-        public String apply(Map.Entry<Property<?>, Comparable<?>> entry) {
+        public String apply(Property.Value<?> entry) {
             if (entry == null) {
                 return "<NULL>";
             } else {
-                Property<?> lv = entry.getKey();
-                return lv.getName() + "=" + this.nameValue(lv, entry.getValue());
+                return entry.toString();
             }
         }
 

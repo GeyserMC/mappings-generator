@@ -434,7 +434,7 @@ public final class BlockMappers {
         register(Blocks.TNT).map(TntBlock.UNSTABLE, "explode_bit");
         register(Blocks.REDSTONE_WIRE).map(BlockStateProperties.POWER, "redstone_signal");
         register(Blocks.WHEAT).map(CropBlock.AGE, "growth");
-        register(Blocks.FARMLAND).map(FarmBlock.MOISTURE, "moisturized_amount");
+        register(Blocks.FARMLAND).map(FarmlandBlock.MOISTURE, "moisturized_amount");
         register(Blocks.LADDER).mapFacingDirectionNorthTwo(LadderBlock.FACING);
         register(Blocks.LEVER)
             .transform("open_bit", state -> {

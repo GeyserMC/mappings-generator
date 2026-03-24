@@ -1,7 +1,6 @@
 package org.geysermc.generator;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -96,11 +95,6 @@ public class EmptyLevelReader implements LevelReader {
     @Override
     public EnvironmentAttributeReader environmentAttributes() {
         return null;
-    }
-
-    @Override
-    public float getShade(Direction direction, boolean b) {
-        return 0;
     }
 
     @Override
