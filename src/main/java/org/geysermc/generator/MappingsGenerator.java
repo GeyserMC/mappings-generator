@@ -122,8 +122,6 @@ public class MappingsGenerator {
                 ex.printStackTrace();
             }
 
-            BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build(Util.registryAccess).forEach(DataComponentInitializers.PendingComponents::apply);
-
             try {
                 Type listType = new TypeToken<List<PaletteItemEntry>>(){}.getType();
                 List<PaletteItemEntry> entries = GSON.fromJson(new FileReader(itemPalette), listType);

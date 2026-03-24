@@ -6,6 +6,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponentInitializers;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.server.Bootstrap;
@@ -37,6 +39,7 @@ public class Util {
         System.setOut(out);
 
         registryAccess = registryAccess();
+        BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build(registryAccess).forEach(DataComponentInitializers.PendingComponents::apply);
     }
 
     @SneakyThrows

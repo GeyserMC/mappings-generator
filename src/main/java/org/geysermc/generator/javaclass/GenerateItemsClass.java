@@ -20,7 +20,6 @@ public class GenerateItemsClass {
 
     public static void main(String[] args) {
         Util.initialize();
-        BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build(Util.registryAccess).forEach(DataComponentInitializers.PendingComponents::apply);
 
         Map<Item, String> classOverrides = new HashMap<>();
         classOverrides.put(Items.COMPASS, "CompassItem");
