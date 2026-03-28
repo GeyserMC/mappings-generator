@@ -16,3 +16,9 @@ Once the program is done running, files will be created containing mappings need
 ## Updating for future versions
 
 Update the `javaMinecraftVersion` variable in `build.gradle.kts` to your desired version.
+
+## Class generation for Geyser
+- GenerateBlocksClass: `org.geysermc.geyser.level.block.Blocks`
+- GenerateItemsClass: `org.geysermc.geyser.item.Items`
+- PropertyBridge: `org.geysermc.geyser.level.block.property.Properties`
+- GenerateTags: `org.geysermc.geyser.session.cache.tags` - `ItemTag`, `BlockTag`, `EnchantmentTag` and `DialogTag` classes

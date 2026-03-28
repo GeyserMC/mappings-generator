@@ -1,6 +1,7 @@
 package org.geysermc.generator.javaclass;
 
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.DialogTags;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -15,6 +16,7 @@ public final class GenerateTags {
         printTags("Tag<Block>", BlockTags.class);
         printTags("Tag<Item>", ItemTags.class);
         printTags("Tag<Enchantment>", EnchantmentTags.class);
+        printTags("Tag<Dialog>", DialogTags.class);
     }
 
     private static void printTags(String geyserName, Class<?> clazz) throws IllegalAccessException {
