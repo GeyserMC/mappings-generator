@@ -1,4 +1,4 @@
-package org.geysermc.generator;
+package org.geysermc.generator.mcpl;
 
 import net.minecraft.client.renderer.LevelEventHandler;
 import net.minecraft.world.level.block.LevelEvent;

@@ -12,6 +12,10 @@ public class FieldConstructor {
         builder.append(baseClass);
     }
 
+    public FieldConstructor(String baseClass, String genericType) {
+        builder.append(baseClass).append("<").append(genericType).append(">");
+    }
+
     public FieldConstructor declareFieldName(String name) {
         assert state == State.START;
         builder.append(" ").append(name.toUpperCase(Locale.ROOT)).append(" = register(new ");
@@ -38,6 +42,12 @@ public class FieldConstructor {
     public FieldConstructor addParameter(int parameter) {
         assert state == State.ADD_PARAMETERS;
         builder.append(parameter).append(", ");
+        return this;
+    }
+
+    public FieldConstructor addFinishingParameter(String parameter) {
+        assert state == State.ADD_PARAMETERS;
+        builder.append(parameter);
         return this;
     }
 

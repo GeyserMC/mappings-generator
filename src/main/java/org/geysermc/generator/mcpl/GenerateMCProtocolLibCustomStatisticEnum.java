@@ -1,10 +1,11 @@
-package org.geysermc.generator;
+package org.geysermc.generator.mcpl;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.StatFormatter;
 import net.minecraft.stats.Stats;
+import org.geysermc.generator.Util;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

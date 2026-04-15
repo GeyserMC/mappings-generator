@@ -1,8 +1,9 @@
-package org.geysermc.generator;
+package org.geysermc.generator.mcpl;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
+import org.geysermc.generator.Util;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

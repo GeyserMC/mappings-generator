@@ -1,4 +1,4 @@
-package org.geysermc.generator;
+package org.geysermc.generator.mcpl;
 
 import com.mojang.serialization.DynamicOps;
 import net.minecraft.core.LayeredRegistryAccess;
@@ -18,6 +18,7 @@ import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.CloseableResourceManager;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.tags.TagLoader;
+import org.geysermc.generator.Util;
 
 import java.io.IOException;
 import java.nio.file.Path;

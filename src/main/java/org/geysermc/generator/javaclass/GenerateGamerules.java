@@ -1,5 +1,6 @@
 package org.geysermc.generator.javaclass;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.locale.DeprecatedTranslationsInfo;
 import net.minecraft.world.level.gamerules.GameRule;
@@ -9,9 +10,11 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static org.geysermc.generator.javaclass.FieldConstructor.wrap;
+
 public class GenerateGamerules {
 
-    public static void main(String[] args) {
+    static void main() {
         Util.initialize();
 
         // TODO implement the deprecations parser in Geyser
@@ -27,21 +30,40 @@ public class GenerateGamerules {
                 translationString = reversed.get(translationString);
             }
 
-            StringBuilder builder = new StringBuilder();
-            builder.append(gameRule.getIdentifier().getPath().toUpperCase(Locale.ROOT));
-            builder.append("(\"");
-            builder.append(translationString);
-            builder.append("\", ");
-            builder.append(gameRule.defaultValue());
-            builder.append(")");
-
-            if (i == BuiltInRegistries.GAME_RULE.size() - 1) {
-                builder.append(";");
+            Object defaultValue = gameRule.defaultValue();
+            String classType, geyserType;
+            if (defaultValue instanceof Boolean) {
+                classType = "Boolean";
+                geyserType = "Bool";
+            } else if (defaultValue instanceof Integer) {
+                classType = "Integer";
+                geyserType = "Int";
             } else {
-                builder.append(",");
+                throw new RuntimeException("Unknown default value type: " + defaultValue.getClass());
             }
 
-            System.out.println(builder.toString());
+            FieldConstructor constructor = new FieldConstructor("GameRule", classType);
+            constructor.declareFieldName(gameRule.getIdentifier().getPath().toUpperCase(Locale.ROOT));
+
+            constructor.declareClassName("GameRule." + geyserType);
+            constructor.addParameter(wrap(gameRule.getDescriptionId()));
+            constructor.addParameter(wrap(translationString));
+
+            // also add min/max for integer gamerules
+            if (gameRule.argument() instanceof IntegerArgumentType integerArgumentType) {
+                constructor.addParameter(integerArgumentType.getMinimum());
+
+                int max = integerArgumentType.getMaximum();
+                if (max == Integer.MAX_VALUE) {
+                    constructor.addParameter("Integer.MAX_VALUE");
+                } else {
+                    constructor.addParameter(integerArgumentType.getMaximum());
+                }
+            }
+
+            constructor.addFinishingParameter(defaultValue.toString());
+            constructor.finish();
+            System.out.println(constructor);
         }
     }
 

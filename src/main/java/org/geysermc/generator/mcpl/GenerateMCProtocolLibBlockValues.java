@@ -1,8 +1,9 @@
-package org.geysermc.generator;
+package org.geysermc.generator.mcpl;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import org.geysermc.generator.Util;
 
 public class GenerateMCProtocolLibBlockValues {
 

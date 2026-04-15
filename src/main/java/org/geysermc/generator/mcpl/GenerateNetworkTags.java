@@ -1,4 +1,4 @@
-package org.geysermc.generator;
+package org.geysermc.generator.mcpl;
 
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -25,6 +25,7 @@ import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.tags.TagLoader;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import org.geysermc.generator.Util;
 
 import java.io.IOException;
 import java.nio.file.Path;
