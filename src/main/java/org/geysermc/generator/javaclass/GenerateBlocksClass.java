@@ -31,7 +31,6 @@ public final class GenerateBlocksClass {
         Map<Block, String> classOverrides = new HashMap<>();
         classOverrides.put(Blocks.PISTON, "PistonBlock");
         classOverrides.put(Blocks.STICKY_PISTON, "PistonBlock");
-        classOverrides.put(Blocks.WATER, "WaterBlock");
 
         List<Class<? extends Block>> mirroredClasses = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
                 FlowerPotBlock.class, FurnaceBlock.class, LecternBlock.class, MovingPistonBlock.class,
