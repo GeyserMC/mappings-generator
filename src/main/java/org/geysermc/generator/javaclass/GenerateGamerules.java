@@ -2,13 +2,10 @@ package org.geysermc.generator.javaclass;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.locale.DeprecatedTranslationsInfo;
 import net.minecraft.world.level.gamerules.GameRule;
 import org.geysermc.generator.Util;
 
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 import static org.geysermc.generator.javaclass.FieldConstructor.wrap;
 
@@ -17,18 +14,8 @@ public class GenerateGamerules {
     static void main() {
         Util.initialize();
 
-        // TODO implement the deprecations parser in Geyser
-        DeprecatedTranslationsInfo info = DeprecatedTranslationsInfo.loadFromDefaultResource();
-        Map<String, String> reversed = new HashMap<>();
-        info.renamed().forEach((key, value) -> reversed.put(value, key));
-
         for (int i = 0; i < BuiltInRegistries.GAME_RULE.size(); i++) {
             GameRule<?> gameRule = BuiltInRegistries.GAME_RULE.byId(i);
-
-            String translationString = gameRule.getDescriptionId();
-            if (reversed.containsKey(translationString)) {
-                translationString = reversed.get(translationString);
-            }
 
             Object defaultValue = gameRule.defaultValue();
             String classType, geyserType;
@@ -47,7 +34,6 @@ public class GenerateGamerules {
 
             constructor.declareClassName("GameRule." + geyserType);
             constructor.addParameter(wrap(gameRule.getDescriptionId()));
-            constructor.addParameter(wrap(translationString));
 
             // also add min/max for integer gamerules
             if (gameRule.argument() instanceof IntegerArgumentType integerArgumentType) {
