@@ -34,6 +34,7 @@ public class GenerateGamerules {
 
             constructor.declareClassName("GameRule." + geyserType);
             constructor.addParameter(wrap(BuiltInRegistries.GAME_RULE.getKey(gameRule).getPath()));
+            constructor.addParameter("GameRuleCategory." + gameRule.category().getDescriptionId().getPath().toUpperCase(Locale.ROOT));
 
             // also add min/max for integer gamerules
             if (gameRule.argument() instanceof IntegerArgumentType integerArgumentType) {
