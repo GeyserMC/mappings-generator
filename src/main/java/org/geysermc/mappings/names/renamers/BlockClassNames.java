@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FlowerPotBlock;
 import net.minecraft.world.level.block.FurnaceBlock;
 import net.minecraft.world.level.block.LecternBlock;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.block.SkullBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WallSkullBlock;
@@ -24,7 +25,7 @@ import java.util.Optional;
 public final class BlockClassNames {
     private static final List<Class<? extends Block>> MIRRORED_CLASSES = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
             FlowerPotBlock.class, FurnaceBlock.class, LecternBlock.class, MovingPistonBlock.class,
-            TrapDoorBlock.class, WallSkullBlock.class, ButtonBlock.class);
+            ShulkerBoxBlock.class, TrapDoorBlock.class, WallSkullBlock.class, ButtonBlock.class);
     public static final TypeRenamer<Block, String> INSTANCE = TypeRenamer.of(BlockClassNames::getClassName, builder -> builder
             .rename(Blocks.PISTON, "PistonBlock")
             .rename(Blocks.STICKY_PISTON, "PistonBlock"));
