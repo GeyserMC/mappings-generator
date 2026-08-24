@@ -1,5 +1,6 @@
 package org.geysermc.mappings.generator;
 
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
@@ -7,10 +8,12 @@ import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.BoatItem;
 import net.minecraft.world.item.FireworkRocketItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MinecartItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.FuelValues;
 import net.minecraft.world.level.block.state.BlockState;
 import org.geysermc.mappings.definitions.item.ItemEntry;
 import org.geysermc.mappings.definitions.item.ItemMappings;
@@ -22,10 +25,12 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public final class ItemMappingsGenerator extends MappingsGenerator<Map<Item, ItemEntry>> {
+    private final CompletableFuture<RegistryAccess> registries;
     private final CompletableFuture<BedrockSamples> bedrockSamples;
 
-    public ItemMappingsGenerator(PackOutput output, CompletableFuture<BedrockSamples> bedrockSamples) {
+    public ItemMappingsGenerator(PackOutput output, CompletableFuture<RegistryAccess> registries, CompletableFuture<BedrockSamples> bedrockSamples) {
         super(output, FileType.ITEM_MAPPINGS);
+        this.registries = registries;
         this.bedrockSamples = bedrockSamples;
     }
 
@@ -33,14 +38,16 @@ public final class ItemMappingsGenerator extends MappingsGenerator<Map<Item, Ite
     public CompletableFuture<?> run(CachedOutput cache) {
         return bedrockSamples
                 .thenCompose(samples -> samples.openData(data -> ItemMappings.read(this, data)))
-                .thenCompose(mappings -> {
-                    mappings.mapAllItems((key, item) -> getRemapItem(mappings, key, item, Block.byItem(item)));
+                .thenCombine(registries, (mappings, registryAccess) -> {
+                    FuelValues fuelValues = FuelValues.vanillaBurnTimes(registryAccess, FeatureFlags.VANILLA_SET);
+                    mappings.mapAllItems((key, item) -> getRemapItem(mappings, key, item, Block.byItem(item), fuelValues));
                     mappings.checkForDuplicates();
-                    return saveFile(cache, mappings.mappings());
-                });
+                    return mappings;
+                })
+                .thenCompose(mappings -> saveFile(cache, mappings.mappings()));
     }
 
-    private ItemEntry getRemapItem(ItemMappings mappings, Identifier javaIdentifier, Item item, Block block) {
+    private ItemEntry getRemapItem(ItemMappings mappings, Identifier javaIdentifier, Item item, Block block, FuelValues fuelValues) {
         // Ignore items that require experiments
         if (FeatureFlags.isExperimental(item.requiredFeatures())) {
             return ItemEntry.UNKNOWN;
@@ -72,7 +79,8 @@ public final class ItemMappingsGenerator extends MappingsGenerator<Map<Item, Ite
             entityPlacer = true;
         }
 
-        return new ItemEntry(bedrockIdentifier, bedrockData, isBlock, firstStateId, lastStateId, entityPlacer);
+        return new ItemEntry(bedrockIdentifier, bedrockData, isBlock, firstStateId, lastStateId, entityPlacer,
+                fuelValues.burnDuration(new ItemStack(item)));
     }
 
     @Override
