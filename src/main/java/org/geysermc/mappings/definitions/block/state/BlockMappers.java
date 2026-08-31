@@ -231,6 +231,14 @@ public final class BlockMappers {
                         case SOUTH -> 2;
                         case WEST -> 1;
                         default -> 0;
+                    })
+                .transform(StairBlock.SHAPE, "minecraft:corner", value ->
+                    switch (value) {
+                        case INNER_LEFT -> "inner_left";
+                        case INNER_RIGHT -> "inner_right";
+                        case OUTER_LEFT -> "outer_left";
+                        case OUTER_RIGHT -> "outer_right";
+                        default -> "none";
                     });
         register(AttachedStemBlock.class).transform(AttachedStemBlock.FACING, "facing_direction",
                 value -> switch (value) {

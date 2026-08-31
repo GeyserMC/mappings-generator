@@ -6,7 +6,7 @@ minecraft-java = "26.2"
 # Set this to the release tag at https://github.com/Mojang/bedrock-samples/releases
 minecraft-bedrock-tag = "1.26.30.5"
 # Set this to the respective commit at https://github.com/CloudburstMC/Data/
-minecraft-bedrock-data = "fb969c547236d87a17181941cd585a0eb18f7ceb"
+minecraft-bedrock-data = "a8a4341d7763d6eb8547cff3ca46b4153d60163d"
 
 # Check this at https://maven.fabricmc.net/net/fabricmc/fabric-loom
 fabric-loom = "1.17.16"
