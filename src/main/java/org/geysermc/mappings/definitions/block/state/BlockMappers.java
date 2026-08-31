@@ -683,7 +683,11 @@ public final class BlockMappers {
                 .addBedrockProperty("suspended_bit", true)
                 .map(TripWireBlock.ATTACHED, "attached_bit")
                 .map(TripWireBlock.DISARMED, "disarmed_bit")
-                .map(TripWireBlock.POWERED, "powered_bit");
+                .map(TripWireBlock.POWERED, "powered_bit")
+                .map(TripWireBlock.NORTH, "minecraft:connection_north")
+                .map(TripWireBlock.EAST, "minecraft:connection_east")
+                .map(TripWireBlock.SOUTH, "minecraft:connection_south")
+                .map(TripWireBlock.WEST, "minecraft:connection_west");
         register(CommandBlock.class)
                 .map(CommandBlock.CONDITIONAL, "conditional_bit")
                 .mapFacingDirectionNorthTwo(CommandBlock.FACING);
