@@ -112,6 +112,11 @@ public final class BlockMappers {
                 .mapCardinalDirection(FenceGateBlock.FACING)
                 .map(FenceGateBlock.IN_WALL, "in_wall_bit")
                 .map(FenceGateBlock.OPEN, "open_bit");
+        register(FenceBlock.class)
+                .map(FenceBlock.NORTH, "minecraft:connection_north")
+                .map(FenceBlock.EAST, "minecraft:connection_east")
+                .map(FenceBlock.SOUTH, "minecraft:connection_south")
+                .map(FenceBlock.WEST, "minecraft:connection_west");
 
         register(
                 Blocks.BLAST_FURNACE,
@@ -232,14 +237,12 @@ public final class BlockMappers {
                         case WEST -> 1;
                         default -> 0;
                     })
-                .transform(StairBlock.SHAPE, "minecraft:corner", value ->
-                    switch (value) {
-                        case INNER_LEFT -> "inner_left";
-                        case INNER_RIGHT -> "inner_right";
-                        case OUTER_LEFT -> "outer_left";
-                        case OUTER_RIGHT -> "outer_right";
-                        default -> "none";
-                    });
+                .transform(StairBlock.SHAPE, "minecraft:corner", value -> {
+                    if (value == StairsShape.STRAIGHT) {
+                        return "none";
+                    }
+                    return value.getSerializedName();
+                });
         register(AttachedStemBlock.class).transform(AttachedStemBlock.FACING, "facing_direction",
                 value -> switch (value) {
                     case NORTH -> 2;
