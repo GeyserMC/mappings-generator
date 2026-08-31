@@ -112,11 +112,13 @@ public final class BlockMappers {
                 .mapCardinalDirection(FenceGateBlock.FACING)
                 .map(FenceGateBlock.IN_WALL, "in_wall_bit")
                 .map(FenceGateBlock.OPEN, "open_bit");
-        register(FenceBlock.class)
-                .map(FenceBlock.NORTH, "minecraft:connection_north")
-                .map(FenceBlock.EAST, "minecraft:connection_east")
-                .map(FenceBlock.SOUTH, "minecraft:connection_south")
-                .map(FenceBlock.WEST, "minecraft:connection_west");
+
+        // Fence, glass panes, iron bars and copper bars
+        register(CrossCollisionBlock.class)
+                .map(CrossCollisionBlock.NORTH, "minecraft:connection_north")
+                .map(CrossCollisionBlock.EAST, "minecraft:connection_east")
+                .map(CrossCollisionBlock.SOUTH, "minecraft:connection_south")
+                .map(CrossCollisionBlock.WEST, "minecraft:connection_west");
 
         register(
                 Blocks.BLAST_FURNACE,
