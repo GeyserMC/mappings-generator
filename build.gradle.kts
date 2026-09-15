@@ -9,12 +9,16 @@ plugins {
 }
 
 group = "org.geysermc.mappings-generator"
-version = "2.0.0"
+version = "2.0.1"
 
 val targetJavaVersion = 25
 
+// Matches xx.xx.xx, discards preview info
+val humanBedrockVersionRegex = "\\d+\\.\\d+\\.\\d+".toRegex()
+
 val minecraftJavaVersion = libs.versions.minecraft.java
 val minecraftBedrockVersion = libs.versions.minecraft.bedrock.tag
+val minecraftBedrockHumanVersion = minecraftBedrockVersion.map { humanBedrockVersionRegex.find(it)?.value!! }
 
 // Have to do this to explicitly attach the Mockito Java agent: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
 val mockitoAgent = configurations.create("mockitoAgent")
@@ -111,6 +115,7 @@ tasks {
         inputs.property("minecraft_version", minecraftJavaVersion.get())
         inputs.property("loader_version", libs.versions.fabric.loader.get())
         inputs.property("bedrock_version", minecraftBedrockVersion.get())
+        inputs.property("human_bedrock_version", minecraftBedrockHumanVersion.get())
         inputs.property("bedrock_data_sha", libs.versions.minecraft.bedrock.data.get())
         filteringCharset = "UTF-8"
 
@@ -121,6 +126,7 @@ tasks {
                     "minecraft_version" to minecraftJavaVersion.get(),
                     "loader_version" to libs.versions.fabric.loader.get(),
                     "bedrock_version" to minecraftBedrockVersion.get(),
+                    "human_bedrock_version" to minecraftBedrockHumanVersion.get(),
                     "bedrock_data_sha" to libs.versions.minecraft.bedrock.data.get()
                 )
             )
@@ -170,12 +176,13 @@ tasks {
         doLast {
             val githubOutput = providers.environmentVariable("GITHUB_OUTPUT").map { file(it) }
             if (githubOutput.isPresent) {
+
                 // Hack: tags should always start with version, if it doesn't then the version was bumped, so reset build number
                 val buildNumber = providers.environmentVariable("LAST_RELEASE_TAG").map { if (it.startsWith(version.toString())) "auto" else "0" }.orElse("auto")
                 githubOutput.get().writeText(
                     "version=${version}\n" +
                     "java_version=${minecraftJavaVersion.get()}\n" +
-                    "bedrock_version=${minecraftBedrockVersion.get()}\n" +
+                    "bedrock_version=${minecraftBedrockHumanVersion.get()}\n" +
                     "full_file=${prepareFullRelease.get().archiveFile.get().asFile.absolutePath}\n" +
                     "min_file=${prepareMinRelease.get().archiveFile.get().asFile.absolutePath}\n" +
                     "build_number=${buildNumber.get()}\n"

@@ -27,7 +27,7 @@ GeyserMC does not relicense Minecraft, its data, or any other material owned by 
 
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
-        return saveFile(cache, BASE.formatted(SharedConstants.getCurrentVersion().name(), MappingsUtil.getBedrockVersion()));
+        return saveFile(cache, BASE.formatted(SharedConstants.getCurrentVersion().name(), MappingsUtil.getHumanBedrockVersion()));
     }
 
     @Override
