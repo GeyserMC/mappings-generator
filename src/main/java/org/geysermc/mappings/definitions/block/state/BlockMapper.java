@@ -140,9 +140,13 @@ public class BlockMapper {
     }
 
     public <T extends Comparable<T>> BlockMapper transform(Property<T> property, String bedrockName, Function<T, Object> function) {
+        return transform(property, _ -> bedrockName, function);
+    }
+
+    public <T extends Comparable<T>> BlockMapper transform(Property<T> property, Function<Block, String> bedrockName, Function<T, Object> propertyTransformer) {
         this.blockStateMappers.add((state, tag) -> {
-           Object value = function.apply(state.getValue(property));
-           addToTag(tag, bedrockName, value);
+            Object value = propertyTransformer.apply(state.getValue(property));
+            addToTag(tag, bedrockName.apply(state.getBlock()), value);
         });
         return this;
     }

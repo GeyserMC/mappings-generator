@@ -424,18 +424,32 @@ public final class BlockMappers {
                 .mapFacingDirectionNorthTwo(BlockStateProperties.FACING)
                 .map(BlockStateProperties.TRIGGERED, "triggered_bit");
 
-        register(BedBlock.class)
-                .transform(BedBlock.PART, "head_piece_bit", value -> switch (value) {
+        register(AbstractBedBlock.class)
+                .transform(AbstractBedBlock.PART, "head_piece_bit", value -> switch (value) {
                     case FOOT -> false;
                     case HEAD -> true;
                 })
-                .map(BedBlock.OCCUPIED, "occupied_bit")
-                .transform(BedBlock.FACING, "direction", direction -> switch (direction) {
-                    case SOUTH -> 0;
-                    case WEST -> 1;
-                    case NORTH -> 2;
-                    case EAST -> 3;
-                    default -> throw new IllegalStateException("Unexpected value: " + direction);
+                .map(AbstractBedBlock.OCCUPIED, "occupied_bit")
+                // Thanks Mojang
+                .addMapper((state, tag) -> {
+                    Direction facing = state.getValue(AbstractBedBlock.FACING);
+                    String bedrockName;
+                    Object transformed;
+
+                    if (state.getBlock() instanceof BedBlock) {
+                        bedrockName = "direction";
+                        transformed = switch (facing) {
+                            case SOUTH -> 0;
+                            case WEST -> 1;
+                            case NORTH -> 2;
+                            case EAST -> 3;
+                            default -> throw new IllegalStateException("Unexpected value: " + facing);
+                        };
+                    } else {
+                        bedrockName = "minecraft:cardinal_direction";
+                        transformed = facing.getSerializedName();
+                    }
+                    addToTag(tag, bedrockName, transformed);
                 });
         register(Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD, Blocks.END_ROD)
                 .mapFacingDirectionNorthThree(BlockStateProperties.FACING);
@@ -920,5 +934,8 @@ public final class BlockMappers {
                 });
         register(CopperGolemStatueBlock.class).mapCardinalDirection(CopperGolemStatueBlock.FACING);
         register(Blocks.POTENT_SULFUR).directMap(PotentSulfurBlock.STATE);
+        register(Blocks.SHELF_MUSHROOM)
+                .mapCardinalDirection(ShelfMushroomBlock.FACING)
+                .map(ShelfMushroomBlock.AGE, "growth");
     }
 }

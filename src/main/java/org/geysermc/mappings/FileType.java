@@ -91,7 +91,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<Map<Item, ItemEntry>> ITEM_MAPPINGS = jsonMappings("items", Codec.unboundedMap(BuiltInRegistries.ITEM.byNameCodec(), ItemEntry.CODEC));
     public static final FileType<Map<String, ParticleMapping>> PARTICLE_MAPPINGS = jsonMappings("particles", Codec.unboundedMap(Codec.STRING, ParticleMapping.CODEC));
     public static final FileType<String> README = text("mappings/README.md", Codec.STRING, true); // An edge case
-    public static final FileType<List<List<TypedResolvableDataComponent>>> RESOLVABLE_ITEM_DATA_COMPONENTS = jsonMappings("resolvable_item_data_components", TypedResolvableDataComponent.CODEC.listOf().listOf());
+    public static final FileType<List<List<TypedResolvableDataComponent>>> RESOLVABLE_ITEM_DATA_COMPONENTS = jsonMappings("resolvable_item_data_components", TypedResolvableDataComponent.CODEC.listOf().listOf().fieldOf("value").codec());
     public static final FileType<Map<SoundEvent, SoundMapping>> SOUND_MAPPINGS = jsonMappings("sounds", Codec.unboundedMap(MappingsCodecs.TRIMMED_SOUND_EVENT_CODEC, SoundMapping.CODEC));
     public static final FileType<UtilMappings> UTIL_MAPPINGS = jsonMappings("util", UtilMappings.CODEC);
 
