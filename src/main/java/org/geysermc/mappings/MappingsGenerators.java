@@ -93,7 +93,7 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
                 .withFactory(InteractionsGenerator::new)
                 .withSamplesFactory(ItemComponentsGenerator::new)
                 .withRegistryFactory(ItemDataComponentGenerator::new)
-                .withRegistryAndSamplesFactory(ItemMappingsGenerator::new)
+                .withSamplesFactory(ItemMappingsGenerator::new)
                 .withSamplesFactory(ParticleMappingsGenerator::new)
                 .withFactory(ReadMeGenerator::new)
                 .withRegistryFactory(ResolvableItemDataComponentsGenerator::new)

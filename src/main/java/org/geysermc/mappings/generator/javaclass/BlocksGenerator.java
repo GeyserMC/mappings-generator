@@ -102,7 +102,7 @@ public final class BlocksGenerator extends MappingsGenerator<String> {
                     constructor.addMethod("destroyTime", destroyTime);
                 }
                 PushReaction pushReaction = defaultState.getPistonPushReaction();
-                if (pushReaction != PushReaction.NORMAL) {
+                if (pushReaction != PushReaction.PUSH_PULL) {
                     constructor.addMethod("pushReaction", "PistonBehavior." + pushReaction);
                 }
 
