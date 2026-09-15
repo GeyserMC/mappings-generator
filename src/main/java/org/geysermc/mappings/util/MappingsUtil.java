@@ -3,6 +3,7 @@ package org.geysermc.mappings.util;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JavaOps;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.data.models.blockstates.PropertyValueList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -119,18 +120,23 @@ public final class MappingsUtil {
         return identifier + "[" + blockStatePropertiesToString(state) + "]";
     }
 
+    private static ModContainer getModContainer() {
+        return FabricLoader.getInstance().getModContainer(MappingsGenerators.MOD_ID).orElseThrow();
+    }
+
     /// Gets the `geyser:bedrock_version` field from the FMJ
     public static String getBedrockVersion() {
-        return FabricLoader.getInstance().getModContainer(MappingsGenerators.MOD_ID)
-                .map(container -> container.getMetadata().getCustomValue("geyser:bedrock_version").getAsString())
-                .orElseThrow();
+        return getModContainer().getMetadata().getCustomValue("geyser:bedrock_version").getAsString();
+    }
+
+    /// Gets the `geyser:human_bedrock_version` field from the FMJ
+    public static String getHumanBedrockVersion() {
+        return getModContainer().getMetadata().getCustomValue("geyser:human_bedrock_version").getAsString();
     }
 
     /// Gets the `geyser:bedrock_data_sha` field from the FMJ
     public static String getBedrockDataSha() {
-        return FabricLoader.getInstance().getModContainer(MappingsGenerators.MOD_ID)
-                .map(container -> container.getMetadata().getCustomValue("geyser:bedrock_data_sha").getAsString())
-                .orElseThrow();
+        return getModContainer().getMetadata().getCustomValue("geyser:bedrock_data_sha").getAsString();
     }
 
     // thank you rainbow

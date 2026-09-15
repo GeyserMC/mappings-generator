@@ -113,6 +113,13 @@ public final class BlockMappers {
                 .map(FenceGateBlock.IN_WALL, "in_wall_bit")
                 .map(FenceGateBlock.OPEN, "open_bit");
 
+        // Fence, glass panes, iron bars and copper bars
+        register(CrossCollisionBlock.class)
+                .map(CrossCollisionBlock.NORTH, "minecraft:connection_north")
+                .map(CrossCollisionBlock.EAST, "minecraft:connection_east")
+                .map(CrossCollisionBlock.SOUTH, "minecraft:connection_south")
+                .map(CrossCollisionBlock.WEST, "minecraft:connection_west");
+
         register(
                 Blocks.BLAST_FURNACE,
                 Blocks.FURNACE,
@@ -231,7 +238,13 @@ public final class BlockMappers {
                         case SOUTH -> 2;
                         case WEST -> 1;
                         default -> 0;
-                    });
+                    })
+                .transform(StairBlock.SHAPE, "minecraft:corner", value -> {
+                    if (value == StairsShape.STRAIGHT) {
+                        return "none";
+                    }
+                    return value.getSerializedName();
+                });
         register(AttachedStemBlock.class).transform(AttachedStemBlock.FACING, "facing_direction",
                 value -> switch (value) {
                     case NORTH -> 2;
@@ -670,7 +683,11 @@ public final class BlockMappers {
                 .addBedrockProperty("suspended_bit", true)
                 .map(TripWireBlock.ATTACHED, "attached_bit")
                 .map(TripWireBlock.DISARMED, "disarmed_bit")
-                .map(TripWireBlock.POWERED, "powered_bit");
+                .map(TripWireBlock.POWERED, "powered_bit")
+                .map(TripWireBlock.NORTH, "minecraft:connection_north")
+                .map(TripWireBlock.EAST, "minecraft:connection_east")
+                .map(TripWireBlock.SOUTH, "minecraft:connection_south")
+                .map(TripWireBlock.WEST, "minecraft:connection_west");
         register(CommandBlock.class)
                 .map(CommandBlock.CONDITIONAL, "conditional_bit")
                 .mapFacingDirectionNorthTwo(CommandBlock.FACING);
