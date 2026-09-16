@@ -30,8 +30,9 @@ public record TypedResolvableDataComponent(DataComponentType<?> type, Resolvable
             ResolvableDataComponentType.ofHolderSet(DataComponents.DAMAGE_RESISTANT, DamageResistant::types),
             ResolvableDataComponentType.ofHolder(DataComponents.INSTRUMENT, InstrumentComponent::instrument, true),
             ResolvableDataComponentType.ofHolder(DataComponents.JUKEBOX_PLAYABLE, JukeboxPlayable::song, true),
-            // Manually adding these 2: they are not detected automatically, because they use .cacheEncoding, which wraps their codec and makes it unable to detect
+            // Manually adding these 3: they are not detected automatically, because they use .cacheEncoding, which wraps their codec and makes it unable to detect
             // (until we have mixins)
+            ResolvableDataComponentType.ofHolder(DataComponents.BLOCK_TRANSFORMER),
             ResolvableDataComponentType.ofHolder(DataComponents.PROVIDES_TRIM_MATERIAL),
             ResolvableDataComponentType.ofHolderSet(DataComponents.PROVIDES_BANNER_PATTERNS)
     );
