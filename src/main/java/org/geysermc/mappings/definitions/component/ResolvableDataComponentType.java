@@ -13,7 +13,8 @@ import java.util.function.Function;
 public record ResolvableDataComponentType<T>(DataComponentType<T> type, Function<T, Optional<ResolvableDataComponent>> dataGetter) {
     // Components which do not allow direct serialisation over network and instead are only ever encoded using network IDs
     // Can't automatically detect this until we have mixins
-    private static final List<DataComponentType<?>> WALL_OF_SHAME = List.of(DataComponents.CHICKEN_VARIANT, DataComponents.DAMAGE_TYPE);
+    private static final List<DataComponentType<?>> WALL_OF_SHAME = List.of(DataComponents.CHICKEN_VARIANT, DataComponents.DAMAGE_TYPE,
+            DataComponents.BLOCK_TRANSFORMER, DataComponents.PROVIDES_POTTERY_PATTERN);
 
     public static <T, R extends ResolvableDataComponent> ResolvableDataComponentType<T> of(DataComponentType<T> type, Function<T, R> dataGetter) {
         return new ResolvableDataComponentType<>(type, dataGetter.andThen(Optional::of));

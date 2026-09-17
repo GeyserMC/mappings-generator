@@ -9,6 +9,7 @@ import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import org.geysermc.mappings.generator.BiomeMappingsGenerator;
 import org.geysermc.mappings.generator.BlockMappingsGenerator;
+import org.geysermc.mappings.generator.PotPatternMappingsGenerator;
 import org.geysermc.mappings.generator.ReadMeGenerator;
 import org.geysermc.mappings.generator.shape.BlockShapeMappingsGenerator;
 import org.geysermc.mappings.generator.shape.CollisionShapeMappingsGenerator;
@@ -90,10 +91,11 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
                 .withSamplesFactory(BlockMappingsGenerator::new)
                 .withFactory(BlockShapeMappingsGenerator::new)
                 .withFactory(CollisionShapeMappingsGenerator::new)
+                .withRegistryFactory(PotPatternMappingsGenerator::new)
                 .withFactory(InteractionsGenerator::new)
                 .withSamplesFactory(ItemComponentsGenerator::new)
                 .withRegistryFactory(ItemDataComponentGenerator::new)
-                .withRegistryAndSamplesFactory(ItemMappingsGenerator::new)
+                .withSamplesFactory(ItemMappingsGenerator::new)
                 .withSamplesFactory(ParticleMappingsGenerator::new)
                 .withFactory(ReadMeGenerator::new)
                 .withRegistryFactory(ResolvableItemDataComponentsGenerator::new)

@@ -9,6 +9,7 @@ import net.minecraft.world.item.BoatItem;
 import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.equipment.EquipmentAssets;
@@ -23,14 +24,13 @@ import java.util.Optional;
 
 public final class ItemClassNames {
     private static final List<Class<? extends Item>> MIRRORED_CLASSES = List.of(DyeItem.class, SpawnEggItem.class,
-            PotionItem.class, BannerItem.class, BoatItem.class);
+            PotionItem.class, BannerItem.class, BoatItem.class, MapItem.class);
     public static final TypeRenamer<Item, String> INSTANCE = TypeRenamer.of(ItemClassNames::getClassName, builder -> builder
             .rename(Items.COMPASS, "CompassItem")
             .rename(Items.GOAT_HORN, "GoatHornItem")
             .rename(Items.TIPPED_ARROW, "TippedArrowItem")
             .rename(Items.ARROW, "ArrowItem")
             .rename(Items.MAP, "MapItem")
-            .rename(Items.FILLED_MAP, "FilledMapItem")
             .rename(Items.SHIELD, "ShieldItem")
             .rename(Items.FISHING_ROD, "FishingRodItem")
             .rename(Items.ENCHANTED_BOOK, "EnchantedBookItem")
