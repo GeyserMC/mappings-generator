@@ -30,6 +30,7 @@ public final class ItemClassNames {
             .rename(Items.GOAT_HORN, "GoatHornItem")
             .rename(Items.TIPPED_ARROW, "TippedArrowItem")
             .rename(Items.ARROW, "ArrowItem")
+            .rename(Items.MAP, "MapItem")
             .rename(Items.SHIELD, "ShieldItem")
             .rename(Items.FISHING_ROD, "FishingRodItem")
             .rename(Items.ENCHANTED_BOOK, "EnchantedBookItem")
