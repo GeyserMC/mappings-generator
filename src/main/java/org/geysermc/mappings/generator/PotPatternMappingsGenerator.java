@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class PotPatternMappingsGenerator extends MappingsGenerator<Map<Holder<DecoratedPotPattern>, Identifier>> {
+public class PotPatternMappingsGenerator extends MappingsGenerator<Map<Identifier, Identifier>> {
     private final CompletableFuture<RegistryAccess> registries;
 
     public PotPatternMappingsGenerator(PackOutput output, CompletableFuture<RegistryAccess> registries) {
@@ -33,7 +33,7 @@ public class PotPatternMappingsGenerator extends MappingsGenerator<Map<Holder<De
                     if (pattern == null) {
                         return null;
                     }
-                    return Pair.of(pattern, Renamers.ITEMS.forType(item).apply(BuiltInRegistries.ITEM.getKey(item)));
+                    return Pair.of(pattern.value().assetId(), Renamers.ITEMS.forType(item).apply(BuiltInRegistries.ITEM.getKey(item)));
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond))));

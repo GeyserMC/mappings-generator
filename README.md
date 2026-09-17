@@ -124,6 +124,7 @@ The generator generates the following data:
     - `blocks.nbt` (and `blocks_debug.json`): a map from Minecraft Java block state to its respective Bedrock block state.
     - `block_shapes.nbt`: describing the shapes of all of Minecraft Java's block states.
     - `collisions.nbt`: describing the shapes of all of Minecraft Java's block state collision boxes.
+    - `decorated_pot_patterns.json`: a map from (vanilla) Minecraft Java decorated pot pattern (asset ID) to its respective Bedrock item ID.
     - `interactions.json`: describing how interactions with a Minecraft Java block state may be processed.
     - `item_components.nbt`: Minecraft Bedrock item components, patched by the generator to possibly allow extra items to be put in the off-hand.
     - `additional_offhand_items.json`: an array of all Bedrock items that were patched by the generator to allow putting into the off-hand.

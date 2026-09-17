@@ -10,8 +10,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.entity.DecoratedPotPattern;
-import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
 import net.minecraft.world.level.block.state.BlockState;
 import org.geysermc.mappings.definitions.biome.BedrockBiome;
 import org.geysermc.mappings.definitions.block.BlockEntry;
@@ -87,7 +85,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<Map<BlockState, BlockEntry>> BLOCK_MAPPINGS = nbtMappings("blocks", BlockMappings.CODEC);
     public static final FileType<BlockShapeMappings> BLOCK_SHAPE_MAPPINGS = nbtMappings("block_shapes", BlockShapeMappings.CODEC);
     public static final FileType<BlockShapeMappings> COLLISION_MAPPINGS = nbtMappings("collisions", BlockShapeMappings.CODEC);
-    public static final FileType<Map<Holder<DecoratedPotPattern>, Identifier>> DECORATED_POT_PATTERNS = jsonMappings("decorated_pot_patterns", Codec.unboundedMap(DecoratedPotPatterns.CODEC, Identifier.CODEC));
+    public static final FileType<Map<Identifier, Identifier>> DECORATED_POT_PATTERNS = jsonMappings("decorated_pot_patterns", Codec.unboundedMap(Identifier.CODEC, Identifier.CODEC));
     public static final FileType<BlockInteractionData> INTERACTION_MAPPINGS = jsonMappings("interactions", BlockInteractionData.CODEC);
     public static final FileType<Map<Identifier, CompoundTag>> ITEM_COMPONENTS = nbtMappings("item_components", ItemComponents.COMPONENTS_CODEC);
     public static final FileType<List<ItemDataComponents>> ITEM_DATA_COMPONENTS = jsonMappings("item_data_components", ItemDataComponents.CODEC.listOf());
