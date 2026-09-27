@@ -87,7 +87,7 @@ public final class ItemNames {
 
         if (bedrock.endsWith("banner")) { // Don't include banner patterns
             bedrock = "banner";
-        } else if (bedrock.endsWith("bed")) {
+        } else if (bedrock.endsWith("bed") && !bedrock.equals("straw_bed")) {
             bedrock = "bed";
         }
 

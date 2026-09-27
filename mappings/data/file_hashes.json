@@ -21,16 +21,16 @@
     "mappings/interactions.json": -1772060972,
     "mappings/item_components.nbt": -1501985338,
     "mappings/item_data_components.json": 1738628359,
-    "mappings/items.json": -622293516,
+    "mappings/items.json": -51724044,
     "mappings/particles.json": 2021393077,
     "mappings/resolvable_item_data_components.json": 614380895,
     "mappings/sounds.json": -1241738642,
     "mappings/util.json": 261276379,
-    "mcpl/data/networkCodec.nbt": -1808762841,
-    "mcpl/data/networkTags.nbt": 207887737,
-    "mcpl/javaclass/BuiltinSound.java": -483691470,
-    "mcpl/javaclass/ClientboundBlockEventPacket.java": -1210646689,
-    "mcpl/javaclass/CustomStatistic.java": -23239455,
-    "mcpl/javaclass/LevelEventType.java": 561633093
+    "mcpl/data/networkCodec.nbt": -350869070,
+    "mcpl/data/networkTags.nbt": 1666866777,
+    "mcpl/javaclass/BuiltinSound.java": -275094392,
+    "mcpl/javaclass/ClientboundBlockEventPacket.java": 59353490,
+    "mcpl/javaclass/CustomStatistic.java": 173411750,
+    "mcpl/javaclass/LevelEventType.java": 1124580471
   }
 }
