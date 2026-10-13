@@ -106,6 +106,7 @@ The generator generates the following data:
     - `ClientboundBlockEventPacket.java`, a list of constants used for identifying Minecraft Java's block events.
     - `CustomStatistic.java`, an enum containing all of Minecraft Java's custom statistics.
     - `LevelEventType.java`, an enum containing all of Minecraft Java's level events.
+    - `MapIconType.java`, an enum containing all of Minecraft Java's map icon types.
 - Data-driven registry data used in MCPL:
     - `networkCodec.nbt`, containing registry data for all of Minecraft Java's network-synced registries.
     - `networkTags.nbt`, containing vanilla registry tags for all of Minecraft Java's registries.
