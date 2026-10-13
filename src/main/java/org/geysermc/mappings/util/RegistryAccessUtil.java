@@ -35,9 +35,9 @@ public final class RegistryAccessUtil {
                     LayeredRegistryAccess<RegistryLayer> initialRegistryAccess = RegistryLayer.createRegistryAccess();
                     List<Registry.PendingTags<?>> pendingTags = TagLoader.loadTagsForExistingRegistries(resourceManager, initialRegistryAccess.getLayer(RegistryLayer.STATIC));
 
-                    RegistryAccess.Frozen worldgenAccess = initialRegistryAccess.getAccessForLoading(RegistryLayer.WORLDGEN);
+                    RegistryAccess.Frozen worldgenAccess = initialRegistryAccess.getAccessForLoading(RegistryLayer.WORLD);
                     List<HolderLookup.RegistryLookup<?>> worldgenLookups = TagLoader.buildUpdatedLookups(worldgenAccess, pendingTags);
-                    return RegistryDataLoader.load(resourceManager, worldgenLookups, RegistryDataLoader.WORLDGEN_REGISTRIES, Util.backgroundExecutor())
+                    return RegistryDataLoader.load(resourceManager, worldgenLookups, RegistryDataLoader.WORLD_REGISTRIES, Util.backgroundExecutor())
                             .thenCompose(loadedWorldgenRegistries -> {
                                 List<HolderLookup.RegistryLookup<?>> worldgenRegistries = Stream.concat(worldgenLookups.stream(), loadedWorldgenRegistries.listRegistries()).toList();
                                 return RegistryDataLoader.load(resourceManager, worldgenRegistries, RegistryDataLoader.DIMENSION_REGISTRIES, Util.backgroundExecutor())
@@ -47,7 +47,7 @@ public final class RegistryAccessUtil {
                                             HolderLookup.Provider worldgenLookupProvider = HolderLookup.Provider.create(worldgenRegistries.stream());
                                             WorldDimensions dimensions = WorldPresets.createNormalWorldDimensions(worldgenLookupProvider);
                                             WorldDimensions.Complete complete = dimensions.bake(dimensionRegistries.lookupOrThrow(Registries.LEVEL_STEM));
-                                            LayeredRegistryAccess<RegistryLayer> registryAccess = initialRegistryAccess.replaceFrom(RegistryLayer.WORLDGEN,
+                                            LayeredRegistryAccess<RegistryLayer> registryAccess = initialRegistryAccess.replaceFrom(RegistryLayer.WORLD,
                                                     loadedWorldgenRegistries, complete.dimensionsRegistryAccess());
 
                                             pendingTags.forEach(Registry.PendingTags::apply);

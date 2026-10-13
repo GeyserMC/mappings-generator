@@ -6,9 +6,9 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.HolderSetCodec;
-import net.minecraft.resources.RegistryFileCodec;
-import net.minecraft.resources.RegistryFixedCodec;
+import net.minecraft.core.registries.codec.HolderSetCodec;
+import net.minecraft.core.registries.codec.RegistryFileCodec;
+import net.minecraft.core.registries.codec.RegistryFixedCodec;
 import net.minecraft.world.item.JukeboxPlayable;
 import net.minecraft.world.item.component.DamageResistant;
 import net.minecraft.world.item.component.InstrumentComponent;
@@ -30,8 +30,9 @@ public record TypedResolvableDataComponent(DataComponentType<?> type, Resolvable
             ResolvableDataComponentType.ofHolderSet(DataComponents.DAMAGE_RESISTANT, DamageResistant::types),
             ResolvableDataComponentType.ofHolder(DataComponents.INSTRUMENT, InstrumentComponent::instrument, true),
             ResolvableDataComponentType.ofHolder(DataComponents.JUKEBOX_PLAYABLE, JukeboxPlayable::song, true),
-            // Manually adding these 2: they are not detected automatically, because they use .cacheEncoding, which wraps their codec and makes it unable to detect
+            // Manually adding these 3: they are not detected automatically, because they use .cacheEncoding, which wraps their codec and makes it unable to detect
             // (until we have mixins)
+            ResolvableDataComponentType.ofHolder(DataComponents.BLOCK_TRANSFORMER),
             ResolvableDataComponentType.ofHolder(DataComponents.PROVIDES_TRIM_MATERIAL),
             ResolvableDataComponentType.ofHolderSet(DataComponents.PROVIDES_BANNER_PATTERNS)
     );
