@@ -60,6 +60,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<String> MCPL_BUILTIN_SOUND = javaClass("BuiltinSound").parented("mcpl");
     public static final FileType<String> MCPL_CUSTOM_STATISTIC = javaClass("CustomStatistic").parented("mcpl");
     public static final FileType<String> MCPL_LEVEL_EVENT_TYPE = javaClass("LevelEventType").parented("mcpl");
+    public static final FileType<String> MCPL_MAP_ICON_TYPE = javaClass("MapIconType").parented("mcpl");
     public static final FileType<NetworkCodec> MCPL_NETWORK_CODEC = nbtData("networkCodec", NetworkCodec.CODEC).parented("mcpl");
     public static final FileType<NetworkTags> MCPL_NETWORK_TAGS = nbtData("networkTags", NetworkTags.CODEC).parented("mcpl");
 

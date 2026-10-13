@@ -11,6 +11,7 @@ import org.geysermc.mappings.generator.BiomeMappingsGenerator;
 import org.geysermc.mappings.generator.BlockMappingsGenerator;
 import org.geysermc.mappings.generator.PotPatternMappingsGenerator;
 import org.geysermc.mappings.generator.ReadMeGenerator;
+import org.geysermc.mappings.generator.mcpl.MapIconTypeGenerator;
 import org.geysermc.mappings.generator.shape.BlockShapeMappingsGenerator;
 import org.geysermc.mappings.generator.shape.CollisionShapeMappingsGenerator;
 import org.geysermc.mappings.generator.ItemDataComponentGenerator;
@@ -73,6 +74,7 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
                 .withFactory(BuiltinSoundGenerator::new)
                 .withFactory(CustomStatisticGenerator::new)
                 .withFactory(LevelEventTypeGenerator::new)
+                .withFactory(MapIconTypeGenerator::new)
                 .withRegistryFactory(NetworkCodecGenerator::new)
                 .withRegistryFactory(NetworkTagsGenerator::new));
 
