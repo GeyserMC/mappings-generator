@@ -12,7 +12,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DecoratedPotBlock;
@@ -42,8 +41,6 @@ public final class ItemClassNames {
             .rename(Items.FIREWORK_STAR, "FireworkStarItem")
             .rename(Items.PLAYER_HEAD, "PlayerHeadItem")
             .rename(Items.TROPICAL_FISH_BUCKET, "TropicalFishBucketItem")
-            .rename(Items.WOLF_ARMOR, "WolfArmorItem")
-            .rename(Items.LEATHER_HORSE_ARMOR, "DyeableArmorItem")
             .rename(Items.OMINOUS_BOTTLE, "OminousBottleItem")
             .rename(Items.LIGHT, "LightItem"));
 
@@ -63,11 +60,7 @@ public final class ItemClassNames {
             if (equippable != null && item != Items.ELYTRA) {
                 // Filter out llama swag
                 if (equippable.canBeEquippedBy(BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(EntityTypes.PLAYER))) {
-                    if (equippable.assetId().isPresent() && equippable.assetId().orElseThrow() == EquipmentAssets.LEATHER) {
-                        return "DyeableArmorItem";
-                    } else {
-                        return "ArmorItem";
-                    }
+                    return "ArmorItem";
                 }
             }
             
