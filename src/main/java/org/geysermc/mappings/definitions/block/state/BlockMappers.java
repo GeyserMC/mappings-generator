@@ -268,7 +268,12 @@ public final class BlockMappers {
             default -> throw new IllegalStateException("Unexpected value: " + value);
         });
         register(Blocks.TORCH, Blocks.REDSTONE_TORCH, Blocks.SOUL_TORCH, Blocks.COPPER_TORCH).addBedrockProperty("torch_facing_direction", "top");
-        register(Blocks.FIRE).directMap(FireBlock.AGE);
+        register(Blocks.FIRE).directMap(FireBlock.AGE)
+                .map(FireBlock.WEST, "minecraft:connection_west")
+                .map(FireBlock.SOUTH, "minecraft:connection_south")
+                .map(FireBlock.NORTH, "minecraft:connection_north")
+                .map(FireBlock.EAST, "minecraft:connection_east")
+                .map(FireBlock.UP, "minecraft:connection_up");
         register(Blocks.SOUL_FIRE).addBedrockProperty("age", 0);
         register(TrapDoorBlock.class)
                 .transform(TrapDoorBlock.FACING, "direction", value -> switch (value) {
@@ -459,7 +464,12 @@ public final class BlockMappers {
             case LOWER -> "double_bot";
         });
         register(Blocks.TNT).map(TntBlock.UNSTABLE, "explode_bit");
-        register(Blocks.REDSTONE_WIRE).map(BlockStateProperties.POWER, "redstone_signal");
+        register(Blocks.REDSTONE_WIRE)
+                .map(BlockStateProperties.POWER, "redstone_signal")
+                .map(RedstoneWireBlock.WEST, "redstone_west")
+                .map(RedstoneWireBlock.SOUTH, "redstone_south")
+                .map(RedstoneWireBlock.NORTH, "redstone_north")
+                .map(RedstoneWireBlock.EAST, "redstone_east");
         register(Blocks.WHEAT).map(CropBlock.AGE, "growth");
         register(Blocks.FARMLAND).map(FarmlandBlock.MOISTURE, "moisturized_amount");
         register(Blocks.LADDER).mapFacingDirectionNorthTwo(LadderBlock.FACING);
@@ -937,5 +947,12 @@ public final class BlockMappers {
         register(Blocks.SHELF_MUSHROOM)
                 .mapCardinalDirection(ShelfMushroomBlock.FACING)
                 .map(ShelfMushroomBlock.AGE, "growth");
+        register(Blocks.CHORUS_PLANT)
+                .map(ChorusPlantBlock.WEST, "minecraft:connection_west")
+                .map(ChorusPlantBlock.SOUTH, "minecraft:connection_south")
+                .map(ChorusPlantBlock.NORTH, "minecraft:connection_north")
+                .map(ChorusPlantBlock.EAST, "minecraft:connection_east")
+                .map(ChorusPlantBlock.UP, "minecraft:connection_up")
+                .map(ChorusPlantBlock.DOWN, "minecraft:connection_down");
     }
 }
