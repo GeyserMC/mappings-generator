@@ -10,16 +10,15 @@ import org.geysermc.mappings.names.TypeRenamer;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
-// block, block_marker, noxious_gas_cloud, geyser, dust, dust_color_transition, effect, falling_dust, firework, tinted_leaves, item,
-// vibration, trail, wax_on, wax_off, glow, scrape
-// level events: elder_guardian, pale_oak_leaves, poplar_leaves, sculk_charge, sculk_charge_pop, mob_growth, item_slime, item_cobweb, item_snowball, rain, smoke, white_smoke,
-// sneeze, squid_ink, witch, dripping_honey, dripping_obsidian_tear, falling_obsidian_tear, snowflake, glow_squid_ink, electric_spark,
-// vault_connection, block_crumble,
 public final class ParticleMappings {
-    // See Mojang's ParticleTypes class, we're following the same order - except for geyseropt particles,
-    // those are at the bottom (also in the same order)
-    // Also see the particles needing special handling in Geyser (noted in ParticleMappingsGenerator)
+    // From the top to the bottom:
+    // - Simple direct identifier to identifier mappings, the best kind
+    // - Cloudburst/ParticleType enum mappings, meh but still ocur frequently
+    // - Cloudburst/LevelEvent enum mappings, only a few
+    // - Built-in handling in Geyser, for special particles, only a few
+    // Also see Mojang's ParticleTypes class, we're following the same order
     public static final TypeRenamer<ParticleType<?>, Optional<ParticleMapping>> PARTICLES = TypeRenamer.ofOptional(builder -> builder
             // Simple identifier particle mappings (the best kind)
             .mapResult(ParticleMapping::ofIdentifier)
@@ -37,18 +36,17 @@ public final class ParticleMappings {
             .rename(ParticleTypes.CRIT, "critical_hit_emitter")
             .rename(ParticleTypes.DRAGON_BREATH, "dragon_breath_lingering")
             .rename(ParticleTypes.DRIPPING_LAVA, "lava_drip_particle")
-            .rename(ParticleTypes.FALLING_LAVA, "lava_drip_particle") // TODO is this right?
+            .rename(ParticleTypes.FALLING_LAVA, "lava_drip_particle")
             .rename(ParticleTypes.DRIPPING_WATER, "water_drip_particle")
             .rename(ParticleTypes.FALLING_WATER, "water_splash_particle")
             .rename(ParticleTypes.ENCHANT, "enchanting_table_particle")
             .rename(ParticleTypes.END_ROD, "endrod")
-            .rename(ParticleTypes.ENTITY_EFFECT, "evoker_spell") // TODO is this right?
             .rename(ParticleTypes.EXPLOSION_EMITTER, "huge_explosion_emitter")
             .rename(ParticleTypes.EXPLOSION, "large_explosion")
-            .rename(ParticleTypes.GUST, "breeze_wind_explosion_emitter")
+            .rename(ParticleTypes.GUST, "breeze_ground_particle")
             .rename(ParticleTypes.SMALL_GUST, "wind_charged_emitter")
-            .rename(ParticleTypes.GUST_EMITTER_LARGE, "wind_explosion_emitter")
-            .rename(ParticleTypes.GUST_EMITTER_SMALL, "breeze_wind_explosion_emitter")  // TODO ^ pretty sure these 2 are wrong way round
+            .rename(ParticleTypes.GUST_EMITTER_LARGE, "breeze_wind_explosion_emitter")
+            .rename(ParticleTypes.GUST_EMITTER_SMALL, "wind_explosion_emitter")
             .rename(ParticleTypes.SONIC_BOOM, "sonic_explosion")
             .rename(ParticleTypes.FISHING, "water_wake_particle")
             .rename(ParticleTypes.FLAME, "basic_flame_particle")
@@ -60,7 +58,6 @@ public final class ParticleMappings {
             .rename(ParticleTypes.HAPPY_VILLAGER, "villager_happy")
             .rename(ParticleTypes.COMPOSTER, "villager_happy")
             .rename(ParticleTypes.HEART, "heart_particle")
-            .rename(ParticleTypes.INSTANT_EFFECT, "mobspell_emitter") // TODO is this right?
             .rename(ParticleTypes.LARGE_SMOKE, "water_evaporation_actor_emitter")
             .rename(ParticleTypes.LAVA, "lava_particle")
             .rename(ParticleTypes.MYCELIUM, "mycelium_dust_particle")
@@ -70,13 +67,13 @@ public final class ParticleMappings {
             .rename(ParticleTypes.SPIT, "llama_spit_smoke")
             .rename(ParticleTypes.TOTEM_OF_UNDYING, "totem_particle")
             .rename(ParticleTypes.SPLASH, "water_splash_particle_manual")
-            .rename(ParticleTypes.BUBBLE_POP, "bubble_column_bubble") // TODO is this right?
+            .rename(ParticleTypes.BUBBLE_POP, "bubble_column_bubble")
             .rename(ParticleTypes.CURRENT_DOWN, "bubble_column_down_particle")
             .rename(ParticleTypes.BUBBLE_COLUMN_UP, "bubble_column_up_particle")
             .rename(ParticleTypes.DOLPHIN, "dolphin_move_particle")
             .rename(ParticleTypes.CAMPFIRE_COSY_SMOKE, "campfire_smoke_particle")
-            .rename(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, "campfire_tall_smoke_particle") // TODO test movement without level type
-            .rename(ParticleTypes.FALLING_HONEY, "honey_drip_particle") // TODO is this right?
+            .rename(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, "campfire_tall_smoke_particle")
+            .rename(ParticleTypes.FALLING_HONEY, "honey_drip_particle")
             .rename(ParticleTypes.FALLING_NECTAR, "nectar_drip_particle")
             .rename(ParticleTypes.FALLING_SPORE_BLOSSOM, "spore_blossom_shower_particle")
             .rename(ParticleTypes.SPORE_BLOSSOM_AIR, "spore_blossom_ambient_particle")
@@ -94,7 +91,7 @@ public final class ParticleMappings {
             .rename(ParticleTypes.DUST_PILLAR, "smash_ground_particle")
             .rename(ParticleTypes.OMINOUS_SPAWNING, "ominous_spawning_particle")
             .rename(ParticleTypes.RAID_OMEN, "raid_omen_ambient")
-            .rename(ParticleTypes.TRIAL_OMEN, "trial_omen_emitter") // TODO ^ should they both be emitter?
+            .rename(ParticleTypes.TRIAL_OMEN, "trial_omen_emitter")
             .rename(ParticleTypes.FIREFLY, "firefly_particle")
             .identical(ParticleTypes.SULFUR_CUBE_GOO)
 
@@ -146,5 +143,27 @@ public final class ParticleMappings {
             .rename(ParticleTypes.SCULK_CHARGE, LevelEvent.SCULK_CHARGE)
             .rename(ParticleTypes.SCULK_CHARGE_POP, LevelEvent.SCULK_CHARGE_POP)
             .rename(ParticleTypes.ITEM_COBWEB, LevelEvent.ANIMATION_SPAWN_COBWEB)
+
+            // Built-in mappings (handled in Geyser, hardcoded)
+            // Excuse the method names, they seem a bit odd, this is abusing the renamer stuff a little
+            .mapResult(Function.identity())
+            .withIdenticalNamer(_ -> ParticleMapping.builtIn())
+
+            .identical(ParticleTypes.BLOCK)
+            .identical(ParticleTypes.GEYSER)
+            .identical(ParticleTypes.DUST)
+            .identical(ParticleTypes.DUST_COLOR_TRANSITION)
+            .identical(ParticleTypes.EFFECT)
+            .identical(ParticleTypes.FALLING_DUST)
+            .identical(ParticleTypes.FIREWORK)
+            .identical(ParticleTypes.TINTED_LEAVES)
+            .identical(ParticleTypes.INSTANT_EFFECT)
+            .identical(ParticleTypes.ITEM)
+            .identical(ParticleTypes.VIBRATION)
+            .identical(ParticleTypes.TRAIL)
+            .identical(ParticleTypes.WAX_ON)
+            .identical(ParticleTypes.WAX_OFF)
+            .identical(ParticleTypes.GLOW)
+            .identical(ParticleTypes.SCRAPE)
     );
 }

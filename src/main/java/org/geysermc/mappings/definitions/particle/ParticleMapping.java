@@ -1,35 +1,87 @@
 package org.geysermc.mappings.definitions.particle;
 
-import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.resources.Identifier;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.cloudburstmc.protocol.bedrock.data.ParticleType;
 import org.geysermc.mappings.util.MappingsCodecs;
 
 import java.util.Optional;
+import java.util.Set;
 
-public record ParticleMapping(Either<Identifier, Either<ParticleType, LevelEvent>> bedrockMapping) {
-    private static final Codec<ParticleType> PARTICLE_TYPE_CODEC = MappingsCodecs.enumCodec(ParticleType::values, ParticleType::name);
-    private static final Codec<LevelEvent> LEVEL_EVENT_CODEC = MappingsCodecs.enumCodec(LevelEvent::values, LevelEvent::name);
+public interface ParticleMapping {
+    Codec<ParticleMapping> CODEC = MappingsCodecs.fuzzyCodec(Set.of(IdentifierMapping.MAP_CODEC, ParticleTypeMapping.MAP_CODEC,
+            LevelEventMapping.MAP_CODEC, BuiltInMapping.MAP_CODEC), ParticleMapping::codec).codec();
 
-    public static final Codec<ParticleMapping> CODEC = Codec.either(Identifier.CODEC.fieldOf("bedrock_id").codec(),
-                    Codec.either(PARTICLE_TYPE_CODEC.fieldOf("particle_type").codec(), LEVEL_EVENT_CODEC.fieldOf("level_event").codec()))
-            .xmap(ParticleMapping::new, ParticleMapping::bedrockMapping);
-
-    public static ParticleMapping ofIdentifier(String identifier) {
-        return new ParticleMapping(Either.left(Identifier.parse(identifier)));
+    static ParticleMapping ofIdentifier(String identifier) {
+        return new IdentifierMapping(Identifier.parse(identifier));
     }
 
-    public static ParticleMapping ofType(ParticleType type) {
-        return new ParticleMapping(Either.right(Either.left(type)));
+    static ParticleMapping ofType(ParticleType type) {
+        return new ParticleTypeMapping(type);
     }
 
-    public static ParticleMapping ofEvent(LevelEvent event) {
-        return new ParticleMapping(Either.right(Either.right(event)));
+    static ParticleMapping ofEvent(LevelEvent event) {
+        return new LevelEventMapping(event);
     }
 
-    public Optional<Identifier> identifier() {
-        return bedrockMapping.left();
+    static ParticleMapping builtIn() {
+        return BuiltInMapping.UNIT;
+    }
+
+    MapCodec<? extends ParticleMapping> codec();
+
+    default Optional<Identifier> identifier() {
+        return Optional.empty();
+    }
+
+    record IdentifierMapping(Identifier bedrockIdentifier) implements ParticleMapping {
+        private static final MapCodec<IdentifierMapping> MAP_CODEC = Identifier.CODEC
+                .xmap(IdentifierMapping::new, IdentifierMapping::bedrockIdentifier)
+                .fieldOf("bedrock_id");
+
+        @Override
+        public MapCodec<IdentifierMapping> codec() {
+            return MAP_CODEC;
+        }
+
+        @Override
+        public Optional<Identifier> identifier() {
+            return Optional.of(bedrockIdentifier);
+        }
+    }
+
+    record ParticleTypeMapping(ParticleType type) implements ParticleMapping {
+        private static final MapCodec<ParticleTypeMapping> MAP_CODEC = MappingsCodecs.enumCodec(ParticleType::values, ParticleType::name)
+                .xmap(ParticleTypeMapping::new, ParticleTypeMapping::type)
+                .fieldOf("particle_type");
+
+        @Override
+        public MapCodec<ParticleTypeMapping> codec() {
+            return MAP_CODEC;
+        }
+    }
+
+    record LevelEventMapping(LevelEvent event) implements ParticleMapping {
+        private static final MapCodec<LevelEventMapping> MAP_CODEC = MappingsCodecs.enumCodec(LevelEvent::values, LevelEvent::name)
+                .xmap(LevelEventMapping::new, LevelEventMapping::event)
+                .fieldOf("level_event");
+
+        @Override
+        public MapCodec<LevelEventMapping> codec() {
+            return MAP_CODEC;
+        }
+    }
+
+    enum BuiltInMapping implements ParticleMapping {
+        UNIT;
+
+        private static final MapCodec<BuiltInMapping> MAP_CODEC = MapCodec.unit(UNIT).fieldOf("built_in");
+
+        @Override
+        public MapCodec<BuiltInMapping> codec() {
+            return MAP_CODEC;
+        }
     }
 }

@@ -5,6 +5,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.MapEncoder;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -12,6 +14,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -41,6 +46,20 @@ public final class MappingsCodecs {
             }
             return null;
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> MapCodec<T> fuzzyCodec(Collection<MapCodec<? extends T>> codecs,
+                                             Function<T, ? extends MapEncoder<? extends T>> encoderGetter) {
+        // Can't use a mixin with invoker here, because invokers require the exact return type
+        try {
+            Class<?> codecClazz = Class.forName("net.minecraft.network.chat.ComponentSerialization$FuzzyCodec");
+            Constructor<?> constructor = codecClazz.getDeclaredConstructor(Collection.class, Function.class);
+            constructor.setAccessible(true);
+            return (MapCodec<T>) constructor.newInstance(codecs, encoderGetter);
+        } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private MappingsCodecs() {}

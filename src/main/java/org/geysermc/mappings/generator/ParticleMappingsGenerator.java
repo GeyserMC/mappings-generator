@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
@@ -21,11 +22,22 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public final class ParticleMappingsGenerator extends MappingsGenerator<Map<ParticleType<?>, ParticleMapping>> {
+    private static final Collection<ParticleType<?>> IGNORED_PARTICLES = Set.of(
+            // Impossible?
+            ParticleTypes.BLOCK_MARKER,
+            // These 2 are seemingly empty on Java
+            ParticleTypes.NOXIOUS_GAS_CLOUD,
+            ParticleTypes.ENTITY_EFFECT,
+            // Needs resourcepack?
+            ParticleTypes.LANDING_HONEY
+    );
     private static final Logger LOGGER = LogUtils.getLogger();
     private final CompletableFuture<BedrockSamples> bedrockSamples;
 
@@ -60,6 +72,10 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Parti
 
             // Then, loop over all particles, mapping them to their bedrock counterpart
             for (ParticleType<?> particle : BuiltInRegistries.PARTICLE_TYPE) {
+                if (IGNORED_PARTICLES.contains(particle)) {
+                    continue;
+                }
+
                 Identifier javaId = BuiltInRegistries.PARTICLE_TYPE.getKey(particle);
                 Renamers.PARTICLES.get(particle).ifPresentOrElse(mapping -> {
                     if (mapping.identifier().isPresent() && mapping.identifier().get().getNamespace().equals(Identifier.DEFAULT_NAMESPACE)
