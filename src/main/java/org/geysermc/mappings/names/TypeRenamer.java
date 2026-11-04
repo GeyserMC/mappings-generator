@@ -14,27 +14,15 @@ public interface TypeRenamer<T, R> extends InstanceRenamer<T, T, R> {
         return forType(type).apply(type);
     }
 
-    static <T, R> TypeRenamer<T, R> of(Function<T, R> fallback, Consumer<Aggregator<T, T, R>> builder) {
-        Builder<T, R> renamer = new Builder<>(fallback);
+    static <T, R> TypeRenamer<T, R> of(Function<T, R> fallback, Consumer<Aggregator<T, T, R, T, T, R>> builder) {
+        AbstractAggregator.TypeOnly<T, R> renamer = new AbstractAggregator.TypeOnly<>(fallback);
         builder.accept(renamer);
         return renamer.build();
     }
 
-    static <T, R> TypeRenamer<T, Optional<R>> ofOptional(Consumer<Aggregator<T, T, R>> builder) {
-        Builder<T, Optional<R>> renamer = new Builder<>(_ -> Optional.empty());
-        builder.accept(renamer.mapResult(Optional::of));
+    static <T, R> TypeRenamer<T, Optional<R>> ofOptional(Consumer<Aggregator<T, T, R, T, T, R>> builder) {
+        AbstractAggregator.TypeOnlyOptional<T, R> renamer = new AbstractAggregator.TypeOnlyOptional<>();
+        builder.accept(renamer);
         return renamer.build();
-    }
-
-    class Builder<T, R> extends InstanceRenamer.Builder<T, T, R> {
-
-        public Builder(Function<T, R> fallback) {
-            super((type, _) -> fallback.apply(type));
-        }
-
-        @Override
-        public TypeRenamer<T, R> build() {
-            return type -> renamers.getOrDefault(type, instance -> fallback.apply(type, instance));
-        }
     }
 }

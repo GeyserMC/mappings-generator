@@ -1,12 +1,10 @@
 package org.geysermc.mappings.names;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -50,7 +48,7 @@ public interface InstanceRenamer<T, I, R> {
     /// @param <I> the instance of the type {@link T} in-game, e.g. {@link BlockState}
     /// @param <R> the rename result, e.g. {@link String} or {@link Identifier}
     /// @return the created {@link InstanceRenamer}
-    static <T, I, R> InstanceRenamer<T, I, R> of(Function<I, R> fallback, Consumer<Aggregator<T, I, R>> builder) {
+    static <T, I, R> InstanceRenamer<T, I, R> of(Function<I, R> fallback, Consumer<Aggregator<T, I, R, T, I, R>> builder) {
         return of((_, instance) -> fallback.apply(instance), builder);
     }
 
@@ -67,15 +65,14 @@ public interface InstanceRenamer<T, I, R> {
     /// @param <I> the instance of the type {@link T} in-game, e.g. {@link BlockState}
     /// @param <R> the rename result, e.g. {@link String} or {@link Identifier}
     /// @return the created {@link InstanceRenamer}
-    static <T, I, R> InstanceRenamer<T, I, R> of(BiFunction<T, I, R> fallback, Consumer<Aggregator<T, I, R>> builder) {
-        Builder<T, I, R> renamer = new Builder<>(fallback);
+    static <T, I, R> InstanceRenamer<T, I, R> of(BiFunction<T, I, R> fallback, Consumer<Aggregator<T, I, R, T, I, R>> builder) {
+        AbstractAggregator.Builder<T, I, R> renamer = new AbstractAggregator.Builder<>(fallback);
         builder.accept(renamer);
         return renamer.build();
     }
 
     /// An {@link Aggregator} "aggregates", or collects, rename overrides for an {@link InstanceRenamer} or {@link TypeRenamer}.
-    @FunctionalInterface
-    interface Aggregator<T, I, R> {
+    interface Aggregator<T, I, R, BT, BI, BR> {
 
         /// Returns a new {@link Aggregator} which delegates back to this {@link Aggregator}, with its type {@link T} mapped to
         /// {@link M}, using the given `mapper` function.
@@ -88,27 +85,11 @@ public interface InstanceRenamer<T, I, R> {
         ///         .rename(Biomes.BADLANDS, "mesa") // Automatically turns Biomes.BADLANDS into Identifier["minecraft:badlands"]
         ///         .rename(Biomes.ERODED_BADLANDS, "mesa_bryce"));
         /// ```
-        default <M> Aggregator<M, I, R> mapType(Function<M, T> mapper) {
-            return new Aggregator<>() {
-                @Override
-                public Aggregator<M, I, R> rename(M type, Function<I, R> renamer) {
-                    Aggregator.this.rename(mapper.apply(type), renamer);
-                    return this;
-                }
-            };
-        }
+        <M> Aggregator<M, I, R, BT, BI, BR> mapType(Function<M, BT> mapper);
 
         /// Returns a new {@link Aggregator} which delegates back to this {@link Aggregator}, with its instance {@link I} mapped to
         /// {@link M}, using the given `mapper` function.
-        default <M> Aggregator<T, M, R> mapInstance(Function<I, M> mapper) {
-            return new Aggregator<>() {
-                @Override
-                public Aggregator<T, M, R> rename(T type, Function<M, R> renamer) {
-                    Aggregator.this.rename(type, mapper.andThen(renamer));
-                    return this;
-                }
-            };
-        }
+        <M> Aggregator<T, M, R, BT, BI, BR> mapInstance(Function<BI, M> mapper);
 
         /// Returns a new {@link Aggregator} which delegates back to this {@link Aggregator}, with its result {@link R} mapped to
         /// {@link M}, using the given `mapper` function.
@@ -121,25 +102,32 @@ public interface InstanceRenamer<T, I, R> {
         ///         .mapResult(Identifier::withDefaultNamespace)
         ///         .rename(Items.MAP, "empty_map") // Automatically turns "empty_map" into Identifier["minecraft:empty_map"]
         /// ```
-        default <M> Aggregator<T, I, M> mapResult(Function<M, R> mapper) {
-            return new Aggregator<>() {
-                @Override
-                public Aggregator<T, I, M> rename(T type, Function<I, M> renamer) {
-                    Aggregator.this.rename(type, renamer.andThen(mapper));
-                    return this;
-                }
-            };
-        }
+        <M> Aggregator<T, I, M, BT, BI, BR> mapResult(Function<M, BR> mapper);
 
-        default DefaultedAggregator<T, I, R> withIdenticalNamer(Function<T, R> identicalNamer) {
-            return new DefaultedAggregator<>() {
+        default IdenticalCapableAggregator<T, I, R, BT, BI, BR> withIdenticalNamer(Function<T, R> identicalNamer) {
+            return new IdenticalCapableAggregator<>() {
                 @Override
                 public R identicalName(T type) {
                     return identicalNamer.apply(type);
                 }
 
                 @Override
-                public DefaultedAggregator<T, I, R> rename(T type, Function<I, R> renamer) {
+                public <M> Aggregator<M, I, R, BT, BI, BR> mapType(Function<M, BT> mapper) {
+                    return Aggregator.this.mapType(mapper);
+                }
+
+                @Override
+                public <M> Aggregator<T, M, R, BT, BI, BR> mapInstance(Function<BI, M> mapper) {
+                    return Aggregator.this.mapInstance(mapper);
+                }
+
+                @Override
+                public <M> Aggregator<T, I, M, BT, BI, BR> mapResult(Function<M, BR> mapper) {
+                    return Aggregator.this.mapResult(mapper);
+                }
+
+                @Override
+                public IdenticalCapableAggregator<T, I, R, BT, BI, BR> rename(T type, Function<I, R> renamer) {
                     Aggregator.this.rename(type, renamer);
                     return this;
                 }
@@ -151,7 +139,7 @@ public interface InstanceRenamer<T, I, R> {
         ///
         /// @param type the type {@link T} to register the rename for
         /// @param to what to rename the type {@link T} to
-        default Aggregator<T, I, R> rename(T type, R to) {
+        default Aggregator<T, I, R, BT, BI, BR> rename(T type, R to) {
             return rename(type, _ -> to);
         }
 
@@ -159,45 +147,23 @@ public interface InstanceRenamer<T, I, R> {
         ///
         /// @param type the type {@link T} to register the renamer for
         /// @param renamer the renamer function, which takes an instance {@link I} and turns it into a result {@link R}
-        Aggregator<T, I, R> rename(T type, Function<I, R> renamer);
+        Aggregator<T, I, R, BT, BI, BR> rename(T type, Function<I, R> renamer);
     }
 
-    interface DefaultedAggregator<T, I, R> extends Aggregator<T, I, R> {
+    interface IdenticalCapableAggregator<T, I, R, BT, BI, BR> extends Aggregator<T, I, R, BT, BI, BR> {
 
         R identicalName(T type);
 
-        default DefaultedAggregator<T, I, R> identical(T type) {
+        default IdenticalCapableAggregator<T, I, R, BT, BI, BR> identical(T type) {
             return rename(type, identicalName(type));
         }
 
         @Override
-        default DefaultedAggregator<T, I, R> rename(T type, R to) {
-            return (DefaultedAggregator<T, I, R>) Aggregator.super.rename(type, to);
+        default IdenticalCapableAggregator<T, I, R, BT, BI, BR> rename(T type, R to) {
+            return (IdenticalCapableAggregator<T, I, R, BT, BI, BR>) Aggregator.super.rename(type, to);
         }
 
         @Override
-        DefaultedAggregator<T, I, R> rename(T type, Function<I, R> renamer);
-    }
-
-    class Builder<T, I, R> implements Aggregator<T, I, R> {
-        protected final BiFunction<T, I, R> fallback;
-        protected final Map<T, Function<I, R>> renamers = new Object2ObjectOpenHashMap<>();
-
-        public Builder(BiFunction<T, I, R> fallback) {
-            this.fallback = fallback;
-        }
-
-        @Override
-        public Builder<T, I, R> rename(T type, Function<I, R> renamer) {
-            if (renamers.containsKey(type)) {
-                throw new IllegalArgumentException("Already registered a renamer for " + type);
-            }
-            renamers.put(type, renamer);
-            return this;
-        }
-
-        public InstanceRenamer<T, I, R> build() {
-            return type -> renamers.getOrDefault(type, instance -> fallback.apply(type, instance));
-        }
+        IdenticalCapableAggregator<T, I, R, BT, BI, BR> rename(T type, Function<I, R> renamer);
     }
 }

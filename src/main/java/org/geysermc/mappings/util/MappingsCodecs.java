@@ -12,6 +12,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 public final class MappingsCodecs {
     public static final Codec<Identifier> TRIMMED_IDENTIFIER_CODEC = Codec.of(Codec.STRING.comap(Identifier::toShortString), Identifier.CODEC);
     public static final Codec<SoundEvent> TRIMMED_SOUND_EVENT_CODEC = TRIMMED_IDENTIFIER_CODEC.flatXmap(identifier -> BuiltInRegistries.SOUND_EVENT.get(identifier)
@@ -26,6 +29,19 @@ public final class MappingsCodecs {
     /// Preferably don't use this codec - rather, use codecs of proper types and encode these instead
     public static final Codec<JsonElement> JSON_ELEMENT = Codec.PASSTHROUGH.xmap(dynamic -> dynamic.convert(JsonOps.INSTANCE).getValue(),
         element -> new Dynamic<>(JsonOps.INSTANCE, element.deepCopy()));
+
+    public static <E> Codec<E> enumCodec(Supplier<E[]> valuesSupplier, Function<E, String> toString) {
+        E[] values = valuesSupplier.get();
+        //noinspection NullableProblems - Mojang messed up the annotations
+        return Codec.stringResolver(toString, string -> {
+            for (E value : values) {
+                if (toString.apply(value).equals(string)) {
+                    return value;
+                }
+            }
+            return null;
+        });
+    }
 
     private MappingsCodecs() {}
 }

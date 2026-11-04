@@ -8,7 +8,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
-import org.cloudburstmc.protocol.bedrock.data.LevelEventType;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.names.Renamers;
@@ -24,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public final class ParticleMappingsGenerator extends MappingsGenerator<Map<String, ParticleMapping>> {
@@ -60,33 +58,29 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Strin
                 });
             }
 
+            return validParticleIds;
+        }).thenCompose(validParticleIds -> {
             Map<String, ParticleMapping> mappings = new Object2ObjectOpenHashMap<>();
 
             // Then, loop over all particles, mapping them to their bedrock counterpart
             for (net.minecraft.core.particles.ParticleType<?> particle : BuiltInRegistries.PARTICLE_TYPE) {
                 String mcplName = identifierToMcpl(BuiltInRegistries.PARTICLE_TYPE.getKey(particle));
-                Optional<Identifier> bedrockId = Renamers.PARTICLES.get(particle);
-                Optional<? extends LevelEventType> eventType = Renamers.PARTICLES_EVENTS.get(particle);
-                // We can define our own particles in other namespaces, in e.g. the integrated pack, so don't check for those
-                if (bedrockId.isPresent() && bedrockId.get().getNamespace().equals(Identifier.DEFAULT_NAMESPACE) && !validParticleIds.contains(bedrockId.get())) {
-                    // TODO throw or error
-                    LOGGER.warn("Bedrock particle ID {} for Java particle {} not found in resource pack.", bedrockId.get(), mcplName);
-                    bedrockId = Optional.empty();
-                }
 
-                if (eventType.isEmpty()) {
-                    eventType = Renamers.PARTICLES_LEVEL_EVENTS.get(particle);
-                }
+                Renamers.PARTICLES.get(particle).ifPresentOrElse(mapping -> {
+                    if (mapping.identifier().isPresent() && mapping.identifier().get().getNamespace().equals(Identifier.DEFAULT_NAMESPACE)
+                            && !validParticleIds.contains(mapping.identifier().get())) {
+                        // TODO throw or error
+                        LOGGER.warn("Bedrock particle ID {} for Java particle {} not found in resource pack.", mapping.identifier().get(), mcplName);
+                    }
 
-                if (bedrockId.isEmpty() && eventType.isEmpty()) {
+                    mappings.put(mcplName, mapping);
+                }, () -> {
                     if (validParticleIds.contains(BuiltInRegistries.PARTICLE_TYPE.getKey(particle))) {
                         LOGGER.error("No Bedrock particle mapped for {}, but the Bedrock resource pack contains a particle with the ID {}", mcplName, BuiltInRegistries.PARTICLE_TYPE.getKey(particle));
                     } else {
                         LOGGER.error("No Bedrock particle mapped for {}", mcplName);
                     }
-                }
-
-                mappings.put(mcplName, new ParticleMapping(bedrockId, eventType.map(LevelEventType::toString)));
+                });
             }
 
             return saveFile(cache, mappings);
