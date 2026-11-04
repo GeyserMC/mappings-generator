@@ -1,20 +1,17 @@
 package org.geysermc.mappings.generator;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.data.ParticleType;
+import org.cloudburstmc.protocol.bedrock.data.LevelEventType;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.FileType;
+import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.slf4j.Logger;
 
@@ -32,11 +29,10 @@ import java.util.concurrent.CompletableFuture;
 
 public final class ParticleMappingsGenerator extends MappingsGenerator<Map<String, ParticleMapping>> {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final BiMap<String, String> SPECIAL_MCPL_RENAMES = ImmutableBiMap.of(
+    private static final Map<String, String> SPECIAL_MCPL_RENAMES = Map.of(
             "TRIAL_SPAWNER_DETECTION", "TRIAL_SPAWNER_DETECTED_PLAYER",
             "TRIAL_SPAWNER_DETECTION_OMINOUS", "TRIAL_SPAWNER_DETECTED_PLAYER_OMINOUS"
     );
-    private static final String GEYSER_PACK_NAMESPACE = "geyseropt";
     private final CompletableFuture<BedrockSamples> bedrockSamples;
 
     public ParticleMappingsGenerator(PackOutput output, CompletableFuture<BedrockSamples> bedrockSamples) {
@@ -47,6 +43,7 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Strin
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
         return bedrockSamples.thenCompose(samples -> samples.openSamplesRaw(opened -> {
+            // Get a list of valid particle IDs from the bedrock samples
             List<Identifier> validParticleIds = new ArrayList<>();
             Path particlesPath = opened.getPath("resource_pack/particles");
             try(DirectoryStream<Path> particles = opened.provider().newDirectoryStream(particlesPath, _ -> true)) {
@@ -62,80 +59,43 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Strin
                     }
                 });
             }
-            return validParticleIds;
-        })).thenCombine(readExistingFile(), Pair::of).thenCompose(validIdsAndMappings -> {
+
             Map<String, ParticleMapping> mappings = new Object2ObjectOpenHashMap<>();
-            List<Identifier> validParticleIds = validIdsAndMappings.getFirst();
-            validIdsAndMappings.getSecond().ifPresent(mappings::putAll);
 
-            // First, check for any removed particles that are in our mappings at the moment
-            for (String mappedJavaParticle : mappings.keySet()) {
-                Identifier javaIdentifier = mcplToIdentifier(mappedJavaParticle);
-                if (!BuiltInRegistries.PARTICLE_TYPE.containsKey(javaIdentifier)) {
-                    LOGGER.warn("Particle of type {} does not exist anymore, but still is present in the mappings! It will be removed.", javaIdentifier);
-                }
-            }
-
-            for (Identifier javaParticle : BuiltInRegistries.PARTICLE_TYPE.keySet()) {
-                String mcplName = identifierToMcpl(javaParticle);
-                ParticleMapping mapping = mappings.computeIfAbsent(mcplName, _ -> ParticleMapping.EMPTY);
-
-                Optional<Identifier> bedrockId = mapping.bedrockId();
-                Optional<String> eventType = mapping.cloudburstEventType();
-
-                // Ignore Geyser namespaces as these won't be found in the Bedrock resource pack
-                if (bedrockId.isPresent() && !bedrockId.get().getNamespace().equals(GEYSER_PACK_NAMESPACE)) {
-                    if (!validParticleIds.contains(bedrockId.get())) {
-                        LOGGER.warn("Bedrock particle ID {} for Java particle {} not found in resource pack.", bedrockId.get(), mcplName);
-                        bedrockId = Optional.empty();
-                    }
+            // Then, loop over all particles, mapping them to their bedrock counterpart
+            for (net.minecraft.core.particles.ParticleType<?> particle : BuiltInRegistries.PARTICLE_TYPE) {
+                String mcplName = identifierToMcpl(BuiltInRegistries.PARTICLE_TYPE.getKey(particle));
+                Optional<Identifier> bedrockId = Renamers.PARTICLES.get(particle);
+                Optional<? extends LevelEventType> eventType = Renamers.PARTICLES_EVENTS.get(particle);
+                // We can define our own particles in other namespaces, in e.g. the integrated pack, so don't check for those
+                if (bedrockId.isPresent() && bedrockId.get().getNamespace().equals(Identifier.DEFAULT_NAMESPACE) && !validParticleIds.contains(bedrockId.get())) {
+                    // TODO throw or error
+                    LOGGER.warn("Bedrock particle ID {} for Java particle {} not found in resource pack.", bedrockId.get(), mcplName);
+                    bedrockId = Optional.empty();
                 }
 
-                if (eventType.isEmpty() && isBedrockParticleType(mcplName)) {
-                    eventType = Optional.of(mcplName); // parity
-                } else if (eventType.isPresent() && !isBedrockParticleType(eventType.get())) {
-                    LOGGER.warn("Particle type {} for Java particle {} does not exist in the Cloudburst Protocol!", eventType.get(), mcplName);
-                    eventType = Optional.empty();
+                if (eventType.isEmpty()) {
+                    eventType = Renamers.PARTICLES_LEVEL_EVENTS.get(particle);
                 }
 
                 if (bedrockId.isEmpty() && eventType.isEmpty()) {
-                    if (validParticleIds.contains(javaParticle)) {
-                        LOGGER.error("No Bedrock particle mapped for {}, but the Bedrock resource pack contains a particle with the ID {}", mcplName, javaParticle);
+                    if (validParticleIds.contains(BuiltInRegistries.PARTICLE_TYPE.getKey(particle))) {
+                        LOGGER.error("No Bedrock particle mapped for {}, but the Bedrock resource pack contains a particle with the ID {}", mcplName, BuiltInRegistries.PARTICLE_TYPE.getKey(particle));
                     } else {
                         LOGGER.error("No Bedrock particle mapped for {}", mcplName);
                     }
                 }
 
-                mappings.put(mcplName, new ParticleMapping(bedrockId, eventType));
+                mappings.put(mcplName, new ParticleMapping(bedrockId, eventType.map(LevelEventType::toString)));
             }
 
             return saveFile(cache, mappings);
-        });
-    }
-
-    private static Identifier mcplToIdentifier(String mcpl) {
-        String specialReverted = SPECIAL_MCPL_RENAMES.inverse().getOrDefault(mcpl, mcpl);
-        return Identifier.fromNamespaceAndPath("minecraft", specialReverted.toLowerCase(Locale.ROOT));
+        }));
     }
 
     private static String identifierToMcpl(Identifier identifier) {
         String pathUppercase = identifier.getPath().toUpperCase(Locale.ROOT);
         return SPECIAL_MCPL_RENAMES.getOrDefault(pathUppercase, pathUppercase);
-    }
-
-    private boolean isBedrockParticleType(String enumName) {
-        try {
-            // Check if we have a particle type mapping
-            ParticleType.valueOf(enumName);
-        } catch (IllegalArgumentException _) {
-            // No particle type; try level event
-            try {
-                LevelEvent.valueOf(enumName);
-            } catch (IllegalArgumentException _) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.geysermc.mappings.names;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -16,6 +17,12 @@ public interface TypeRenamer<T, R> extends InstanceRenamer<T, T, R> {
     static <T, R> TypeRenamer<T, R> of(Function<T, R> fallback, Consumer<Aggregator<T, T, R>> builder) {
         Builder<T, R> renamer = new Builder<>(fallback);
         builder.accept(renamer);
+        return renamer.build();
+    }
+
+    static <T, R> TypeRenamer<T, Optional<R>> ofOptional(Consumer<Aggregator<T, T, R>> builder) {
+        Builder<T, Optional<R>> renamer = new Builder<>(_ -> Optional.empty());
+        builder.accept(renamer.mapResult(Optional::of));
         return renamer.build();
     }
 

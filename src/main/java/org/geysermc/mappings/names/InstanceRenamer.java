@@ -131,6 +131,21 @@ public interface InstanceRenamer<T, I, R> {
             };
         }
 
+        default DefaultedAggregator<T, I, R> withIdenticalNamer(Function<T, R> identicalNamer) {
+            return new DefaultedAggregator<>() {
+                @Override
+                public R identicalName(T type) {
+                    return identicalNamer.apply(type);
+                }
+
+                @Override
+                public DefaultedAggregator<T, I, R> rename(T type, Function<I, R> renamer) {
+                    Aggregator.this.rename(type, renamer);
+                    return this;
+                }
+            };
+        }
+
         /// Registers a constant rename for the given type {@link T}.
         /// Use this method if the result for the type is always the same, no matter the instance {@link I}.
         ///
@@ -145,6 +160,23 @@ public interface InstanceRenamer<T, I, R> {
         /// @param type the type {@link T} to register the renamer for
         /// @param renamer the renamer function, which takes an instance {@link I} and turns it into a result {@link R}
         Aggregator<T, I, R> rename(T type, Function<I, R> renamer);
+    }
+
+    interface DefaultedAggregator<T, I, R> extends Aggregator<T, I, R> {
+
+        R identicalName(T type);
+
+        default DefaultedAggregator<T, I, R> identical(T type) {
+            return rename(type, identicalName(type));
+        }
+
+        @Override
+        default DefaultedAggregator<T, I, R> rename(T type, R to) {
+            return (DefaultedAggregator<T, I, R>) Aggregator.super.rename(type, to);
+        }
+
+        @Override
+        DefaultedAggregator<T, I, R> rename(T type, Function<I, R> renamer);
     }
 
     class Builder<T, I, R> implements Aggregator<T, I, R> {
