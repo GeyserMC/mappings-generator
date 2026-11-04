@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
@@ -21,16 +22,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public final class ParticleMappingsGenerator extends MappingsGenerator<Map<String, ParticleMapping>> {
+public final class ParticleMappingsGenerator extends MappingsGenerator<Map<ParticleType<?>, ParticleMapping>> {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Map<String, String> SPECIAL_MCPL_RENAMES = Map.of(
-            "TRIAL_SPAWNER_DETECTION", "TRIAL_SPAWNER_DETECTED_PLAYER",
-            "TRIAL_SPAWNER_DETECTION_OMINOUS", "TRIAL_SPAWNER_DETECTED_PLAYER_OMINOUS"
-    );
     private final CompletableFuture<BedrockSamples> bedrockSamples;
 
     public ParticleMappingsGenerator(PackOutput output, CompletableFuture<BedrockSamples> bedrockSamples) {
@@ -60,36 +56,30 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Strin
 
             return validParticleIds;
         }).thenCompose(validParticleIds -> {
-            Map<String, ParticleMapping> mappings = new Object2ObjectOpenHashMap<>();
+            Map<ParticleType<?>, ParticleMapping> mappings = new Object2ObjectOpenHashMap<>();
 
             // Then, loop over all particles, mapping them to their bedrock counterpart
-            for (net.minecraft.core.particles.ParticleType<?> particle : BuiltInRegistries.PARTICLE_TYPE) {
-                String mcplName = identifierToMcpl(BuiltInRegistries.PARTICLE_TYPE.getKey(particle));
-
+            for (ParticleType<?> particle : BuiltInRegistries.PARTICLE_TYPE) {
+                Identifier javaId = BuiltInRegistries.PARTICLE_TYPE.getKey(particle);
                 Renamers.PARTICLES.get(particle).ifPresentOrElse(mapping -> {
                     if (mapping.identifier().isPresent() && mapping.identifier().get().getNamespace().equals(Identifier.DEFAULT_NAMESPACE)
                             && !validParticleIds.contains(mapping.identifier().get())) {
-                        // TODO throw or error
-                        LOGGER.warn("Bedrock particle ID {} for Java particle {} not found in resource pack.", mapping.identifier().get(), mcplName);
+                        LOGGER.error("Bedrock particle ID {} for Java particle {} not found in resource pack, ignoring!", mapping.identifier().get(), javaId);
+                        return;
                     }
 
-                    mappings.put(mcplName, mapping);
+                    mappings.put(particle, mapping);
                 }, () -> {
                     if (validParticleIds.contains(BuiltInRegistries.PARTICLE_TYPE.getKey(particle))) {
-                        LOGGER.error("No Bedrock particle mapped for {}, but the Bedrock resource pack contains a particle with the ID {}", mcplName, BuiltInRegistries.PARTICLE_TYPE.getKey(particle));
+                        LOGGER.error("No Bedrock particle mapped for {}, but the Bedrock resource pack contains a particle with the same ID", javaId);
                     } else {
-                        LOGGER.error("No Bedrock particle mapped for {}", mcplName);
+                        LOGGER.error("No Bedrock particle mapped for {}", javaId);
                     }
                 });
             }
 
             return saveFile(cache, mappings);
         }));
-    }
-
-    private static String identifierToMcpl(Identifier identifier) {
-        String pathUppercase = identifier.getPath().toUpperCase(Locale.ROOT);
-        return SPECIAL_MCPL_RENAMES.getOrDefault(pathUppercase, pathUppercase);
     }
 
     @Override

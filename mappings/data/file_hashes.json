@@ -22,7 +22,7 @@
     "mappings/item_components.nbt": -1766935728,
     "mappings/item_data_components.json": 1738628359,
     "mappings/items.json": -51724044,
-    "mappings/particles.json": 795937515,
+    "mappings/particles.json": 2111857714,
     "mappings/resolvable_item_data_components.json": 614380895,
     "mappings/sounds.json": 1798142906,
     "mappings/util.json": 261276379,
@@ -32,6 +32,7 @@
     "mcpl/javaclass/ClientboundBlockEventPacket.java": 59353490,
     "mcpl/javaclass/CustomStatistic.java": 173411750,
     "mcpl/javaclass/LevelEventType.java": 1124580471,
-    "mcpl/javaclass/MapIconType.java": -1743545625
+    "mcpl/javaclass/MapIconType.java": -1743545625,
+    "mcpl/javaclass/ParticleType.java": 1669126406
   }
 }
