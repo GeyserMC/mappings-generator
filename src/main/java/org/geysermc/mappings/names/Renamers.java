@@ -1,5 +1,6 @@
 package org.geysermc.mappings.names;
 
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
@@ -7,11 +8,14 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.names.renamers.BlockClassNames;
 import org.geysermc.mappings.names.renamers.BlockNames;
 import org.geysermc.mappings.names.renamers.ItemClassNames;
 import org.geysermc.mappings.names.renamers.ItemNames;
+import org.geysermc.mappings.names.renamers.ParticleMappings;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 /// Holds {@link InstanceRenamer}s and {@link TypeRenamer}s for the various game types.
@@ -60,6 +64,7 @@ public final class Renamers {
     public static final TypeRenamer<Block, String> BLOCK_CLASSES = BlockClassNames.INSTANCE;
     public static final InstanceRenamer<Item, Identifier, Identifier> ITEMS = ItemNames.INSTANCE;
     public static final TypeRenamer<Item, String> ITEM_CLASSES = ItemClassNames.INSTANCE;
+    public static final TypeRenamer<ParticleType<?>, Optional<ParticleMapping>> PARTICLES = ParticleMappings.PARTICLES;
 
     private Renamers() {}
 }
