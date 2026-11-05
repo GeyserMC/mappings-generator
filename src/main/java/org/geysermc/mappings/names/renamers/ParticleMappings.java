@@ -40,7 +40,7 @@ public final class ParticleMappings {
             .rename(ParticleTypes.END_ROD, "endrod")
             .rename(ParticleTypes.EXPLOSION_EMITTER, "huge_explosion_emitter")
             .rename(ParticleTypes.EXPLOSION, "large_explosion")
-            .rename(ParticleTypes.GUST, "breeze_ground_particle")
+            .rename(ParticleTypes.GUST, "wind_charged_emitter") // FIXME needs optional pack
             .rename(ParticleTypes.SMALL_GUST, "wind_charged_emitter")
             .rename(ParticleTypes.GUST_EMITTER_LARGE, "breeze_wind_explosion_emitter")
             .rename(ParticleTypes.GUST_EMITTER_SMALL, "wind_explosion_emitter")
