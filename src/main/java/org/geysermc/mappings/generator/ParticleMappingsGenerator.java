@@ -34,9 +34,7 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Parti
             ParticleTypes.BLOCK_MARKER,
             // These 2 are seemingly empty on Java
             ParticleTypes.NOXIOUS_GAS_CLOUD,
-            ParticleTypes.ENTITY_EFFECT,
-            // Needs resourcepack?
-            ParticleTypes.LANDING_HONEY
+            ParticleTypes.ENTITY_EFFECT
     );
     private static final Logger LOGGER = LogUtils.getLogger();
     private final CompletableFuture<BedrockSamples> bedrockSamples;

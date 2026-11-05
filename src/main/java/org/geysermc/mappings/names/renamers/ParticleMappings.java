@@ -72,7 +72,7 @@ public final class ParticleMappings {
             .rename(ParticleTypes.WHITE_SMOKE, "white_smoke_particle")
             .identical(ParticleTypes.SNEEZE)
             .rename(ParticleTypes.SPIT, "llama_spit_smoke")
-            .rename(ParticleTypes.SQUID_INK, "ink_emitter") // Note: bedrock also has squid_ink_bubble
+            .rename(ParticleTypes.SQUID_INK, "squid_ink_bubble")
             .rename(ParticleTypes.TOTEM_OF_UNDYING, "totem_particle")
             .rename(ParticleTypes.SPLASH, "water_splash_particle_manual")
             .rename(ParticleTypes.WITCH, "witchspell_emitter")
@@ -96,7 +96,7 @@ public final class ParticleMappings {
             .rename(ParticleTypes.FALLING_DRIPSTONE_LAVA, "stalactite_lava_drip_particle")
             .rename(ParticleTypes.DRIPPING_DRIPSTONE_WATER, "stalactite_water_drip_particle")
             .rename(ParticleTypes.FALLING_DRIPSTONE_WATER, "stalactite_water_drip_particle")
-            .rename(ParticleTypes.GLOW_SQUID_INK, "ink_emitter") // FIXME ?
+            .rename(ParticleTypes.GLOW_SQUID_INK, "squid_ink_bubble")
             .rename(ParticleTypes.ELECTRIC_SPARK, "electric_spark_particle")
             .rename(ParticleTypes.SHRIEK, "shriek_particle")
             .rename(ParticleTypes.EGG_CRACK, "villager_happy")
@@ -120,6 +120,7 @@ public final class ParticleMappings {
             .rename(ParticleTypes.SWEEP_ATTACK, "geyseropt:sweep_attack")
             .rename(ParticleTypes.UNDERWATER, "geyseropt:underwater")
             .rename(ParticleTypes.NAUTILUS, "geyseropt:nautilus")
+            .rename(ParticleTypes.LANDING_HONEY, "geyseropt:landing_honey")
             .rename(ParticleTypes.ASH, "geyseropt:ash")
             .rename(ParticleTypes.CRIMSON_SPORE, "geyseropt:crimson_spore")
             .rename(ParticleTypes.WARPED_SPORE, "geyseropt:warped_spore")
