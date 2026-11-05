@@ -10,7 +10,7 @@ import org.geysermc.mappings.util.MappingsCodecs;
 import java.util.Optional;
 import java.util.Set;
 
-public interface ParticleMapping {
+public sealed interface ParticleMapping {
     Codec<ParticleMapping> CODEC = MappingsCodecs.fuzzyCodec(Set.of(IdentifierMapping.MAP_CODEC, ParticleTypeMapping.MAP_CODEC,
             LevelEventMapping.MAP_CODEC, BuiltInMapping.MAP_CODEC), ParticleMapping::codec).codec();
 

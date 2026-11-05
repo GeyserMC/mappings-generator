@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -31,6 +32,7 @@ import java.util.function.Function;
 /// @see Aggregator
 /// @see InstanceRenamer#of(Function, Consumer)
 /// @see InstanceRenamer#of(BiFunction, Consumer)
+/// @see InstanceRenamer#ofOptional(Consumer)
 @FunctionalInterface
 public interface InstanceRenamer<T, I, R> {
 
@@ -71,6 +73,20 @@ public interface InstanceRenamer<T, I, R> {
         return renamer.build();
     }
 
+    /// Creates a new {@link InstanceRenamer} by using an "aggregated" set of renames. Callers should specify an {@link Aggregator} consumer, which "aggregates"
+    /// the set of rename overrides. If no rename is registered for a type {@link T}, the created renamer returns an empty {@link Optional}.
+    ///
+    /// @param builder a consumer that takes an {@link Aggregator}, and registers renames to it
+    /// @param <T> the type to be renamed, e.g. {@link Block}
+    /// @param <I> the instance of the type {@link T} in-game, e.g. {@link BlockState}
+    /// @param <R> the rename result, e.g. {@link String} or {@link Identifier}
+    /// @return the created {@link InstanceRenamer}
+    static <T, I, R> InstanceRenamer<T, I, Optional<R>> ofOptional(Consumer<Aggregator<T, I, R, T, I, R>> builder) {
+        AbstractAggregator.OptionalBuilder<T, I, R> renamer = new AbstractAggregator.OptionalBuilder<>();
+        builder.accept(renamer);
+        return renamer.build();
+    }
+
     /// An {@link Aggregator} "aggregates", or collects, rename overrides for an {@link InstanceRenamer} or {@link TypeRenamer}.
     interface Aggregator<T, I, R, BT, BI, BR> {
 
@@ -104,6 +120,25 @@ public interface InstanceRenamer<T, I, R> {
         /// ```
         <M> Aggregator<T, I, M, BT, BI, BR> mapResult(Function<M, BR> mapper);
 
+        /// Returns an {@link IdenticalCapableAggregator}, which provides the {@link IdenticalCapableAggregator#identical(Object)} method to this {@link Aggregator}.
+        ///
+        /// This can be useful when some of your mappings are identical on both Java and bedrock. For example:
+        ///
+        /// ```java
+        /// public static final TypeRenamer<String, Optional<String>> SOME_MAPPINGS = TypeRenamer.ofOptional(builder -> builder
+        ///         .withIdenticalNamer(Function.identity())
+        ///         .rename("some_java_type", "some_bedrock_type")
+        ///         .rename("another_java_type", "some_bedrock_type_2")
+        ///         .identical("java_parity_type") // "java_parity_type" -> "java_parity_type"
+        /// );
+        /// ```
+        ///
+        /// This is especially useful if your renamer returns an {@link Optional}, so you can't rely on a fallback function to return the identical name.
+        /// Note that when the type {@link T}, instance {@link I}, or the result {@link R} is mapped using one of the 3 mapping functions, the identical namer is lost.
+        ///
+        /// @param identicalNamer a function that converts a {@link T} to a {@link R} in cases where {@link T} should be identical to {@link R}
+        /// @return the {@link IdenticalCapableAggregator}
+        /// @see IdenticalCapableAggregator
         default IdenticalCapableAggregator<T, I, R, BT, BI, BR> withIdenticalNamer(Function<T, R> identicalNamer) {
             return new IdenticalCapableAggregator<>() {
                 @Override
@@ -150,19 +185,26 @@ public interface InstanceRenamer<T, I, R> {
         Aggregator<T, I, R, BT, BI, BR> rename(T type, Function<I, R> renamer);
     }
 
+    /// An {@link Aggregator} that is capable of identical renames.
+    ///
+    /// @see Aggregator#withIdenticalNamer(Function)
+    /// @see IdenticalCapableAggregator#identical(Object)
     interface IdenticalCapableAggregator<T, I, R, BT, BI, BR> extends Aggregator<T, I, R, BT, BI, BR> {
 
         R identicalName(T type);
 
+        /// Registers a constant rename for the given type {@link T} using {@link IdenticalCapableAggregator#identicalName(Object)}.
         default IdenticalCapableAggregator<T, I, R, BT, BI, BR> identical(T type) {
             return rename(type, identicalName(type));
         }
 
+        /// {@inheritDoc}
         @Override
         default IdenticalCapableAggregator<T, I, R, BT, BI, BR> rename(T type, R to) {
             return (IdenticalCapableAggregator<T, I, R, BT, BI, BR>) Aggregator.super.rename(type, to);
         }
 
+        /// {@inheritDoc}
         @Override
         IdenticalCapableAggregator<T, I, R, BT, BI, BR> rename(T type, Function<I, R> renamer);
     }
