@@ -5,14 +5,14 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import org.geysermc.mappings.generator.BiomeMappingsGenerator;
 import org.geysermc.mappings.generator.BlockMappingsGenerator;
 import org.geysermc.mappings.generator.PotPatternMappingsGenerator;
 import org.geysermc.mappings.generator.ReadMeGenerator;
-import org.geysermc.mappings.generator.mcpl.MapIconTypeGenerator;
-import org.geysermc.mappings.generator.mcpl.ParticleTypeGenerator;
+import org.geysermc.mappings.generator.javaclass.EnumDataGenerator;
 import org.geysermc.mappings.generator.shape.BlockShapeMappingsGenerator;
 import org.geysermc.mappings.generator.shape.CollisionShapeMappingsGenerator;
 import org.geysermc.mappings.generator.ItemDataComponentGenerator;
@@ -71,14 +71,16 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
         // These are sorted according to their respective FileType, please keep it that way!!
 
         registerProviderGroup("mcpl", builder -> builder
-                .withFactory(ClientboundBlockEventPacketGenerator::new)
+                // Enums
                 .withFactory(BuiltinSoundGenerator::new)
                 .withFactory(CustomStatisticGenerator::new)
                 .withFactory(LevelEventTypeGenerator::new)
-                .withFactory(MapIconTypeGenerator::new)
+                .withFactory(EnumDataGenerator.registryFactory("MCPL/Map Icon Type", FileType.MCPL_MAP_ICON_TYPE, BuiltInRegistries.MAP_DECORATION_TYPE))
+                .withFactory(EnumDataGenerator.registryFactory("MCPL/Particle Type", FileType.MCPL_PARTICLE_TYPE, BuiltInRegistries.PARTICLE_TYPE))
+
+                .withFactory(ClientboundBlockEventPacketGenerator::new)
                 .withRegistryFactory(NetworkCodecGenerator::new)
-                .withRegistryFactory(NetworkTagsGenerator::new)
-                .withFactory(ParticleTypeGenerator::new));
+                .withRegistryFactory(NetworkTagsGenerator::new));
 
         registerProviderGroup("javaclass", builder -> {
             builder.withRegistryFactory(BlocksGenerator::new)
