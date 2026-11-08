@@ -56,21 +56,23 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     // These are alphabetically sorted within their groups, please keep it that way!!
 
+    // MCPL - enums
+    public static final FileType<String> MCPL_BUILTIN_SOUND = enumClass("BuiltinSound").mcpl();
+    public static final FileType<String> MCPL_CUSTOM_STATISTIC = enumClass("CustomStatistic").mcpl();
+    public static final FileType<String> MCPL_LEVEL_EVENT_TYPE = enumClass("LevelEventType").mcpl();
+    public static final FileType<String> MCPL_MAP_ICON_TYPE = enumClass("MapIconType").mcpl();
+    public static final FileType<String> MCPL_PARTICLE_TYPE = enumClass("ParticleType").mcpl();
+
     // MCPL
-    public static final FileType<String> MCPL_BLOCK_EVENT = javaClass("ClientboundBlockEventPacket").parented("mcpl");
-    public static final FileType<String> MCPL_BUILTIN_SOUND = javaClass("BuiltinSound").parented("mcpl");
-    public static final FileType<String> MCPL_CUSTOM_STATISTIC = javaClass("CustomStatistic").parented("mcpl");
-    public static final FileType<String> MCPL_LEVEL_EVENT_TYPE = javaClass("LevelEventType").parented("mcpl");
-    public static final FileType<String> MCPL_MAP_ICON_TYPE = javaClass("MapIconType").parented("mcpl");
-    public static final FileType<NetworkCodec> MCPL_NETWORK_CODEC = nbtData("networkCodec", NetworkCodec.CODEC).parented("mcpl");
-    public static final FileType<NetworkTags> MCPL_NETWORK_TAGS = nbtData("networkTags", NetworkTags.CODEC).parented("mcpl");
-    public static final FileType<String> MCPL_PARTICLE_TYPE = javaClass("ParticleType").parented("mcpl");
+    public static final FileType<String> MCPL_BLOCK_EVENT = javaClass("ClientboundBlockEventPacket").mcpl();
+    public static final FileType<NetworkCodec> MCPL_NETWORK_CODEC = nbtData("networkCodec", NetworkCodec.CODEC).mcpl();
+    public static final FileType<NetworkTags> MCPL_NETWORK_TAGS = nbtData("networkTags", NetworkTags.CODEC).mcpl();
 
     // Javaclass
     public static final FileType<String> BLOCKS = javaClass("Blocks");
     public static final FileType<String> BLOCK_STATE_PROPERTIES = javaClass("Properties");
     public static final FileType<String> GAME_RULES = javaClass("GameRules");
-    public static final FileType<String> MAP_COLOR = javaClass("MapColor");
+    public static final FileType<String> MAP_COLOR = enumClass("MapColor");
     public static final FileType<String> ITEMS = javaClass("Items");
 
     // Javaclass - tags
@@ -119,12 +121,20 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
         types.add(this);
     }
 
+    private FileType<T> mcpl() {
+        return parented("mcpl");
+    }
+
     private FileType<T> parented(String parent) {
         return new FileType<>(parent + "/" + path, codec, type, managed);
     }
 
     private static FileType<String> tagClass(String name) {
         return javaClass("tag/" + name);
+    }
+
+    private static FileType<String> enumClass(String name) {
+        return javaClass("enum/" + name);
     }
 
     private static FileType<String> javaClass(String name) {
