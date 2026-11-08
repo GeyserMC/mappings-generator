@@ -72,8 +72,12 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
 
         registerProviderGroup("mcpl", builder -> builder
                 // Enums
+                .withFactory(EnumDataGenerator.registryFactory("MCPL/Block Entity Type", FileType.MCPL_BLOCK_ENTITY_TYPE, BuiltInRegistries.BLOCK_ENTITY_TYPE))
                 .withFactory(BuiltinSoundGenerator::new)
+                .withFactory(EnumDataGenerator.registryFactory("MCPL/Command Parser", FileType.MCPL_COMMAND_PARSER, BuiltInRegistries.COMMAND_ARGUMENT_TYPE))
+                .withFactory(EnumDataGenerator.registryFactory("MCPL/Container Type", FileType.MCPL_CONTAINER_TYPE, BuiltInRegistries.MENU))
                 .withFactory(CustomStatisticGenerator::new)
+                .withFactory(EnumDataGenerator.registryFactory("MCPL/Effect", FileType.MCPL_EFFECT, BuiltInRegistries.MOB_EFFECT))
                 .withFactory(LevelEventTypeGenerator::new)
                 .withFactory(EnumDataGenerator.registryFactory("MCPL/Map Icon Type", FileType.MCPL_MAP_ICON_TYPE, BuiltInRegistries.MAP_DECORATION_TYPE))
                 .withFactory(EnumDataGenerator.registryFactory("MCPL/Particle Type", FileType.MCPL_PARTICLE_TYPE, BuiltInRegistries.PARTICLE_TYPE))

@@ -6,7 +6,6 @@ import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.StringRepresentable;
-import org.apache.commons.text.WordUtils;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.generator.MappingsGenerator;
 
@@ -64,10 +63,6 @@ public final class EnumDataGenerator extends MappingsGenerator<String> {
                                                                                                                    ResourceKey<? extends Registry<T>> registry) {
         return (output, registryFuture) -> new EnumDataGenerator(output, fileType, name,
                 () -> registryFuture.thenApply(registries -> registries.lookupOrThrow(registry).listElementIds().map(EnumDataGenerator::keyToConstant)));
-    }
-
-    private static String keyToName(ResourceKey<?> key) {
-        return WordUtils.capitalize(key.identifier().getPath().replace("_", " "));
     }
 
     private static String keyToConstant(ResourceKey<?> key) {

@@ -57,8 +57,12 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     // These are alphabetically sorted within their groups, please keep it that way!!
 
     // MCPL - enums
+    public static final FileType<String> MCPL_BLOCK_ENTITY_TYPE = enumClass("BlockEntityType").mcpl();
     public static final FileType<String> MCPL_BUILTIN_SOUND = enumClass("BuiltinSound").mcpl();
+    public static final FileType<String> MCPL_COMMAND_PARSER = enumClass("CommandParser").mcpl();
+    public static final FileType<String> MCPL_CONTAINER_TYPE = enumClass("ContainerType").mcpl();
     public static final FileType<String> MCPL_CUSTOM_STATISTIC = enumClass("CustomStatistic").mcpl();
+    public static final FileType<String> MCPL_EFFECT = enumClass("Effect").mcpl();
     public static final FileType<String> MCPL_LEVEL_EVENT_TYPE = enumClass("LevelEventType").mcpl();
     public static final FileType<String> MCPL_MAP_ICON_TYPE = enumClass("MapIconType").mcpl();
     public static final FileType<String> MCPL_PARTICLE_TYPE = enumClass("ParticleType").mcpl();

@@ -29,8 +29,12 @@
     "mcpl/data/networkCodec.nbt": -350869070,
     "mcpl/data/networkTags.nbt": 1666866777,
     "mcpl/javaclass/ClientboundBlockEventPacket.java": 59353490,
+    "mcpl/javaclass/enum/BlockEntityType.java": -1321989685,
     "mcpl/javaclass/enum/BuiltinSound.java": -275094392,
+    "mcpl/javaclass/enum/CommandParser.java": -28511507,
+    "mcpl/javaclass/enum/ContainerType.java": -1574002239,
     "mcpl/javaclass/enum/CustomStatistic.java": 173411750,
+    "mcpl/javaclass/enum/Effect.java": 1742466652,
     "mcpl/javaclass/enum/LevelEventType.java": 1124580471,
     "mcpl/javaclass/enum/MapIconType.java": -825093595,
     "mcpl/javaclass/enum/ParticleType.java": 1669126406
