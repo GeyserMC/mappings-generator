@@ -2,6 +2,7 @@ package org.geysermc.mappings.definitions.particle;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.Identifier;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.cloudburstmc.protocol.bedrock.data.ParticleType;
@@ -15,7 +16,15 @@ public sealed interface ParticleMapping {
             LevelEventMapping.MAP_CODEC, BuiltInMapping.MAP_CODEC), ParticleMapping::codec).codec();
 
     static ParticleMapping ofIdentifier(String identifier) {
-        return new IdentifierMapping(Identifier.parse(identifier));
+        return new IdentifierMapping(Identifier.parse(identifier), Optional.empty());
+    }
+
+    static ParticleMapping ofColored(String identifier, int rgb) {
+        return ofColored(identifier, ParticleColor.constant(rgb));
+    }
+
+    static ParticleMapping ofColored(String identifier, ParticleColor color) {
+        return new IdentifierMapping(Identifier.parse(identifier), Optional.of(color));
     }
 
     static ParticleMapping ofType(ParticleType type) {
@@ -36,10 +45,13 @@ public sealed interface ParticleMapping {
         return Optional.empty();
     }
 
-    record IdentifierMapping(Identifier bedrockIdentifier) implements ParticleMapping {
-        private static final MapCodec<IdentifierMapping> MAP_CODEC = Identifier.CODEC
-                .xmap(IdentifierMapping::new, IdentifierMapping::bedrockIdentifier)
-                .fieldOf("bedrock_id");
+    record IdentifierMapping(Identifier bedrockIdentifier, Optional<ParticleColor> color) implements ParticleMapping {
+        private static final MapCodec<IdentifierMapping> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
+                instance.group(
+                        Identifier.CODEC.fieldOf("bedrock_id").forGetter(IdentifierMapping::bedrockIdentifier),
+                        ParticleColor.CODEC.optionalFieldOf("color").forGetter(IdentifierMapping::color)
+                ).apply(instance, IdentifierMapping::new)
+        );
 
         @Override
         public MapCodec<IdentifierMapping> codec() {

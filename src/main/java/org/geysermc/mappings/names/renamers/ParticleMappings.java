@@ -4,6 +4,7 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
+import org.geysermc.mappings.definitions.particle.ParticleColor;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.names.TypeRenamer;
 
@@ -15,7 +16,9 @@ import java.util.function.Function;
 public final class ParticleMappings {
     // From the top to the bottom:
     // - Simple direct identifier to identifier mappings, the best kind
-    // - Cloudburst/ParticleType enum mappings, meh but still ocur frequently
+    //  - Optional pack mappings
+    //  - Mappings requiring a colour
+    // - Cloudburst/ParticleType enum mappings, meh but still occur frequently
     // - Cloudburst/LevelEvent enum mappings, only a few
     // - Built-in handling in Geyser, for special particles, only a few
     // Also see Mojang's ParticleTypes class, we're following the same order
@@ -64,7 +67,6 @@ public final class ParticleMappings {
             .rename(ParticleTypes.LARGE_SMOKE, "water_evaporation_actor_emitter")
             .rename(ParticleTypes.LAVA, "lava_particle")
             .rename(ParticleTypes.MYCELIUM, "mycelium_dust_particle")
-            .rename(ParticleTypes.NOTE, "note_particle")
             .rename(ParticleTypes.POOF, "explosion_manual")
             .rename(ParticleTypes.PORTAL, "mob_portal")
             .rename(ParticleTypes.RAIN, "rain_splash_particle")
@@ -127,6 +129,21 @@ public final class ParticleMappings {
             .rename(ParticleTypes.LANDING_OBSIDIAN_TEAR, "geyseropt:landing_obsidian_tear")
             .rename(ParticleTypes.WHITE_ASH, "geyseropt:white_ash")
 
+            // Identifier particle mappings requiring one or more colours
+            .mapResult(Function.identity())
+            // Always white on Java Edition, requires colour on bedrock
+            .rename(ParticleTypes.FIREWORK, ParticleMapping.ofColored("sparkler_emitter", 0xFFFFFF))
+            // Always random on Java Edition, requires colour on bedrock
+            .rename(ParticleTypes.NOTE, ParticleMapping.ofColored("note_particle", ParticleColor.random()))
+            // See https://mcsrc.dev/2/26.3/net/minecraft/client/particle/GlowParticle#L188
+            .rename(ParticleTypes.WAX_ON, ParticleMapping.ofColored("wax_particle", 0xE88C14))
+            // See https://mcsrc.dev/2/26.3/net/minecraft/client/particle/GlowParticle#L159
+            .rename(ParticleTypes.WAX_OFF, ParticleMapping.ofColored("wax_particle", 0xFFE5FF))
+            // See https://mcsrc.dev/2/26.3/net/minecraft/client/particle/GlowParticle#L88-92
+            .rename(ParticleTypes.GLOW, ParticleMapping.ofColored("glow_particle", ParticleColor.random(0x99FFCC, 0x146666)))
+            // See https://mcsrc.dev/2/26.3/net/minecraft/client/particle/GlowParticle#L125-129
+            .rename(ParticleTypes.SCRAPE, ParticleMapping.ofColored("wax_particle", ParticleColor.random(0x499382, 0x6DC49E)))
+
             // Cloudburst ParticleType enum mappings (a little ugly)
             .mapResult(ParticleMapping::ofType)
             .withIdenticalNamer(type -> org.cloudburstmc.protocol.bedrock.data.ParticleType.valueOf(Objects.requireNonNull(BuiltInRegistries.PARTICLE_TYPE.getKey(type)).getPath().toUpperCase(Locale.ROOT)))
@@ -156,15 +173,10 @@ public final class ParticleMappings {
             .identical(ParticleTypes.DUST_COLOR_TRANSITION)
             .identical(ParticleTypes.EFFECT)
             .identical(ParticleTypes.FALLING_DUST)
-            .identical(ParticleTypes.FIREWORK)
             .identical(ParticleTypes.TINTED_LEAVES)
             .identical(ParticleTypes.INSTANT_EFFECT)
             .identical(ParticleTypes.ITEM)
             .identical(ParticleTypes.VIBRATION)
             .identical(ParticleTypes.TRAIL)
-            .identical(ParticleTypes.WAX_ON)
-            .identical(ParticleTypes.WAX_OFF)
-            .identical(ParticleTypes.GLOW)
-            .identical(ParticleTypes.SCRAPE)
     );
 }
