@@ -3,73 +3,90 @@ package org.geysermc.mappings.definitions.particle;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.util.StringRepresentable;
 
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-public sealed interface ParticleColor {
-    Codec<ParticleColor> DIRECT_CODEC = Type.CODEC.dispatch(ParticleColor::type, Type::codec);
-    Codec<ParticleColor> CODEC = Codec.either(Codec.INT, DIRECT_CODEC)
-            .xmap(either -> either.map(Constant::new, Function.identity()), color -> {
-                if (color instanceof Constant(int rgb)) {
+public record ParticleColor(String variable, Provider provider) {
+    public static final String DEFAULT_COLOR_VARIABLE = "variable.color";
+
+    public static final Codec<ParticleColor> FULL_CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                    Codec.STRING.optionalFieldOf("variable", DEFAULT_COLOR_VARIABLE).forGetter(ParticleColor::variable),
+                    Provider.MAP_CODEC.forGetter(ParticleColor::provider)
+            ).apply(instance, ParticleColor::new)
+    );
+    public static final Codec<ParticleColor> CODEC = Codec.either(Codec.INT, FULL_CODEC)
+            .xmap(either -> either.map(ParticleColor::constant, Function.identity()), color -> {
+                if (color.variable.equals(DEFAULT_COLOR_VARIABLE) && color.provider instanceof Provider.Constant(int rgb)) {
                     return Either.left(rgb);
                 }
                 return Either.right(color);
             });
 
-    static ParticleColor constant(int rgb) {
-        return new Constant(rgb);
+    public static ParticleColor constant(int rgb) {
+        return new ParticleColor(DEFAULT_COLOR_VARIABLE, new Provider.Constant(rgb));
     }
 
-    static ParticleColor random(int... rgbs) {
-        return new Random(IntStream.of(rgbs).boxed().toList());
+    public static ParticleColor random(int... rgbs) {
+        return random(DEFAULT_COLOR_VARIABLE, rgbs);
     }
 
-    Type type();
+    public static ParticleColor random(String variable, int... rgbs) {
+        return new ParticleColor(variable, new Provider.Random(IntStream.of(rgbs).boxed().toList()));
+    }
 
-    enum Type implements StringRepresentable {
-        CONSTANT("constant", Constant.MAP_CODEC),
-        RANDOM("random", Random.MAP_CODEC);
+    public sealed interface Provider {
+        MapCodec<Provider> MAP_CODEC = Type.CODEC.dispatchMap(Provider::type, Type::codec);
 
-        public static final Codec<Type> CODEC = StringRepresentable.fromEnum(Type::values);
+        Type type();
 
-        private final String name;
-        private final MapCodec<? extends ParticleColor> codec;
+        enum Type implements StringRepresentable {
+            CONSTANT("constant", Constant.MAP_CODEC),
+            RANDOM("random", Random.MAP_CODEC);
 
-        Type(String name, MapCodec<? extends ParticleColor> codec) {
-            this.name = name;
-            this.codec = codec;
+            public static final Codec<Type> CODEC = StringRepresentable.fromEnum(Type::values);
+
+            private final String name;
+            private final MapCodec<? extends Provider> codec;
+
+            Type(String name, MapCodec<? extends Provider> codec) {
+                this.name = name;
+                this.codec = codec;
+            }
+
+            public MapCodec<? extends Provider> codec() {
+                return codec;
+            }
+
+            @Override
+            public String getSerializedName() {
+                return name;
+            }
         }
 
-        public MapCodec<? extends ParticleColor> codec() {
-            return codec;
+        record Constant(int rgb) implements Provider {
+            public static final MapCodec<Constant> MAP_CODEC = Codec.INT.fieldOf("value")
+                    .xmap(Constant::new, Constant::rgb);
+
+            @Override
+            public Type type() {
+                return Type.CONSTANT;
+            }
         }
 
-        @Override
-        public String getSerializedName() {
-            return name;
+        record Random(List<Integer> values) implements Provider {
+            public static final MapCodec<Random> MAP_CODEC = Codec.INT.listOf().optionalFieldOf("values", List.of())
+                    .xmap(Random::new, Random::values);
+
+            @Override
+            public Type type() {
+                return Type.RANDOM;
+            }
         }
     }
 
-    record Constant(int rgb) implements ParticleColor {
-        public static final MapCodec<Constant> MAP_CODEC = Codec.INT.fieldOf("value")
-                .xmap(Constant::new, Constant::rgb);
-
-        @Override
-        public Type type() {
-            return Type.CONSTANT;
-        }
-    }
-
-    record Random(List<Integer> values) implements ParticleColor {
-        public static final MapCodec<Random> MAP_CODEC = Codec.INT.listOf().optionalFieldOf("values", List.of())
-                .xmap(Random::new, Random::values);
-
-        @Override
-        public Type type() {
-            return Type.RANDOM;
-        }
-    }
 }

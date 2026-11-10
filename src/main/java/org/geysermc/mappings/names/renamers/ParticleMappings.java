@@ -133,8 +133,8 @@ public final class ParticleMappings {
             .mapResult(Function.identity())
             // Always white on Java Edition, requires colour on bedrock
             .rename(ParticleTypes.FIREWORK, ParticleMapping.ofColored("sparkler_emitter", 0xFFFFFF))
-            // Always random on Java Edition, requires colour on bedrock
-            .rename(ParticleTypes.NOTE, ParticleMapping.ofColored("note_particle", ParticleColor.random()))
+            // Always random on Java Edition, requires colour on bedrock (side note: thanks for the one variable edge case, Mojang)
+            .rename(ParticleTypes.NOTE, ParticleMapping.ofColored("note_particle", ParticleColor.random("variable.note_color")))
             // See https://mcsrc.dev/2/26.3/net/minecraft/client/particle/GlowParticle#L188
             .rename(ParticleTypes.WAX_ON, ParticleMapping.ofColored("wax_particle", 0xE88C14))
             // See https://mcsrc.dev/2/26.3/net/minecraft/client/particle/GlowParticle#L159
