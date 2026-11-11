@@ -32,7 +32,7 @@ public final class ItemMappingsGenerator extends MappingsGenerator<Map<Item, Ite
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
         return bedrockSamples
-                .thenCompose(samples -> samples.openData(data -> ItemMappings.read(this, data)))
+                .thenCompose(samples -> samples.data().open(data -> ItemMappings.read(this, data)))
                 .thenCompose(mappings -> {
                     mappings.mapAllItems((key, item) -> getRemapItem(mappings, key, item, Block.byItem(item)));
                     mappings.checkForDuplicates();

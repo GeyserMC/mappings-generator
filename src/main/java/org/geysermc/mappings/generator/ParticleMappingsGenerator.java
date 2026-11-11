@@ -46,11 +46,11 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Parti
 
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
-        return bedrockSamples.thenCompose(samples -> samples.openSamplesRaw(opened -> {
+        return bedrockSamples.thenCompose(samples -> samples.samples().openRaw(opened -> {
             // Get a list of valid particle IDs from the bedrock samples
             List<Identifier> validParticleIds = new ArrayList<>();
             Path particlesPath = opened.getPath("resource_pack/particles");
-            try(DirectoryStream<Path> particles = opened.provider().newDirectoryStream(particlesPath, _ -> true)) {
+            try (DirectoryStream<Path> particles = opened.provider().newDirectoryStream(particlesPath, _ -> true)) {
                 particles.forEach(path -> {
                     try {
                         JsonElement json = JsonParser.parseString(Files.readString(path));
