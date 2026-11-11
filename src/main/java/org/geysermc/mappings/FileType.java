@@ -72,6 +72,10 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<NetworkCodec> MCPL_NETWORK_CODEC = nbtData("networkCodec", NetworkCodec.CODEC).mcpl();
     public static final FileType<NetworkTags> MCPL_NETWORK_TAGS = nbtData("networkTags", NetworkTags.CODEC).mcpl();
 
+    // Javaclass - enums
+    public static final FileType<String> INTERACTIVE_TAG = enumClass("InteractiveTag");
+    public static final FileType<String> MAP_COLOR = enumClass("MapColor");
+
     // Javaclass
     public static final FileType<String> BLOCKS = javaClass("Blocks");
     public static final FileType<String> BLOCK_STATE_PROPERTIES = javaClass("Properties");

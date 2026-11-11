@@ -47,6 +47,12 @@ public final class EnumDataGenerator extends MappingsGenerator<String> {
         return factory(name, fileType, () -> CompletableFuture.completedFuture(valuesSupplier.get().map(toString)));
     }
 
+    public static <E> Function<PackOutput, EnumDataGenerator> factory(String name, FileType<String> fileType, Supplier<Stream<E>> valuesSupplier,
+                                                                      Function<E, String> toString, Function<E, Stream<Object>> argsSupplier) {
+        return factory(name, fileType, valuesSupplier,
+                value -> toString.apply(value) + "(" + argsSupplier.apply(value).map(Object::toString).collect(Collectors.joining(", ")) + ")");
+    }
+
     public static <E extends StringRepresentable> Function<PackOutput, EnumDataGenerator> enumFactory(String name, FileType<String> fileType, Supplier<E[]> valuesSupplier) {
         return factory(name, fileType, () -> Arrays.stream(valuesSupplier.get()), constant -> constant.getSerializedName().toUpperCase(Locale.ROOT));
     }
