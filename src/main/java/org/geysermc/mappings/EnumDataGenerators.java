@@ -8,9 +8,12 @@ import org.geysermc.mappings.generator.javaclass.MapColorsGenerator;
 import org.geysermc.mappings.generator.mcpl.BuiltinSoundGenerator;
 import org.geysermc.mappings.generator.mcpl.CustomStatisticGenerator;
 import org.geysermc.mappings.generator.mcpl.LevelEventTypeGenerator;
+import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class EnumDataGenerators {
@@ -30,15 +33,21 @@ public final class EnumDataGenerators {
     }
 
     public static ProviderGroupBuilder enums(ProviderGroupBuilder builder) {
-        return builder.withFactory(MapColorsGenerator::new)
-                // Little crazy this one, move it to a separate method when adding more factories
-                .withSamplesFactory(EnumDataGenerator.samplesFactory("Interactive Tags", FileType.INTERACTIVE_TAG,
-                        samples -> samples.readFileOrThrow(FileType.BEDROCK_LANG_EN_US)
-                                .thenApply(texts -> texts.stringPropertyNames().stream()
-                                        .filter(string -> string.startsWith("action.interact."))
-                                        .map(string -> string.replace("action.interact.", "")
-                                                .replace(".", "_").toUpperCase(Locale.ROOT) +
-                                                "(" + MappingsUtil.wrapInQuotes(string) + ")"))));
+        return builder.withSamplesFactory(EnumDataGenerator.protocolFactory("Bedrock Enchantment", FileType.BEDROCK_ENCHANTMENT, FileType.BEDROCK_ENCHANTMENTS,
+                        enchantment -> !enchantment.name().equals("NumEnchantments") && !enchantment.name().equals("InvalidEnchantment")))
+                .withFactory(MapColorsGenerator::new)
+                .withSamplesFactory(EnumDataGenerators.interactiveTags());
+    }
+
+    private static BiFunction<PackOutput, CompletableFuture<BedrockSamples>, EnumDataGenerator> interactiveTags() {
+        // Little crazy this one
+        return EnumDataGenerator.samplesFactory("Interactive Tags", FileType.INTERACTIVE_TAG,
+                samples -> samples.readFileOrThrow(FileType.BEDROCK_LANG_EN_US)
+                        .thenApply(texts -> texts.stringPropertyNames().stream()
+                                .filter(string -> string.startsWith("action.interact."))
+                                .map(string -> string.replace("action.interact.", "")
+                                        .replace(".", "_").toUpperCase(Locale.ROOT) +
+                                        "(" + MappingsUtil.wrapInQuotes(string) + ")")));
     }
 
     private static Function<PackOutput, EnumDataGenerator> mcplRegistry(String name, FileType<String> fileType, Registry<?> registry) {

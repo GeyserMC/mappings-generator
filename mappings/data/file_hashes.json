@@ -6,6 +6,7 @@
     "javaclass/GameRules.java": -990502181,
     "javaclass/Items.java": -397807310,
     "javaclass/Properties.java": -1809920470,
+    "javaclass/enum/BedrockEnchantment.java": 1976741096,
     "javaclass/enum/InteractiveTag.java": -804574559,
     "javaclass/enum/MapColor.java": 1310943801,
     "javaclass/tag/BlockTag.java": 2126629028,

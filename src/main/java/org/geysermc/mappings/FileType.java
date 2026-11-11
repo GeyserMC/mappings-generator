@@ -16,6 +16,7 @@ import org.geysermc.mappings.definitions.biome.BedrockBiome;
 import org.geysermc.mappings.definitions.block.BlockEntry;
 import org.geysermc.mappings.definitions.block.BlockMappings;
 import org.geysermc.mappings.definitions.block.BlockPalette;
+import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.definitions.shape.BlockShapeMappings;
 import org.geysermc.mappings.definitions.component.ItemDataComponents;
 import org.geysermc.mappings.definitions.component.TypedResolvableDataComponent;
@@ -33,6 +34,7 @@ import org.geysermc.mappings.util.MappingsCodecs;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /// A {@link org.geysermc.mappings.FileType} stores a path to a file (relative to some "root" folder or system),
 /// its {@link Codec}, and the {@link Type} it is serialised as (either {@link Type#JSON}, {@link Type#NBT}, or {@link Type#TEXT}).
@@ -74,6 +76,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<NetworkTags> MCPL_NETWORK_TAGS = nbtData("networkTags", NetworkTags.CODEC).mcpl();
 
     // Javaclass - enums
+    public static final FileType<String> BEDROCK_ENCHANTMENT = enumClass("BedrockEnchantment");
     public static final FileType<String> INTERACTIVE_TAG = enumClass("InteractiveTag");
     public static final FileType<String> MAP_COLOR = enumClass("MapColor");
 
@@ -117,6 +120,9 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     // bedrock-samples files
     public static final FileType<List<BedrockBiome>> BEDROCK_BIOMES = bedrockSamplesMetadata("mojang-biomes", BedrockBiome.CODEC.listOf().fieldOf("data_items").codec());
     public static final FileType<Properties> BEDROCK_LANG_EN_US = bedrockSamplesLanguage("en_US");
+
+    // bedrock-protocol files
+    public static FileType<Set<EnumConstant>> BEDROCK_ENCHANTMENTS = bedrockProtocolEnum("Enchant__Type");
 
     // Generator
     public static final FileType<MappingsOutput.FileHashes> FILE_HASHES = jsonData("file_hashes", MappingsOutput.FileHashes.CODEC);
@@ -180,6 +186,10 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     private static FileType<Properties> bedrockSamplesLanguage(String name) {
         return text("resource_pack/texts/" + name + ".lang", MappingsCodecs.PROPERTIES, false);
+    }
+
+    private static FileType<Set<EnumConstant>> bedrockProtocolEnum(String name) {
+        return json(name, EnumConstant.SET_CODEC, false);
     }
 
     private static <T> FileType<T> json(String name, Codec<T> codec, boolean managed) {

@@ -7,15 +7,19 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.StringRepresentable;
 import org.geysermc.mappings.FileType;
+import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.generator.MappingsGenerator;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.resources.DownloadedSamples;
+import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,6 +81,15 @@ public final class EnumDataGenerator extends MappingsGenerator<String> {
                                                                                                               DownloadedSamples.FileSystemUser<Stream<String>> extractor) {
         return (output, samplesFuture) -> new EnumDataGenerator(output, fileType, name,
                 () -> samplesFuture.thenCompose(samples -> samples.samples().open(extractor)));
+    }
+
+    public static BiFunction<PackOutput, CompletableFuture<BedrockSamples>, EnumDataGenerator> protocolFactory(String name, FileType<String> fileType,
+                                                                                                               FileType<Set<EnumConstant>> source, Predicate<EnumConstant> predicate) {
+        return (output, samplesFuture) -> new EnumDataGenerator(output, fileType, name,
+                () -> samplesFuture.thenCompose(samples
+                        -> samples.protocol().open(protocolData
+                        -> protocolData.readFileOrThrow(source).thenApply(constants
+                        -> constants.stream().filter(predicate).map(EnumConstant::name).map(MappingsUtil::camelToUpperCaseSnakeCase)))));
     }
 
     private static String keyToConstant(ResourceKey<?> key) {
