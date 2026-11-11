@@ -8,7 +8,9 @@ import org.geysermc.mappings.generator.javaclass.MapColorsGenerator;
 import org.geysermc.mappings.generator.mcpl.BuiltinSoundGenerator;
 import org.geysermc.mappings.generator.mcpl.CustomStatisticGenerator;
 import org.geysermc.mappings.generator.mcpl.LevelEventTypeGenerator;
+import org.geysermc.mappings.util.MappingsUtil;
 
+import java.util.Locale;
 import java.util.function.Function;
 
 public final class EnumDataGenerators {
@@ -28,7 +30,15 @@ public final class EnumDataGenerators {
     }
 
     public static ProviderGroupBuilder enums(ProviderGroupBuilder builder) {
-        return builder.withFactory(MapColorsGenerator::new);
+        return builder.withFactory(MapColorsGenerator::new)
+                // Little crazy this one, move it to a separate method when adding more factories
+                .withSamplesFactory(EnumDataGenerator.samplesFactory("Interactive Tags", FileType.INTERACTIVE_TAG,
+                        samples -> samples.readFileOrThrow(FileType.BEDROCK_LANG_EN_US)
+                                .thenApply(texts -> texts.stringPropertyNames().stream()
+                                        .filter(string -> string.startsWith("action.interact."))
+                                        .map(string -> string.replace("action.interact.", "")
+                                                .replace(".", "_").toUpperCase(Locale.ROOT) +
+                                                "(" + MappingsUtil.wrapInQuotes(string) + ")"))));
     }
 
     private static Function<PackOutput, EnumDataGenerator> mcplRegistry(String name, FileType<String> fileType, Registry<?> registry) {

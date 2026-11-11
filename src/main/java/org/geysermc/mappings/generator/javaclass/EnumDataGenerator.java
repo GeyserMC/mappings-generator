@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.StringRepresentable;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.generator.MappingsGenerator;
+import org.geysermc.mappings.resources.BedrockSamples;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -69,6 +70,12 @@ public final class EnumDataGenerator extends MappingsGenerator<String> {
                                                                                                                    ResourceKey<? extends Registry<T>> registry) {
         return (output, registryFuture) -> new EnumDataGenerator(output, fileType, name,
                 () -> registryFuture.thenApply(registries -> registries.lookupOrThrow(registry).listElementIds().map(EnumDataGenerator::keyToConstant)));
+    }
+
+    public static BiFunction<PackOutput, CompletableFuture<BedrockSamples>, EnumDataGenerator> samplesFactory(String name, FileType<String> fileType,
+                                                                                                              BedrockSamples.FileSystemUser<Stream<String>> extractor) {
+        return (output, samplesFuture) -> new EnumDataGenerator(output, fileType, name,
+                () -> samplesFuture.thenCompose(samples -> samples.openSamples(extractor)));
     }
 
     private static String keyToConstant(ResourceKey<?> key) {

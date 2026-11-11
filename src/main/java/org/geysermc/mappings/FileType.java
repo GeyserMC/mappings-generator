@@ -32,6 +32,7 @@ import org.geysermc.mappings.util.MappingsCodecs;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /// A {@link org.geysermc.mappings.FileType} stores a path to a file (relative to some "root" folder or system),
 /// its {@link Codec}, and the {@link Type} it is serialised as (either {@link Type#JSON}, {@link Type#NBT}, or {@link Type#TEXT}).
@@ -80,7 +81,6 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<String> BLOCKS = javaClass("Blocks");
     public static final FileType<String> BLOCK_STATE_PROPERTIES = javaClass("Properties");
     public static final FileType<String> GAME_RULES = javaClass("GameRules");
-    public static final FileType<String> MAP_COLOR = enumClass("MapColor");
     public static final FileType<String> ITEMS = javaClass("Items");
 
     // Javaclass - tags
@@ -116,6 +116,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     // bedrock-samples files
     public static final FileType<List<BedrockBiome>> BEDROCK_BIOMES = bedrockSamplesMetadata("mojang-biomes", BedrockBiome.CODEC.listOf().fieldOf("data_items").codec());
+    public static final FileType<Properties> BEDROCK_LANG_EN_US = bedrockSamplesLanguage("en_US");
 
     // Generator
     public static final FileType<MappingsOutput.FileHashes> FILE_HASHES = jsonData("file_hashes", MappingsOutput.FileHashes.CODEC);
@@ -175,6 +176,10 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     private static <T> FileType<T> bedrockSamplesMetadata(String name, Codec<T> codec) {
         return json("metadata/vanilladata_modules/" + name, codec, false);
+    }
+
+    private static FileType<Properties> bedrockSamplesLanguage(String name) {
+        return text("resource_pack/texts/" + name + ".lang", MappingsCodecs.PROPERTIES, false);
     }
 
     private static <T> FileType<T> json(String name, Codec<T> codec, boolean managed) {
