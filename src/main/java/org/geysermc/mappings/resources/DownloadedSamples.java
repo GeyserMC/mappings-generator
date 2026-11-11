@@ -93,6 +93,7 @@ public final class DownloadedSamples {
                 } catch (Exception exception) {
                     throw new RuntimeException("Failed to verify download of " + releaseInfo, exception);
                 }
+                LOGGER.info("Successfully downloaded {} for version {}", releaseInfo.type, releaseInfo.reportedVersion);
                 return new DownloadedSamples(releaseInfo.destination, releaseInfo.rootGetter);
             });
         });
