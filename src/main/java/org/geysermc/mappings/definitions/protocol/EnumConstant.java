@@ -22,12 +22,10 @@ public record EnumConstant(String name, int id) {
     );
 
     public static int findId(Set<EnumConstant> constants, String name) {
-        int i = 0;
         for (EnumConstant constant : constants) {
             if (constant.name.equals(name)) {
-                return i;
+                return constant.id;
             }
-            i++;
         }
         throw new IllegalArgumentException("Enum does not contain constant named " + name);
     }
