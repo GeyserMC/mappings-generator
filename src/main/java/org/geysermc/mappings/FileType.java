@@ -12,10 +12,12 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import org.geysermc.mappings.definitions.biome.BedrockBiome;
 import org.geysermc.mappings.definitions.block.BlockEntry;
 import org.geysermc.mappings.definitions.block.BlockMappings;
 import org.geysermc.mappings.definitions.block.BlockPalette;
+import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.definitions.shape.BlockShapeMappings;
 import org.geysermc.mappings.definitions.component.ItemDataComponents;
@@ -106,6 +108,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<Map<Identifier, CompoundTag>> ITEM_COMPONENTS = nbtMappings("item_components", ItemComponents.COMPONENTS_CODEC);
     public static final FileType<List<ItemDataComponents>> ITEM_DATA_COMPONENTS = jsonMappings("item_data_components", ItemDataComponents.CODEC.listOf());
     public static final FileType<Map<Item, ItemEntry>> ITEM_MAPPINGS = jsonMappings("items", Codec.unboundedMap(BuiltInRegistries.ITEM.byNameCodec(), ItemEntry.CODEC));
+    public static final FileType<Map<Holder<MapDecorationType>, BedrockMapDecoration.Serialized>> MAP_DECORATIONS = jsonMappings("map_decorations", Codec.unboundedMap(MapDecorationType.CODEC, BedrockMapDecoration.Serialized.CODEC));
     public static final FileType<Map<ParticleType<?>, ParticleMapping>> PARTICLE_MAPPINGS = jsonMappings("particles", Codec.unboundedMap(BuiltInRegistries.PARTICLE_TYPE.byNameCodec(), ParticleMapping.CODEC));
     public static final FileType<String> README = text("mappings/README.md", Codec.STRING, true); // An edge case
     public static final FileType<List<List<TypedResolvableDataComponent>>> RESOLVABLE_ITEM_DATA_COMPONENTS = jsonMappings("resolvable_item_data_components", TypedResolvableDataComponent.CODEC.listOf().listOf().fieldOf("value").codec());
@@ -123,6 +126,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     // bedrock-protocol files
     public static FileType<Set<EnumConstant>> BEDROCK_ENCHANTMENTS = bedrockProtocolEnum("Enchant__Type");
+    public static FileType<Set<EnumConstant>> BEDROCK_MAP_DECORATIONS = bedrockProtocolEnum("MapDecoration__Type");
 
     // Generator
     public static final FileType<MappingsOutput.FileHashes> FILE_HASHES = jsonData("file_hashes", MappingsOutput.FileHashes.CODEC);
