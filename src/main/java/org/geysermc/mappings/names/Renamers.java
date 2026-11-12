@@ -1,19 +1,27 @@
 package org.geysermc.mappings.names;
 
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.maps.MapDecorationType;
+import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
+import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.names.renamers.BlockClassNames;
 import org.geysermc.mappings.names.renamers.BlockNames;
 import org.geysermc.mappings.names.renamers.ItemClassNames;
 import org.geysermc.mappings.names.renamers.ItemNames;
 import org.geysermc.mappings.names.renamers.ParticleMappings;
+import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -65,6 +73,46 @@ public final class Renamers {
     public static final InstanceRenamer<Item, Identifier, Identifier> ITEMS = ItemNames.INSTANCE;
     public static final TypeRenamer<Item, String> ITEM_CLASSES = ItemClassNames.INSTANCE;
     public static final TypeRenamer<ParticleType<?>, Optional<ParticleMapping>> PARTICLES = ParticleMappings.PARTICLES;
+    public static final TypeRenamer<Identifier, String> ENCHANTMENTS = TypeRenamer.of(identifier -> MappingsUtil.snakeToPascalCase(identifier.getPath()), builder -> builder
+            .<ResourceKey<Enchantment>>mapType(ResourceKey::identifier)
+            // Sweeping Edge doesn't exist on bedrock :(
+            .rename(Enchantments.BINDING_CURSE, "CurseOfBinding")
+            .rename(Enchantments.VANISHING_CURSE, "CurseOfVanishing"));
+    public static final TypeRenamer<Holder<MapDecorationType>, BedrockMapDecoration> MAP_DECORATIONS = TypeRenamer.of(BedrockMapDecoration::new, builder -> builder
+            // Simple renames
+            .<String>mapResult(BedrockMapDecoration::new)
+            .rename(MapDecorationTypes.PLAYER, "MarkerWhite")
+            .rename(MapDecorationTypes.FRAME, "MarkerSign")
+            .rename(MapDecorationTypes.RED_MARKER, "MarkerRed")
+            .rename(MapDecorationTypes.BLUE_MARKER, "MarkerBlue")
+            .rename(MapDecorationTypes.TARGET_X, "XWhite")
+            .rename(MapDecorationTypes.TARGET_POINT, "TriangleRed")
+            .rename(MapDecorationTypes.PLAYER_OFF_MAP, "SquareWhite")
+            .rename(MapDecorationTypes.PLAYER_OFF_LIMITS, "SmallSquareWhite")
+            .rename(MapDecorationTypes.RED_X, "XWhite")
+            .rename(MapDecorationTypes.SWAMP_HUT, "WitchHut")
+            .rename(MapDecorationTypes.ANCIENT_CITY, "BuriedAncientCity")
+            .rename(MapDecorationTypes.MINESHAFT, "BuriedMineshaft")
+            .rename(MapDecorationTypes.OCEAN_RUIN_WARM, "WarmOceanRuins")
+
+            // Banners, all one icon but with different colours
+            .<Integer>mapResult(rgb -> new BedrockMapDecoration("SmallSquareWhite", ARGB.color(0xFF, rgb)))
+            .rename(MapDecorationTypes.WHITE_BANNER, 0xFFFFFF)
+            .rename(MapDecorationTypes.ORANGE_BANNER, 0xF9801D)
+            .rename(MapDecorationTypes.MAGENTA_BANNER, 0xC74EBD)
+            .rename(MapDecorationTypes.LIGHT_BLUE_BANNER, 0x3AB3DA)
+            .rename(MapDecorationTypes.YELLOW_BANNER, 0xFED83D)
+            .rename(MapDecorationTypes.LIME_BANNER, 0x80C71F)
+            .rename(MapDecorationTypes.PINK_BANNER, 0xF38BAA)
+            .rename(MapDecorationTypes.GRAY_BANNER, 0x474F52)
+            .rename(MapDecorationTypes.LIGHT_GRAY_BANNER, 0x9D9D97)
+            .rename(MapDecorationTypes.CYAN_BANNER, 0x169C9C)
+            .rename(MapDecorationTypes.PURPLE_BANNER, 0x8932B8)
+            .rename(MapDecorationTypes.BLUE_BANNER, 0x3C44AA)
+            .rename(MapDecorationTypes.BROWN_BANNER, 0x835432)
+            .rename(MapDecorationTypes.GREEN_BANNER, 0x5E7C16)
+            .rename(MapDecorationTypes.RED_BANNER, 0xB02E26)
+            .rename(MapDecorationTypes.BLACK_BANNER, 0x1D1D21));
 
     private Renamers() {}
 }

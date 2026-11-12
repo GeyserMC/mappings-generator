@@ -37,11 +37,11 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
 
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
-        return bedrockSamples.thenCompose(samples -> samples.openSamplesRaw(opened ->
-                JsonParser.parseString(Files.readString(opened.getPath("resource_pack/sounds/sound_definitions.json")))
-                        .getAsJsonObject()
-                        .getAsJsonObject("sound_definitions")
-                        .keySet()))
+        return bedrockSamples.thenCompose(samples -> samples.samples().openRaw(opened ->
+                        JsonParser.parseString(Files.readString(opened.getPath("resource_pack/sounds/sound_definitions.json")))
+                                .getAsJsonObject()
+                                .getAsJsonObject("sound_definitions")
+                                .keySet()))
                 .thenCombine(readExistingFile(), Pair::of).thenCompose(validIdsAndMappings -> {
                     Set<String> validBedrockSounds = validIdsAndMappings.getFirst();
                     Map<SoundEvent, SoundMapping> mappings = new Object2ObjectOpenHashMap<>();

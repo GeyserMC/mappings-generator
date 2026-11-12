@@ -50,7 +50,7 @@ public interface InstanceRenamer<T, I, R> {
     /// @param <I> the instance of the type {@link T} in-game, e.g. {@link BlockState}
     /// @param <R> the rename result, e.g. {@link String} or {@link Identifier}
     /// @return the created {@link InstanceRenamer}
-    static <T, I, R> InstanceRenamer<T, I, R> of(Function<I, R> fallback, Consumer<Aggregator<T, I, R, T, I, R>> builder) {
+    static <T, I, R> InstanceRenamer<T, I, R> of(Function<I, R> fallback, Function<Aggregator<T, I, R, T, I, R>, ?> builder) {
         return of((_, instance) -> fallback.apply(instance), builder);
     }
 
@@ -67,9 +67,9 @@ public interface InstanceRenamer<T, I, R> {
     /// @param <I> the instance of the type {@link T} in-game, e.g. {@link BlockState}
     /// @param <R> the rename result, e.g. {@link String} or {@link Identifier}
     /// @return the created {@link InstanceRenamer}
-    static <T, I, R> InstanceRenamer<T, I, R> of(BiFunction<T, I, R> fallback, Consumer<Aggregator<T, I, R, T, I, R>> builder) {
+    static <T, I, R> InstanceRenamer<T, I, R> of(BiFunction<T, I, R> fallback, Function<Aggregator<T, I, R, T, I, R>, ?> builder) {
         AbstractAggregator.Builder<T, I, R> renamer = new AbstractAggregator.Builder<>(fallback);
-        builder.accept(renamer);
+        builder.apply(renamer);
         return renamer.build();
     }
 
@@ -81,9 +81,9 @@ public interface InstanceRenamer<T, I, R> {
     /// @param <I> the instance of the type {@link T} in-game, e.g. {@link BlockState}
     /// @param <R> the rename result, e.g. {@link String} or {@link Identifier}
     /// @return the created {@link InstanceRenamer}
-    static <T, I, R> InstanceRenamer<T, I, Optional<R>> ofOptional(Consumer<Aggregator<T, I, R, T, I, R>> builder) {
+    static <T, I, R> InstanceRenamer<T, I, Optional<R>> ofOptional(Function<Aggregator<T, I, R, T, I, R>, ?> builder) {
         AbstractAggregator.OptionalBuilder<T, I, R> renamer = new AbstractAggregator.OptionalBuilder<>();
-        builder.accept(renamer);
+        builder.apply(renamer);
         return renamer.build();
     }
 

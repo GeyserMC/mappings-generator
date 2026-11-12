@@ -12,10 +12,13 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import org.geysermc.mappings.definitions.biome.BedrockBiome;
 import org.geysermc.mappings.definitions.block.BlockEntry;
 import org.geysermc.mappings.definitions.block.BlockMappings;
 import org.geysermc.mappings.definitions.block.BlockPalette;
+import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
+import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.definitions.shape.BlockShapeMappings;
 import org.geysermc.mappings.definitions.component.ItemDataComponents;
 import org.geysermc.mappings.definitions.component.TypedResolvableDataComponent;
@@ -32,6 +35,8 @@ import org.geysermc.mappings.util.MappingsCodecs;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /// A {@link org.geysermc.mappings.FileType} stores a path to a file (relative to some "root" folder or system),
 /// its {@link Codec}, and the {@link Type} it is serialised as (either {@link Type#JSON}, {@link Type#NBT}, or {@link Type#TEXT}).
@@ -56,21 +61,31 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     // These are alphabetically sorted within their groups, please keep it that way!!
 
+    // MCPL - enums
+    public static final FileType<String> MCPL_BLOCK_ENTITY_TYPE = enumClass("BlockEntityType").mcpl();
+    public static final FileType<String> MCPL_BUILTIN_SOUND = enumClass("BuiltinSound").mcpl();
+    public static final FileType<String> MCPL_COMMAND_PARSER = enumClass("CommandParser").mcpl();
+    public static final FileType<String> MCPL_CONTAINER_TYPE = enumClass("ContainerType").mcpl();
+    public static final FileType<String> MCPL_CUSTOM_STATISTIC = enumClass("CustomStatistic").mcpl();
+    public static final FileType<String> MCPL_EFFECT = enumClass("Effect").mcpl();
+    public static final FileType<String> MCPL_LEVEL_EVENT_TYPE = enumClass("LevelEventType").mcpl();
+    public static final FileType<String> MCPL_MAP_ICON_TYPE = enumClass("MapIconType").mcpl();
+    public static final FileType<String> MCPL_PARTICLE_TYPE = enumClass("ParticleType").mcpl();
+
     // MCPL
-    public static final FileType<String> MCPL_BLOCK_EVENT = javaClass("ClientboundBlockEventPacket").parented("mcpl");
-    public static final FileType<String> MCPL_BUILTIN_SOUND = javaClass("BuiltinSound").parented("mcpl");
-    public static final FileType<String> MCPL_CUSTOM_STATISTIC = javaClass("CustomStatistic").parented("mcpl");
-    public static final FileType<String> MCPL_LEVEL_EVENT_TYPE = javaClass("LevelEventType").parented("mcpl");
-    public static final FileType<String> MCPL_MAP_ICON_TYPE = javaClass("MapIconType").parented("mcpl");
-    public static final FileType<NetworkCodec> MCPL_NETWORK_CODEC = nbtData("networkCodec", NetworkCodec.CODEC).parented("mcpl");
-    public static final FileType<NetworkTags> MCPL_NETWORK_TAGS = nbtData("networkTags", NetworkTags.CODEC).parented("mcpl");
-    public static final FileType<String> MCPL_PARTICLE_TYPE = javaClass("ParticleType").parented("mcpl");
+    public static final FileType<String> MCPL_BLOCK_EVENT = javaClass("ClientboundBlockEventPacket").mcpl();
+    public static final FileType<NetworkCodec> MCPL_NETWORK_CODEC = nbtData("networkCodec", NetworkCodec.CODEC).mcpl();
+    public static final FileType<NetworkTags> MCPL_NETWORK_TAGS = nbtData("networkTags", NetworkTags.CODEC).mcpl();
+
+    // Javaclass - enums
+    public static final FileType<String> BEDROCK_ENCHANTMENT = enumClass("BedrockEnchantment");
+    public static final FileType<String> INTERACTIVE_TAG = enumClass("InteractiveTag");
+    public static final FileType<String> MAP_COLOR = enumClass("MapColor");
 
     // Javaclass
     public static final FileType<String> BLOCKS = javaClass("Blocks");
     public static final FileType<String> BLOCK_STATE_PROPERTIES = javaClass("Properties");
     public static final FileType<String> GAME_RULES = javaClass("GameRules");
-    public static final FileType<String> MAP_COLOR = javaClass("MapColor");
     public static final FileType<String> ITEMS = javaClass("Items");
 
     // Javaclass - tags
@@ -93,6 +108,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<Map<Identifier, CompoundTag>> ITEM_COMPONENTS = nbtMappings("item_components", ItemComponents.COMPONENTS_CODEC);
     public static final FileType<List<ItemDataComponents>> ITEM_DATA_COMPONENTS = jsonMappings("item_data_components", ItemDataComponents.CODEC.listOf());
     public static final FileType<Map<Item, ItemEntry>> ITEM_MAPPINGS = jsonMappings("items", Codec.unboundedMap(BuiltInRegistries.ITEM.byNameCodec(), ItemEntry.CODEC));
+    public static final FileType<Map<Holder<MapDecorationType>, BedrockMapDecoration.Serialized>> MAP_DECORATIONS = jsonMappings("map_decorations", Codec.unboundedMap(MapDecorationType.CODEC, BedrockMapDecoration.Serialized.CODEC));
     public static final FileType<Map<ParticleType<?>, ParticleMapping>> PARTICLE_MAPPINGS = jsonMappings("particles", Codec.unboundedMap(BuiltInRegistries.PARTICLE_TYPE.byNameCodec(), ParticleMapping.CODEC));
     public static final FileType<String> README = text("mappings/README.md", Codec.STRING, true); // An edge case
     public static final FileType<List<List<TypedResolvableDataComponent>>> RESOLVABLE_ITEM_DATA_COMPONENTS = jsonMappings("resolvable_item_data_components", TypedResolvableDataComponent.CODEC.listOf().listOf().fieldOf("value").codec());
@@ -106,6 +122,11 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     // bedrock-samples files
     public static final FileType<List<BedrockBiome>> BEDROCK_BIOMES = bedrockSamplesMetadata("mojang-biomes", BedrockBiome.CODEC.listOf().fieldOf("data_items").codec());
+    public static final FileType<Properties> BEDROCK_LANG_EN_US = bedrockSamplesLanguage("en_US");
+
+    // bedrock-protocol files
+    public static FileType<Set<EnumConstant>> BEDROCK_ENCHANTMENTS = bedrockProtocolEnum("Enchant__Type");
+    public static FileType<Set<EnumConstant>> BEDROCK_MAP_DECORATIONS = bedrockProtocolEnum("MapDecoration__Type");
 
     // Generator
     public static final FileType<MappingsOutput.FileHashes> FILE_HASHES = jsonData("file_hashes", MappingsOutput.FileHashes.CODEC);
@@ -119,12 +140,20 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
         types.add(this);
     }
 
+    private FileType<T> mcpl() {
+        return parented("mcpl");
+    }
+
     private FileType<T> parented(String parent) {
         return new FileType<>(parent + "/" + path, codec, type, managed);
     }
 
     private static FileType<String> tagClass(String name) {
         return javaClass("tag/" + name);
+    }
+
+    private static FileType<String> enumClass(String name) {
+        return javaClass("enum/" + name);
     }
 
     private static FileType<String> javaClass(String name) {
@@ -157,6 +186,14 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     private static <T> FileType<T> bedrockSamplesMetadata(String name, Codec<T> codec) {
         return json("metadata/vanilladata_modules/" + name, codec, false);
+    }
+
+    private static FileType<Properties> bedrockSamplesLanguage(String name) {
+        return text("resource_pack/texts/" + name + ".lang", MappingsCodecs.PROPERTIES, false);
+    }
+
+    private static FileType<Set<EnumConstant>> bedrockProtocolEnum(String name) {
+        return json(name, EnumConstant.SET_CODEC, false);
     }
 
     private static <T> FileType<T> json(String name, Codec<T> codec, boolean managed) {

@@ -11,6 +11,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.pattern.AnsiEscape;
 import org.geysermc.mappings.MappingsGenerators;
 import org.jspecify.annotations.Nullable;
@@ -18,7 +19,9 @@ import org.jspecify.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /// Holds utility methods used across the project
@@ -75,6 +78,14 @@ public final class MappingsUtil {
     /// Wraps the given string in quotes (")
     public static String wrapInQuotes(String string) {
         return "\"" + string + "\"";
+    }
+
+    public static String camelToUpperCaseSnakeCase(String string) {
+        return String.join("_", StringUtils.splitByCharacterTypeCamelCase(string)).toUpperCase(Locale.ROOT);
+    }
+
+    public static String snakeToPascalCase(String string) {
+        return Arrays.stream(string.split("_")).map(StringUtils::capitalize).collect(Collectors.joining());
     }
 
     /// Formats the string with the given {@link AnsiEscape} styles. Returns a string with the ANSI style codes first, then the given string, and then

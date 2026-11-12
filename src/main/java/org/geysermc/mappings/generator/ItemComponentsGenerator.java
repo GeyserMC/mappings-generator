@@ -27,7 +27,7 @@ public final class ItemComponentsGenerator extends MappingsGenerator<Map<Identif
 
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
-        return bedrockSamples.thenCompose(samples -> samples.openData(ItemComponents::read)).thenCompose(components -> {
+        return bedrockSamples.thenCompose(samples -> samples.data().open(ItemComponents::read)).thenCompose(components -> {
             List<Identifier> additionalOffhandItems = new ObjectArrayList<>();
 
             for (Identifier bedrockItem : components.components().keySet()) {

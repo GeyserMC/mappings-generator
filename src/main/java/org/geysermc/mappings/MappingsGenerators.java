@@ -6,13 +6,11 @@ import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.data.DataProvider;
-import net.minecraft.data.PackOutput;
 import org.geysermc.mappings.generator.BiomeMappingsGenerator;
 import org.geysermc.mappings.generator.BlockMappingsGenerator;
+import org.geysermc.mappings.generator.MapDecorationMappingsGenerator;
 import org.geysermc.mappings.generator.PotPatternMappingsGenerator;
 import org.geysermc.mappings.generator.ReadMeGenerator;
-import org.geysermc.mappings.generator.mcpl.MapIconTypeGenerator;
-import org.geysermc.mappings.generator.mcpl.ParticleTypeGenerator;
 import org.geysermc.mappings.generator.shape.BlockShapeMappingsGenerator;
 import org.geysermc.mappings.generator.shape.CollisionShapeMappingsGenerator;
 import org.geysermc.mappings.generator.ItemDataComponentGenerator;
@@ -28,12 +26,8 @@ import org.geysermc.mappings.generator.javaclass.BlockStatePropertiesGenerator;
 import org.geysermc.mappings.generator.javaclass.BlocksGenerator;
 import org.geysermc.mappings.generator.javaclass.GameRulesGenerator;
 import org.geysermc.mappings.generator.javaclass.ItemsGenerator;
-import org.geysermc.mappings.generator.javaclass.MapColorsGenerator;
 import org.geysermc.mappings.generator.javaclass.TagListGenerator;
-import org.geysermc.mappings.generator.mcpl.BuiltinSoundGenerator;
 import org.geysermc.mappings.generator.mcpl.ClientboundBlockEventPacketGenerator;
-import org.geysermc.mappings.generator.mcpl.CustomStatisticGenerator;
-import org.geysermc.mappings.generator.mcpl.LevelEventTypeGenerator;
 import org.geysermc.mappings.generator.mcpl.NetworkCodecGenerator;
 import org.geysermc.mappings.generator.mcpl.NetworkTagsGenerator;
 import org.geysermc.mappings.mixin.accessor.PackGeneratorAccessor;
@@ -43,13 +37,10 @@ import org.slf4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /// The main entrypoint. {@link MappingsGenerator}s must be registered here, in the static initialiser block.
@@ -65,26 +56,22 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String SELECTED_PROVIDER_GROUP = System.getProperty("geyser.providers.selected");
 
-    private static final Map<String, List<ProviderFactory<? extends DataProvider>>> providerGroups = new Object2ObjectLinkedOpenHashMap<>();
+    private static final Map<String, List<ProviderGroupBuilder.ProviderFactory<? extends DataProvider>>> providerGroups = new Object2ObjectLinkedOpenHashMap<>();
 
     static {
         // These are sorted according to their respective FileType, please keep it that way!!
 
         registerProviderGroup("mcpl", builder -> builder
+                .with(EnumDataGenerators::mcpl)
                 .withFactory(ClientboundBlockEventPacketGenerator::new)
-                .withFactory(BuiltinSoundGenerator::new)
-                .withFactory(CustomStatisticGenerator::new)
-                .withFactory(LevelEventTypeGenerator::new)
-                .withFactory(MapIconTypeGenerator::new)
                 .withRegistryFactory(NetworkCodecGenerator::new)
-                .withRegistryFactory(NetworkTagsGenerator::new)
-                .withFactory(ParticleTypeGenerator::new));
+                .withRegistryFactory(NetworkTagsGenerator::new));
 
         registerProviderGroup("javaclass", builder -> {
-            builder.withRegistryFactory(BlocksGenerator::new)
+            builder.with(EnumDataGenerators::enums)
+                    .withRegistryFactory(BlocksGenerator::new)
                     .withFactory(BlockStatePropertiesGenerator::new)
                     .withFactory(GameRulesGenerator::new)
-                    .withFactory(MapColorsGenerator::new)
                     .withRegistryFactory(ItemsGenerator::new);
             TagListGenerator.addProviders(builder::withFactory);
             return builder;
@@ -100,6 +87,7 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
                 .withSamplesFactory(ItemComponentsGenerator::new)
                 .withRegistryFactory(ItemDataComponentGenerator::new)
                 .withSamplesFactory(ItemMappingsGenerator::new)
+                .withSamplesFactory(MapDecorationMappingsGenerator::new)
                 .withSamplesFactory(ParticleMappingsGenerator::new)
                 .withFactory(ReadMeGenerator::new)
                 .withRegistryFactory(ResolvableItemDataComponentsGenerator::new)
@@ -133,7 +121,7 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
         // Have to use this instead of the registries provided by Fabric because these have tags
         CompletableFuture<RegistryAccess> registryAccess = RegistryAccessUtil.create();
 
-        List<ProviderFactory<? extends DataProvider>> factories;
+        List<ProviderGroupBuilder.ProviderFactory<? extends DataProvider>> factories;
         if (SELECTED_PROVIDER_GROUP != null) {
             factories = providerGroups.get(SELECTED_PROVIDER_GROUP);
             if (factories == null) {
@@ -153,32 +141,6 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
         if (providerGroups.containsKey(name)) {
             throw new IllegalArgumentException("Tried to register provider group for name " + name + " twice!");
         }
-        providerGroups.put(name, builder.apply(new ProviderGroupBuilder()).factories);
-    }
-
-    private static class ProviderGroupBuilder {
-        private final List<ProviderFactory<? extends DataProvider>> factories = new ArrayList<>();
-
-        private ProviderGroupBuilder withFactory(Function<PackOutput, ? extends DataProvider> factory) {
-            return withRegistryAndSamplesFactory((output, _, _) -> factory.apply(output));
-        }
-
-        private ProviderGroupBuilder withRegistryFactory(BiFunction<PackOutput, CompletableFuture<RegistryAccess>, ? extends DataProvider> factory) {
-            return withRegistryAndSamplesFactory((output, registries, _) -> factory.apply(output, registries));
-        }
-
-        private ProviderGroupBuilder withSamplesFactory(BiFunction<PackOutput, CompletableFuture<BedrockSamples>, ? extends DataProvider> factory) {
-            return withRegistryAndSamplesFactory((output, _, samples) -> factory.apply(output, samples));
-        }
-
-        private ProviderGroupBuilder withRegistryAndSamplesFactory(ProviderFactory<? extends DataProvider> factory) {
-            this.factories.add(factory);
-            return this;
-        }
-    }
-
-    private interface ProviderFactory<T extends DataProvider> {
-
-        T create(PackOutput output, CompletableFuture<RegistryAccess> registries, CompletableFuture<BedrockSamples> samples);
+        providerGroups.put(name, builder.apply(new ProviderGroupBuilder()).build());
     }
 }
