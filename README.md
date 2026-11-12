@@ -88,6 +88,7 @@ A few notes:
 - The core classes used in the generator's code have Javadocs. Make sure to read these as they can help you quite a bit!
 - If you're not sure how to accomplish something, looking at the code of other generators might help you out.
 - If you're simply aiming to write a new `*Tag.java` class, containing all vanilla tags of a registry, take a look at [`TagListGenerator#addProviders`](src/main/java/org/geysermc/mappings/generator/javaclass/TagListGenerator.java).
+- If you're aiming to write an enum generator, take a look at the [`EnumDataGenerator`](src/main/java/org/geysermc/mappings/generator/javaclass/EnumDataGenerator.java) and [`EnumDataGenerators`](src/main/java/org/geysermc/mappings/EnumDataGenerators.java) classes.
 - If you're stuck somewhere, don't be afraid to reach out on [our Discord](https://discord.gg/geysermc)!
 - Make sure to log information! Use error logs **only** if an error occurred that causes the generated file(s) to be incomplete. Generally, you can obtain a logger for a class as follows:
     ```java
@@ -131,6 +132,7 @@ The generator generates the following data:
     - `additional_offhand_items.json`: an array of all Bedrock items that were patched by the generator to allow putting into the off-hand.
     - `item_data_components.json`: listing default data components for all of Minecraft Java's items, encoded to base 64 using Mojang's stream codecs.
     - `items.json`: a map from Minecraft Java item to its respective Bedrock item (with some additional data).
+    - `map_decorations.json`: a map from Minecraft Java map decoration type to its respective Bedrock type (optionally with an ARGB colour to apply).
     - `particles.json`: a map from Minecraft Java particle to its respective Bedrock identifier or event type.
     - `resolvable_item_data_components.json`: listing default data components for all of Minecraft Java's items, for components that hold data-driven content.
     - `sounds.json`: a map from Minecraft Java sound to its respective Bedrock identifier or event type.

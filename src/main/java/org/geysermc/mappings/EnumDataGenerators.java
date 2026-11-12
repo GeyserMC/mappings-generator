@@ -18,6 +18,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/// Holds all generators generating a stub enum to a `.java` file, whether they use {@link EnumDataGenerator} or not.
+///
+/// Since these type of generators are fairly common, they're kept in this separate class.
 public final class EnumDataGenerators {
 
     private EnumDataGenerators() {}
@@ -44,12 +47,10 @@ public final class EnumDataGenerators {
     private static BiFunction<PackOutput, CompletableFuture<BedrockSamples>, EnumDataGenerator> interactiveTags() {
         // Little crazy this one
         return EnumDataGenerator.samplesFactory("Interactive Tags", FileType.INTERACTIVE_TAG,
-                samples -> samples.readFileOrThrow(FileType.BEDROCK_LANG_EN_US)
-                        .thenApply(texts -> texts.stringPropertyNames().stream()
-                                .filter(string -> string.startsWith("action.interact."))
-                                .map(string -> string.replace("action.interact.", "")
-                                        .replace(".", "_").toUpperCase(Locale.ROOT) +
-                                        "(" + MappingsUtil.wrapInQuotes(string) + ")")));
+                FileType.BEDROCK_LANG_EN_US, texts -> texts.stringPropertyNames().stream()
+                        .filter(key -> key.startsWith("action.interact."))
+                        .map(key -> key.replace("action.interact.", "")
+                                .replace(".", "_").toUpperCase(Locale.ROOT) + "(" + MappingsUtil.wrapInQuotes(key) + ")"));
     }
 
     private static Function<PackOutput, EnumDataGenerator> mcplRegistry(String name, FileType<String> fileType, Registry<?> registry) {
