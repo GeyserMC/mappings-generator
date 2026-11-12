@@ -2,12 +2,14 @@ package org.geysermc.mappings;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import org.geysermc.mappings.generator.javaclass.EnumDataGenerator;
 import org.geysermc.mappings.generator.javaclass.MapColorsGenerator;
 import org.geysermc.mappings.generator.mcpl.BuiltinSoundGenerator;
 import org.geysermc.mappings.generator.mcpl.CustomStatisticGenerator;
 import org.geysermc.mappings.generator.mcpl.LevelEventTypeGenerator;
+import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.util.MappingsUtil;
 
@@ -33,8 +35,8 @@ public final class EnumDataGenerators {
     }
 
     public static ProviderGroupBuilder enums(ProviderGroupBuilder builder) {
-        return builder.withSamplesFactory(EnumDataGenerator.protocolFactory("Bedrock Enchantment", FileType.BEDROCK_ENCHANTMENT, FileType.BEDROCK_ENCHANTMENTS,
-                        enchantment -> !enchantment.name().equals("NumEnchantments") && !enchantment.name().equals("InvalidEnchantment")))
+        return builder.withRegistryAndSamplesFactory(EnumDataGenerator.protocolBasedRegistry("Bedrock Enchantment", FileType.BEDROCK_ENCHANTMENT,
+                        Registries.ENCHANTMENT, FileType.BEDROCK_ENCHANTMENTS, Renamers.ENCHANTMENTS))
                 .withFactory(MapColorsGenerator::new)
                 .withSamplesFactory(EnumDataGenerators.interactiveTags());
     }

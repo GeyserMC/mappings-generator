@@ -21,6 +21,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /// Holds utility methods used across the project
@@ -81,6 +82,10 @@ public final class MappingsUtil {
 
     public static String camelToUpperCaseSnakeCase(String string) {
         return String.join("_", StringUtils.splitByCharacterTypeCamelCase(string)).toUpperCase(Locale.ROOT);
+    }
+
+    public static String snakeToPascalCase(String string) {
+        return Arrays.stream(string.split("_")).map(StringUtils::capitalize).collect(Collectors.joining());
     }
 
     /// Formats the string with the given {@link AnsiEscape} styles. Returns a string with the ANSI style codes first, then the given string, and then

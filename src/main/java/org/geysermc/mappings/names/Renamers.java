@@ -4,6 +4,8 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
@@ -14,6 +16,7 @@ import org.geysermc.mappings.names.renamers.BlockNames;
 import org.geysermc.mappings.names.renamers.ItemClassNames;
 import org.geysermc.mappings.names.renamers.ItemNames;
 import org.geysermc.mappings.names.renamers.ParticleMappings;
+import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -65,6 +68,11 @@ public final class Renamers {
     public static final InstanceRenamer<Item, Identifier, Identifier> ITEMS = ItemNames.INSTANCE;
     public static final TypeRenamer<Item, String> ITEM_CLASSES = ItemClassNames.INSTANCE;
     public static final TypeRenamer<ParticleType<?>, Optional<ParticleMapping>> PARTICLES = ParticleMappings.PARTICLES;
+    public static final TypeRenamer<Identifier, String> ENCHANTMENTS = TypeRenamer.of(identifier -> MappingsUtil.snakeToPascalCase(identifier.getPath()), builder -> builder
+            .<ResourceKey<Enchantment>>mapType(ResourceKey::identifier)
+            // Sweeping Edge doesn't exist on bedrock :(
+            .rename(Enchantments.BINDING_CURSE, "CurseOfBinding")
+            .rename(Enchantments.VANISHING_CURSE, "CurseOfVanishing"));
 
     private Renamers() {}
 }

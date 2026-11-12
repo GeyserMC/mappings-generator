@@ -21,6 +21,17 @@ public record EnumConstant(String name, int id) {
             ).apply(instance, EnumConstant::compose)
     );
 
+    public static int findId(Set<EnumConstant> constants, String name) {
+        int i = 0;
+        for (EnumConstant constant : constants) {
+            if (constant.name.equals(name)) {
+                return i;
+            }
+            i++;
+        }
+        throw new IllegalArgumentException("Enum does not contain constant named " + name);
+    }
+
     private static <T> Function<Set<EnumConstant>, List<T>> decompose(Function<EnumConstant, T> getter) {
         return constants -> constants.stream().map(getter).toList();
     }

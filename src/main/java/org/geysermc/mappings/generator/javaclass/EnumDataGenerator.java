@@ -1,20 +1,28 @@
 package org.geysermc.mappings.generator.javaclass;
 
+import com.mojang.datafixers.util.Pair;
+import com.mojang.logging.LogUtils;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.StringRepresentable;
 import org.geysermc.mappings.FileType;
+import org.geysermc.mappings.ProviderGroupBuilder;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.generator.MappingsGenerator;
+import org.geysermc.mappings.names.TypeRenamer;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.resources.DownloadedSamples;
 import org.geysermc.mappings.util.MappingsUtil;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
@@ -25,6 +33,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class EnumDataGenerator extends MappingsGenerator<String> {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final String name;
     private final Supplier<CompletableFuture<Stream<String>>> valuesSupplier;
 
@@ -75,6 +85,30 @@ public final class EnumDataGenerator extends MappingsGenerator<String> {
                                                                                                                    ResourceKey<? extends Registry<T>> registry) {
         return (output, registryFuture) -> new EnumDataGenerator(output, fileType, name,
                 () -> registryFuture.thenApply(registries -> registries.lookupOrThrow(registry).listElementIds().map(EnumDataGenerator::keyToConstant)));
+    }
+
+    public static <T> ProviderGroupBuilder.ProviderFactory<EnumDataGenerator> protocolBasedRegistry(String name, FileType<String> fileType,
+                                                                                                    ResourceKey<? extends Registry<T>> registryKey,
+                                                                                                    FileType<Set<EnumConstant>> source,
+                                                                                                    TypeRenamer<Identifier, String> renamer) {
+        return (output, registryFuture, samplesFuture) -> new EnumDataGenerator(output, fileType, name,
+                () -> CompletableFuture.allOf(registryFuture, samplesFuture).thenCompose(_ -> {
+                    Registry<T> registry = registryFuture.join().lookupOrThrow(registryKey);
+                    BedrockSamples samples = samplesFuture.join();
+                    return samples.protocol().open(system -> system.readFileOrThrow(source))
+                            .thenApply(bedrockEnum -> registry.listElementIds()
+                                    .map(key -> {
+                                        try {
+                                            return Optional.of(Pair.of(keyToConstant(key), EnumConstant.findId(bedrockEnum, renamer.get(key.identifier()))));
+                                        } catch (IllegalArgumentException exception) {
+                                            LOGGER.error("Missed mapping for {} of registry {} in {}!", key.identifier(), registryKey.identifier(), name);
+                                            return Optional.<Pair<String, Integer>>empty();
+                                        }
+                                    })
+                                    .flatMap(Optional::stream)
+                                    .sorted(Comparator.comparingInt(Pair::getSecond))
+                                    .map(Pair::getFirst));
+                }));
     }
 
     public static BiFunction<PackOutput, CompletableFuture<BedrockSamples>, EnumDataGenerator> samplesFactory(String name, FileType<String> fileType,
