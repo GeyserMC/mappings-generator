@@ -119,11 +119,10 @@ The generator generates the following data:
 - Various stub classes used in Geyser:
     - `BedrockEnchantment.java`: an enum listing all of Minecraft Bedrock's enchantments, ordered by Bedrock ID, but named after its respective Java identifier.
     - `InteractiveTag.java`: an enum listing all of Minecraft Bedrock's built-in interactive tag translations.
-    - `MapColors.java`: an enum listing all of Minecraft Java's possible map colours.
+    - `MapColor.java`: an enum listing all of Minecraft Java's map colours.
     - `Blocks.java`: listing all of Minecraft Java's blocks.
     - `GameRules.java`: listing all of Minecraft Java's game rules.
     - `Items.java`: listing all of Minecraft Java's items.
-    - `MapColor.java`: listing all of Minecraft Java's map colours.
     - `Properties.java`: listing all of Minecraft Java's block state properties.
     - `BlockTag.java`: listing all of Minecraft Java's vanilla block tags.
     - `DialogTag.java`: listing all of Minecraft Java's vanilla dialog tags.
