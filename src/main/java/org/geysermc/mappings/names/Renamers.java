@@ -85,7 +85,6 @@ public final class Renamers {
             .rename(MapDecorationTypes.FRAME, "MarkerSign")
             .rename(MapDecorationTypes.RED_MARKER, "MarkerRed")
             .rename(MapDecorationTypes.BLUE_MARKER, "MarkerBlue")
-            .rename(MapDecorationTypes.TARGET_X, "XWhite")
             .rename(MapDecorationTypes.TARGET_POINT, "TriangleRed")
             .rename(MapDecorationTypes.PLAYER_OFF_MAP, "SquareWhite")
             .rename(MapDecorationTypes.PLAYER_OFF_LIMITS, "SmallSquareWhite")
@@ -112,7 +111,11 @@ public final class Renamers {
             .rename(MapDecorationTypes.BROWN_BANNER, 0x835432)
             .rename(MapDecorationTypes.GREEN_BANNER, 0x5E7C16)
             .rename(MapDecorationTypes.RED_BANNER, 0xB02E26)
-            .rename(MapDecorationTypes.BLACK_BANNER, 0x1D1D21));
+            .rename(MapDecorationTypes.BLACK_BANNER, 0x1D1D21)
+
+            // A unique situation where the decoration doesn't exist on Bedrock, and we replace it with a black cross
+            .mapResult(Function.identity())
+            .rename(MapDecorationTypes.TARGET_X, new BedrockMapDecoration("XWhite", 0xFF000000)));
 
     private Renamers() {}
 }

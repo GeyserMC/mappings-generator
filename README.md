@@ -103,15 +103,23 @@ A few notes:
 The generator generates the following data:
 
 - Various stub classes used in MCPL:
-    - `BuiltinSound.java`, an enum containing all of Minecraft Java's built-in sound events.
+    - `BlockEntityType.java`, an enum listing all of Minecraft Java's block entity types.
+    - `BuiltinSound.java`, an enum listing all of Minecraft Java's built-in sound events.
+    - `CommandParser.java`, an enum listing all of Minecraft Java's command argument parsers.
+    - `ContainerType.java`, an enum listing all of Minecraft Java's menu types.
+    - `CustomStatistic.java`, an enum listing all of Minecraft Java's custom statistics.
+    - `Effect.java`, an enum listing all of Minecraft Java's mob effects.
+    - `LevelEventType.java`, an enum listing all of Minecraft Java's level events.
+    - `MapIconType.java`, an enum listing all of Minecraft Java's map icon types.
+    - `ParticleType.java`, an enum listing all of Minecraft Java's particle types.
     - `ClientboundBlockEventPacket.java`, a list of constants used for identifying Minecraft Java's block events.
-    - `CustomStatistic.java`, an enum containing all of Minecraft Java's custom statistics.
-    - `LevelEventType.java`, an enum containing all of Minecraft Java's level events.
-    - `MapIconType.java`, an enum containing all of Minecraft Java's map icon types.
 - Data-driven registry data used in MCPL:
     - `networkCodec.nbt`, containing registry data for all of Minecraft Java's network-synced registries.
     - `networkTags.nbt`, containing vanilla registry tags for all of Minecraft Java's registries.
 - Various stub classes used in Geyser:
+    - `BedrockEnchantment.java`: an enum listing all of Minecraft Bedrock's enchantments, ordered by Bedrock ID, but named after its respective Java identifier.
+    - `InteractiveTag.java`: an enum listing all of Minecraft Bedrock's built-in interactive tag translations.
+    - `MapColors.java`: an enum listing all of Minecraft Java's possible map colours.
     - `Blocks.java`: listing all of Minecraft Java's blocks.
     - `GameRules.java`: listing all of Minecraft Java's game rules.
     - `Items.java`: listing all of Minecraft Java's items.

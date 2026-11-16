@@ -25,6 +25,7 @@ public final class EnumDataGenerators {
 
     private EnumDataGenerators() {}
 
+    // These are all alphabetically ordered after their FileType counterparts, please keep it that way.
     public static ProviderGroupBuilder mcpl(ProviderGroupBuilder builder) {
         return builder.withFactory(mcplRegistry("Block Entity Type", FileType.MCPL_BLOCK_ENTITY_TYPE, BuiltInRegistries.BLOCK_ENTITY_TYPE))
                 .withFactory(BuiltinSoundGenerator::new)
@@ -40,8 +41,8 @@ public final class EnumDataGenerators {
     public static ProviderGroupBuilder enums(ProviderGroupBuilder builder) {
         return builder.withRegistryAndSamplesFactory(EnumDataGenerator.protocolBasedRegistry("Bedrock Enchantment", FileType.BEDROCK_ENCHANTMENT,
                         Registries.ENCHANTMENT, FileType.BEDROCK_ENCHANTMENTS, Renamers.ENCHANTMENTS))
-                .withFactory(MapColorsGenerator::new)
-                .withSamplesFactory(EnumDataGenerators.interactiveTags());
+                .withSamplesFactory(EnumDataGenerators.interactiveTags())
+                .withFactory(MapColorsGenerator::new);
     }
 
     private static BiFunction<PackOutput, CompletableFuture<BedrockSamples>, EnumDataGenerator> interactiveTags() {
