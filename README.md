@@ -88,6 +88,7 @@ A few notes:
 - The core classes used in the generator's code have Javadocs. Make sure to read these as they can help you quite a bit!
 - If you're not sure how to accomplish something, looking at the code of other generators might help you out.
 - If you're simply aiming to write a new `*Tag.java` class, containing all vanilla tags of a registry, take a look at [`TagListGenerator#addProviders`](src/main/java/org/geysermc/mappings/generator/javaclass/TagListGenerator.java).
+- If you're aiming to write an enum generator, take a look at the [`EnumDataGenerator`](src/main/java/org/geysermc/mappings/generator/javaclass/EnumDataGenerator.java) and [`EnumDataGenerators`](src/main/java/org/geysermc/mappings/EnumDataGenerators.java) classes.
 - If you're stuck somewhere, don't be afraid to reach out on [our Discord](https://discord.gg/geysermc)!
 - Make sure to log information! Use error logs **only** if an error occurred that causes the generated file(s) to be incomplete. Generally, you can obtain a logger for a class as follows:
     ```java
@@ -102,19 +103,26 @@ A few notes:
 The generator generates the following data:
 
 - Various stub classes used in MCPL:
-    - `BuiltinSound.java`, an enum containing all of Minecraft Java's built-in sound events.
+    - `BlockEntityType.java`, an enum listing all of Minecraft Java's block entity types.
+    - `BuiltinSound.java`, an enum listing all of Minecraft Java's built-in sound events.
+    - `CommandParser.java`, an enum listing all of Minecraft Java's command argument parsers.
+    - `ContainerType.java`, an enum listing all of Minecraft Java's menu types.
+    - `CustomStatistic.java`, an enum listing all of Minecraft Java's custom statistics.
+    - `Effect.java`, an enum listing all of Minecraft Java's mob effects.
+    - `LevelEventType.java`, an enum listing all of Minecraft Java's level events.
+    - `MapIconType.java`, an enum listing all of Minecraft Java's map icon types.
+    - `ParticleType.java`, an enum listing all of Minecraft Java's particle types.
     - `ClientboundBlockEventPacket.java`, a list of constants used for identifying Minecraft Java's block events.
-    - `CustomStatistic.java`, an enum containing all of Minecraft Java's custom statistics.
-    - `LevelEventType.java`, an enum containing all of Minecraft Java's level events.
-    - `MapIconType.java`, an enum containing all of Minecraft Java's map icon types.
 - Data-driven registry data used in MCPL:
     - `networkCodec.nbt`, containing registry data for all of Minecraft Java's network-synced registries.
     - `networkTags.nbt`, containing vanilla registry tags for all of Minecraft Java's registries.
 - Various stub classes used in Geyser:
+    - `BedrockEnchantment.java`: an enum listing all of Minecraft Bedrock's enchantments, ordered by Bedrock ID, but named after its respective Java identifier.
+    - `InteractiveTag.java`: an enum listing all of Minecraft Bedrock's built-in interactive tag translations.
+    - `MapColor.java`: an enum listing all of Minecraft Java's map colours.
     - `Blocks.java`: listing all of Minecraft Java's blocks.
     - `GameRules.java`: listing all of Minecraft Java's game rules.
     - `Items.java`: listing all of Minecraft Java's items.
-    - `MapColor.java`: listing all of Minecraft Java's map colours.
     - `Properties.java`: listing all of Minecraft Java's block state properties.
     - `BlockTag.java`: listing all of Minecraft Java's vanilla block tags.
     - `DialogTag.java`: listing all of Minecraft Java's vanilla dialog tags.
@@ -131,6 +139,7 @@ The generator generates the following data:
     - `additional_offhand_items.json`: an array of all Bedrock items that were patched by the generator to allow putting into the off-hand.
     - `item_data_components.json`: listing default data components for all of Minecraft Java's items, encoded to base 64 using Mojang's stream codecs.
     - `items.json`: a map from Minecraft Java item to its respective Bedrock item (with some additional data).
+    - `map_decorations.json`: a map from Minecraft Java map decoration type to its respective Bedrock type (optionally with an ARGB colour to apply).
     - `particles.json`: a map from Minecraft Java particle to its respective Bedrock identifier or event type.
     - `resolvable_item_data_components.json`: listing default data components for all of Minecraft Java's items, for components that hold data-driven content.
     - `sounds.json`: a map from Minecraft Java sound to its respective Bedrock identifier or event type.

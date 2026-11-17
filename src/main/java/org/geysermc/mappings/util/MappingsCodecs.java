@@ -15,9 +15,14 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -39,6 +44,25 @@ public final class MappingsCodecs {
     /// Preferably don't use this codec - rather, use codecs of proper types and encode these instead
     public static final Codec<JsonElement> JSON_ELEMENT = Codec.PASSTHROUGH.xmap(dynamic -> dynamic.convert(JsonOps.INSTANCE).getValue(),
         element -> new Dynamic<>(JsonOps.INSTANCE, element.deepCopy()));
+    /// A codec that parses/writes {@link Properties} to and from a {@link String}.
+    public static final Codec<Properties> PROPERTIES = Codec.STRING.comapFlatMap(string -> {
+        Properties properties = new Properties();
+        try {
+            properties.load(new StringReader(string));
+        } catch (Exception exception) {
+            return DataResult.error(() -> "Failed to parse properties: " + exception.getMessage());
+        }
+        return DataResult.success(properties);
+    }, properties -> {
+        StringWriter writer = new StringWriter();
+        try {
+            properties.store(writer, null);
+        } catch (IOException exception) {
+            // Should never happen since we're working with StringWriter
+            throw new UncheckedIOException(exception);
+        }
+        return writer.toString();
+    });
 
     /// Creates a codec for an enum or enum-like structure. Prefer to use {@link StringRepresentable} when possible,
     /// this method should only be used for enums in libraries.

@@ -65,10 +65,8 @@ public interface FileSystemAccess {
     /// It might be preferred to change the {@link FileType} of a single file to JSON instead, which usually shouldn't cause many problems, unless the {@link DataProvider} using it requires reading the file back.
     boolean NBT_DEBUG_MODE = false;
 
-    /// Use this method for {@link FileType}s with codecs that require {@link RegistryAccess}.
-    ///
     /// {@link FileType.Type#TEXT} files are serialised by encoding with a {@link JavaOps} and then calling {@link Object#toString()} - generally this works
-    /// best if the type of {@link FileType} is {@link String}.
+    /// best if the type of {@link FileType} is {@link String} (and the codec is {@link Codec#STRING}).
     ///
     /// @return a {@link CompletableFuture} that writes the {@code value} for the given {@link FileType} to the {@link CachedOutput} in the root folder
     /// @see FileSystemAccess#saveFile(CachedOutput, RegistryAccess, FileType, Object)
@@ -101,6 +99,9 @@ public interface FileSystemAccess {
         return readFile(type).thenApply(optional -> optional.orElseThrow(() -> new IllegalStateException("Missing required file " + type.path())));
     }
 
+    /// {@link FileType.Type#TEXT} files are parsed by reading the file as a string, and passing this to a {@link JavaOps} - generally this works
+    /// best if the type of {@link FileType} is {@link String} (and the codec is {@link Codec#STRING}).
+    ///
     /// @return a {@link CompletableFuture} that reads the {@link FileType} in the root folder, or returns an empty {@link Optional} if it didn't exist
     /// @see FileSystemAccess#readFileOrThrow(FileType)
     /// @see FileSystemAccess#readFile(FileType, RegistryAccess)
@@ -108,7 +109,7 @@ public interface FileSystemAccess {
         return switch (type.type()) {
             case JSON -> readJsonFile(path(type), type.codec());
             case NBT -> readNbtFile(path(type), type.codec());
-            case TEXT -> throw new UnsupportedOperationException("Unable to read text files!");
+            case TEXT -> readTextFile(path(type), type.codec());
         };
     }
 
@@ -144,6 +145,10 @@ public interface FileSystemAccess {
 
     static <T> CompletableFuture<?> saveTextFile(CachedOutput output, Path file, Codec<T> codec, T value) {
         return saveFile(output, file, (object, stream) -> stream.write(object.toString().getBytes(StandardCharsets.UTF_8)), JavaOps.INSTANCE, codec, value);
+    }
+
+    static <T> CompletableFuture<Optional<T>> readTextFile(Path file, Codec<T> codec) {
+        return readFile(file, Files::readString, JavaOps.INSTANCE, codec);
     }
 
     static <T> CompletableFuture<?> saveNbtFile(CachedOutput output, Path file, Codec<T> codec, T value) {

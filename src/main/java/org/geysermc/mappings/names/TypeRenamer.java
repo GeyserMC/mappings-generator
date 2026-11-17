@@ -14,15 +14,15 @@ public interface TypeRenamer<T, R> extends InstanceRenamer<T, T, R> {
         return forType(type).apply(type);
     }
 
-    static <T, R> TypeRenamer<T, R> of(Function<T, R> fallback, Consumer<Aggregator<T, T, R, T, T, R>> builder) {
+    static <T, R> TypeRenamer<T, R> of(Function<T, R> fallback, Function<Aggregator<T, T, R, T, T, R>, ?> builder) {
         AbstractAggregator.TypeOnly<T, R> renamer = new AbstractAggregator.TypeOnly<>(fallback);
-        builder.accept(renamer);
+        builder.apply(renamer);
         return renamer.build();
     }
 
-    static <T, R> TypeRenamer<T, Optional<R>> ofOptional(Consumer<Aggregator<T, T, R, T, T, R>> builder) {
+    static <T, R> TypeRenamer<T, Optional<R>> ofOptional(Function<Aggregator<T, T, R, T, T, R>, ?> builder) {
         AbstractAggregator.TypeOnlyOptional<T, R> renamer = new AbstractAggregator.TypeOnlyOptional<>();
-        builder.accept(renamer);
+        builder.apply(renamer);
         return renamer.build();
     }
 }

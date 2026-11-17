@@ -35,7 +35,7 @@ public final class BiomeMappingsGenerator extends MappingsGenerator<Map<Holder<B
 
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
-        CompletableFuture<List<BedrockBiome>> bedrockBiomesFuture = bedrockSamples.thenCompose(samples -> samples.openSamples(access -> access.readFileOrThrow(FileType.BEDROCK_BIOMES)));
+        CompletableFuture<List<BedrockBiome>> bedrockBiomesFuture = bedrockSamples.thenCompose(samples -> samples.samples().open(access -> access.readFileOrThrow(FileType.BEDROCK_BIOMES)));
 
         return registries.thenCombine(bedrockBiomesFuture, Pair::of).thenCompose(registriesAndBiomes -> {
             RegistryAccess registries = registriesAndBiomes.getFirst();
