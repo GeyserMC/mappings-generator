@@ -8,6 +8,7 @@ import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.cloudburstmc.protocol.bedrock.data.ParticleType;
 import org.geysermc.mappings.util.MappingsCodecs;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -43,6 +44,11 @@ public sealed interface ParticleMapping {
 
     default Optional<Identifier> identifier() {
         return Optional.empty();
+    }
+
+    default boolean validate(List<Identifier> validParticles) {
+        // Allow non-vanilla particles (used by optional pack)
+        return identifier().map(identifier -> !identifier.getNamespace().equals(Identifier.DEFAULT_NAMESPACE) || validParticles.contains(identifier)).orElse(true);
     }
 
     record IdentifierMapping(Identifier bedrockIdentifier, Optional<ParticleColor> color) implements ParticleMapping {

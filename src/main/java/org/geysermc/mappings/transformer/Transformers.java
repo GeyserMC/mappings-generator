@@ -1,6 +1,7 @@
 package org.geysermc.mappings.transformer;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -9,13 +10,17 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
+import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
+import org.geysermc.mappings.transformer.instance.ParticleMappings;
 import org.geysermc.mappings.util.MappingsUtil;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 public final class Transformers {
+    public static final Transformer.Creator<List<Identifier>, ParticleType<?>, Optional<? extends ParticleMapping>> PARTICLES = ParticleMappings.INSTANCE;
     public static final Transformer<Identifier, String> ENCHANTMENTS = Transformer.strong(builder -> builder
             .mapInput(identifier -> ResourceKey.create(Registries.ENCHANTMENT, identifier))
 
