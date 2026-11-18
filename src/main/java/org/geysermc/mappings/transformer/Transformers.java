@@ -20,6 +20,7 @@ import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.transformer.instance.BlockClassNames;
 import org.geysermc.mappings.transformer.instance.BlockNames;
+import org.geysermc.mappings.transformer.instance.ItemClassNames;
 import org.geysermc.mappings.transformer.instance.ItemNames;
 import org.geysermc.mappings.transformer.instance.ParticleMappings;
 import org.geysermc.mappings.util.MappingsUtil;
@@ -84,6 +85,7 @@ public final class Transformers {
             // Map all other enchantments by simply converting Java name to pascal case
             .finish(identifier -> MappingsUtil.snakeToPascalCase(identifier.getPath())));
     public static final Transformer<Item, Identifier> ITEMS = ItemNames.INSTANCE;
+    public static final Transformer<Item, String> ITEM_CLASSES = ItemClassNames.INSTANCE;
     public static final Transformer.Creator<Set<EnumConstant>, Holder<MapDecorationType>, Optional<? extends BedrockMapDecoration.Serialized>> MAP_DECORATIONS = bedrockDecorations -> Transformer.weak(builder -> builder
             .<BedrockMapDecoration>flatMapOutput(decoration -> decoration.serialize(bedrockDecorations))
             .mark()

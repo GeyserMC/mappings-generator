@@ -13,7 +13,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.definitions.biome.BedrockBiome;
-import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.transformer.Transformers;
 import org.slf4j.Logger;

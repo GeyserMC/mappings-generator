@@ -15,7 +15,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.geysermc.mappings.definitions.item.ItemEntry;
 import org.geysermc.mappings.definitions.item.ItemMappings;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.transformer.Transformers;
 
