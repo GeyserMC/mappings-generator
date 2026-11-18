@@ -82,7 +82,7 @@ public sealed interface ParticleMapping {
     }
 
     record LevelEventMapping(LevelEvent event) implements ParticleMapping {
-        private static final MapCodec<LevelEventMapping> MAP_CODEC = MappingsCodecs.enumCodec(LevelEvent::values, LevelEvent::name)
+        private static final MapCodec<LevelEventMapping> MAP_CODEC = MappingsCodecs.LEVEL_EVENT
                 .xmap(LevelEventMapping::new, LevelEventMapping::event)
                 .fieldOf("level_event");
 

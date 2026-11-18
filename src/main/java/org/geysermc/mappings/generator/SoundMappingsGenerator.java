@@ -3,6 +3,7 @@ package org.geysermc.mappings.generator;
 import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.JavaOps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
@@ -13,20 +14,24 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
+import org.geysermc.mappings.definitions.sound.SoundData;
 import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.FileType;
+import org.geysermc.mappings.definitions.sound.SoundMapping_v1;
 import org.geysermc.mappings.resources.BedrockSamples;
+import org.geysermc.mappings.util.MappingsCodecs;
 import org.geysermc.mappings.util.MappingsUtil;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEvent, SoundMapping>> {
+public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEvent, SoundMapping_v1>> {
     private static final Logger LOGGER = LogUtils.getLogger();
     private final CompletableFuture<BedrockSamples> bedrockSamples;
 
@@ -42,10 +47,10 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                                 .getAsJsonObject()
                                 .getAsJsonObject("sound_definitions")
                                 .keySet()))
-                .thenCombine(readExistingFile(), Pair::of).thenCompose(validIdsAndMappings -> {
+                .thenCombine(readFile(FileType.SOUND_MAPPINGS_LEGACY), Pair::of).thenCompose(validIdsAndMappings -> {
                     Set<String> validBedrockSounds = validIdsAndMappings.getFirst();
-                    Map<SoundEvent, SoundMapping> mappings = new Object2ObjectOpenHashMap<>();
-                    validIdsAndMappings.getSecond().ifPresent(mappings::putAll);
+                    Map<SoundEvent, SoundMapping> oldMappings = new Object2ObjectOpenHashMap<>();
+                    validIdsAndMappings.getSecond().ifPresent(oldMappings::putAll);
 
                     boolean automaticMappingOfBlockSoundsFailed = false;
                     boolean mappingsAreIncomplete = false;
@@ -55,7 +60,7 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                         assert key != null;
                         String path = key.getPath();
 
-                        SoundMapping mapping = mappings.computeIfAbsent(soundEvent, _ -> SoundMapping.EMPTY);
+                        SoundMapping mapping = oldMappings.computeIfAbsent(soundEvent, _ -> SoundMapping.EMPTY);
 
                         Optional<String> identifier = mapping.identifier();
                         Optional<String> playSoundMapping = getPlaySoundMapping(path, validBedrockSounds)
@@ -117,7 +122,7 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                             mappingsAreIncomplete = true;
                         }
 
-                        mappings.put(soundEvent, new SoundMapping(identifier, playSoundMapping, bedrockMapping, extraData, pitchAdjust, levelEvent));
+                        oldMappings.put(soundEvent, new SoundMapping(identifier, playSoundMapping, bedrockMapping, extraData, pitchAdjust, levelEvent));
                     }
 
                     if (automaticMappingOfBlockSoundsFailed) {
@@ -126,6 +131,46 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                     if (mappingsAreIncomplete) {
                         LOGGER.error("Sound mappings are incomplete, please check the logs above");
                     }
+
+                    Map<SoundEvent, SoundMapping_v1> mappings = new Object2ObjectOpenHashMap<>();
+
+                    oldMappings.forEach((event, oldMapping) -> {
+                        SoundMapping_v1 mapping;
+
+                        if (oldMapping.playSoundMapping().isPresent()) {
+                            mapping = SoundMapping_v1.playSound(oldMapping.playSoundMapping().orElseThrow());
+                        } else if (oldMapping.levelEvent()) {
+                            mapping = SoundMapping_v1.levelEvent(LevelEvent.valueOf(oldMapping.bedrockMapping().orElseThrow()));
+                        } else {
+                            org.cloudburstmc.protocol.bedrock.data.SoundEvent sound;
+                            if (oldMapping.bedrockMapping().isPresent()) {
+                                sound = org.cloudburstmc.protocol.bedrock.data.SoundEvent.valueOf(oldMapping.bedrockMapping().get().toUpperCase(Locale.ROOT).replace(".", "_"));
+                            } else {
+                                try {
+                                    sound = org.cloudburstmc.protocol.bedrock.data.SoundEvent.valueOf(BuiltInRegistries.SOUND_EVENT.getKey(event).getPath().toUpperCase(Locale.ROOT).replace(".", "_"));
+                                } catch (IllegalArgumentException exception) {
+                                    LOGGER.warn("Missed " + oldMapping + " for " + event + " !!!");
+                                    return;
+                                }
+                            }
+
+                            Optional<SoundData> data;
+                            if (sound == org.cloudburstmc.protocol.bedrock.data.SoundEvent.NOTE) {
+                                data = Optional.of(SoundData.note(oldMapping.extraData()));
+                            } else if (sound == org.cloudburstmc.protocol.bedrock.data.SoundEvent.PLACE && oldMapping.extraData() == -1
+                                        && oldMapping.identifier().isPresent()) {
+                                data = Optional.of(SoundData.block(MappingsCodecs.BLOCK_STATE_STRING_CODEC.parse(JavaOps.INSTANCE, oldMapping.identifier().get()).getOrThrow()));
+                            } else if (oldMapping.extraData() != -1) {
+                                data = Optional.of(SoundData.constant(oldMapping.extraData()));
+                            } else {
+                                data = Optional.empty();
+                            }
+
+                            mapping = new SoundMapping_v1.SoundEventMapping(sound, data);
+                        }
+
+                        mappings.put(event, mapping);
+                    });
 
                     return saveFile(cache, mappings);
                 });

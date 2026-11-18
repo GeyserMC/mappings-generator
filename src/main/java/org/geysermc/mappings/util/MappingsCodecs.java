@@ -14,6 +14,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.state.BlockState;
+import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -63,6 +64,8 @@ public final class MappingsCodecs {
         }
         return writer.toString();
     });
+    /// Encodes/decodes Cloudburst's {@link LevelEvent} enum.
+    public static final Codec<LevelEvent> LEVEL_EVENT = MappingsCodecs.enumCodec(LevelEvent::values, LevelEvent::name);
 
     /// Creates a codec for an enum or enum-like structure. Prefer to use {@link StringRepresentable} when possible,
     /// this method should only be used for enums in libraries.
