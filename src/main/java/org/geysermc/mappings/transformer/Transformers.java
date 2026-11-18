@@ -7,6 +7,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.ARGB;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
@@ -17,9 +18,9 @@ import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
-import org.geysermc.mappings.names.TypeRenamer;
 import org.geysermc.mappings.transformer.instance.BlockClassNames;
 import org.geysermc.mappings.transformer.instance.BlockNames;
+import org.geysermc.mappings.transformer.instance.ItemNames;
 import org.geysermc.mappings.transformer.instance.ParticleMappings;
 import org.geysermc.mappings.util.MappingsUtil;
 
@@ -82,6 +83,7 @@ public final class Transformers {
             .root()
             // Map all other enchantments by simply converting Java name to pascal case
             .finish(identifier -> MappingsUtil.snakeToPascalCase(identifier.getPath())));
+    public static final Transformer<Item, Identifier> ITEMS = ItemNames.INSTANCE;
     public static final Transformer.Creator<Set<EnumConstant>, Holder<MapDecorationType>, Optional<? extends BedrockMapDecoration.Serialized>> MAP_DECORATIONS = bedrockDecorations -> Transformer.weak(builder -> builder
             .<BedrockMapDecoration>flatMapOutput(decoration -> decoration.serialize(bedrockDecorations))
             .mark()
@@ -141,5 +143,13 @@ public final class Transformers {
 
     public static Predicate<String> contains(String string) {
         return s -> s.contains(string);
+    }
+
+    public static Predicate<String> startsWith(String string) {
+        return s -> s.startsWith(string);
+    }
+
+    public static Predicate<String> endsWith(String string) {
+        return s -> s.endsWith(string);
     }
 }

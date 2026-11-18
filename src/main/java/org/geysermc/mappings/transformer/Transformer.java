@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -20,6 +19,21 @@ public interface Transformer<I, O> extends Function<I, O> {
 
     default <MO> Transformer<I, MO> chain(Transformer<? super O, ? extends MO> after) {
         return input -> after.apply(apply(input));
+    }
+
+    default <MO> Transformer<I, MO> strongChain(StrongBuilder<O, MO> after) {
+        return chain(strong(after));
+    }
+
+    default Transformer<I, O> weakChain(WeakBuilder<O, O> after) {
+        Transformer<? super O, Optional<? extends O>> built = weak(after);
+        return chain(output -> {
+            Optional<? extends O> mapped = built.apply(output);
+            if (mapped.isPresent()) {
+                return mapped.get();
+            }
+            return output;
+        });
     }
 
     static <T> Transformer<T, T> identity() {
@@ -101,7 +115,11 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public Builder<I, O, MaI, MaO, RI, RO> transform(I input, O to) {
-            return transform(Predicate.isEqual(input), _ -> to);
+            return transform(Predicate.isEqual(input), to);
+        }
+
+        public Builder<I, O, MaI, MaO, RI, RO> transform(Predicate<I> inputPredicate, O to) {
+            return transform(inputPredicate, _ -> to);
         }
 
         public Builder<I, O, MaI, MaO, RI, RO> transformBuilder(Predicate<I> inputPredicate, StrongBuilder<I, O> builder) {
