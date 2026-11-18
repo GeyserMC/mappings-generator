@@ -9,11 +9,13 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
-import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
+import org.geysermc.mappings.transformer.Transformer;
+import org.geysermc.mappings.transformer.Transformers;
 import org.slf4j.Logger;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public final class MapDecorationMappingsGenerator extends MappingsGenerator<Map<Holder<MapDecorationType>, BedrockMapDecoration.Serialized>> {
@@ -30,12 +32,11 @@ public final class MapDecorationMappingsGenerator extends MappingsGenerator<Map<
         return bedrockSamples.thenCompose(samples -> samples.protocol().open(protocol -> protocol.readFileOrThrow(FileType.BEDROCK_MAP_DECORATIONS))
                 .thenCompose(bedrockDecorations -> {
                     Map<Holder<MapDecorationType>, BedrockMapDecoration.Serialized> mappings = new Object2ObjectOpenHashMap<>();
+                    Transformer<Holder<MapDecorationType>, Optional<? extends BedrockMapDecoration.Serialized>> transformer = Transformers.MAP_DECORATIONS.create(bedrockDecorations);
+
                     for (Holder<MapDecorationType> decorationType : BuiltInRegistries.MAP_DECORATION_TYPE.asHolderIdMap()) {
-                        try {
-                            mappings.put(decorationType, Renamers.MAP_DECORATIONS.get(decorationType).serialize(bedrockDecorations));
-                        } catch (IllegalArgumentException exception) {
-                            LOGGER.error("Java map decoration {} has no valid bedrock mapping!", decorationType.getRegisteredName());
-                        }
+                        transformer.apply(decorationType).ifPresentOrElse(mapped -> mappings.put(decorationType, mapped),
+                                () -> LOGGER.error("Java map decoration {} has no valid bedrock mapping!", decorationType.getRegisteredName()));
                     }
                     return saveFile(cache, mappings);
                 }));
