@@ -1,19 +1,34 @@
 package org.geysermc.mappings.transformer;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.ARGB;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
+import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.Optional;
 import java.util.Set;
 
 public final class Transformers {
+    public static final Transformer<Identifier, String> ENCHANTMENTS = Transformer.strong(builder -> builder
+            .mapInput(identifier -> ResourceKey.create(Registries.ENCHANTMENT, identifier))
+
+            // Sweeping Edge doesn't exist on bedrock :(
+            .transform(Enchantments.BINDING_CURSE, "CurseOfBinding")
+            .transform(Enchantments.VANISHING_CURSE, "CurseOfVanishing")
+
+            // Map all other enchantments by simply converting Java name to pascal case
+            .finish(identifier -> MappingsUtil.snakeToPascalCase(identifier.getPath())));
     public static final Transformer.Creator<Set<EnumConstant>, Holder<MapDecorationType>, Optional<? extends BedrockMapDecoration.Serialized>> MAP_DECORATIONS = bedrockDecorations -> Transformer.weak(builder -> builder
             .<BedrockMapDecoration>flatMapOutput(decoration -> decoration.serialize(bedrockDecorations))
             .mark()
+
             // Simple renames
             .<String>mapOutput(BedrockMapDecoration::new)
             .transform(MapDecorationTypes.PLAYER, "MarkerWhite")
