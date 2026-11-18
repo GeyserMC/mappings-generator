@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -25,20 +26,32 @@ public interface Transformer<I, O> extends Function<I, O> {
         return t -> t;
     }
 
-    static <I, O> Transformer<I, Optional<? extends O>> weak(Consumer<Builder<I, O, ?, ?, I, O>> builder) {
+    static <I, O> Transformer<I, Optional<? extends O>> weak(WeakBuilder<I, O> builder) {
         Builder<I, O, ?, ?, I, O> baseBuilder = new Builder<>();
-        builder.accept(baseBuilder);
+        builder.build(baseBuilder);
         return baseBuilder.build();
     }
 
-    static <I, O> Transformer<I, O> strong(Function<Builder<I, O, ?, ?, I, O>, Transformer<I, O>> builder) {
-        return builder.apply(new Builder<>());
+    static <I, O> Transformer<I, O> strong(StrongBuilder<I, O> builder) {
+        return builder.build(new Builder<>());
     }
 
     @FunctionalInterface
     interface Creator<BI, I, O> {
 
         Transformer<I, O> create(BI builderInput);
+    }
+
+    @FunctionalInterface
+    interface WeakBuilder<I, O> {
+
+        void build(Builder<I, O, ?, ?, I, O> builder);
+    }
+
+    @FunctionalInterface
+    interface StrongBuilder<I, O> {
+
+        Transformer<I, O> build(Builder<I, O, ?, ?, I, O> builder);
     }
 
     final class Builder<I, O, MaI, MaO, RI, RO> {
@@ -67,20 +80,32 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public <C extends I> Builder<I, O, MaI, MaO, RI, RO> instanceOf(Class<C> clazz, O output) {
-            return instanceOf(clazz, _ -> Optional.of(output));
+            return instanceOf(clazz, _ -> output);
         }
 
-        public <C extends I> Builder<I, O, MaI, MaO, RI, RO> instanceOfBuilder(Class<C> clazz, Consumer<Builder<C, O, ?, ?, C, O>> builder) {
-            return instanceOf(clazz, weak(builder));
+        public <C extends I> Builder<I, O, MaI, MaO, RI, RO> instanceOfWeak(Class<C> clazz, WeakBuilder<C, O> builder) {
+            return instanceOfOptional(clazz, weak(builder));
+        }
+
+        public <C extends I> Builder<I, O, MaI, MaO, RI, RO> instanceOfStrong(Class<C> clazz, StrongBuilder<C, O> builder) {
+            return instanceOf(clazz, strong(builder));
+        }
+
+        public <C extends I> Builder<I, O, MaI, MaO, RI, RO> instanceOf(Class<C> clazz, Transformer<? super C, ? extends O> transformer) {
+            return instanceOfOptional(clazz, transformer.chain(Optional::of));
         }
 
         @SuppressWarnings("unchecked")
-        public <C extends I> Builder<I, O, MaI, MaO, RI, RO> instanceOf(Class<C> clazz, Transformer<C, Optional<? extends O>> transformer) {
+        public <C extends I> Builder<I, O, MaI, MaO, RI, RO> instanceOfOptional(Class<C> clazz, Transformer<? super C, Optional<? extends O>> transformer) {
             return transform(i -> clazz.isInstance(i) ? transformer.apply((C) i) : Optional.empty());
         }
 
         public Builder<I, O, MaI, MaO, RI, RO> transform(I input, O to) {
             return transform(Predicate.isEqual(input), _ -> to);
+        }
+
+        public Builder<I, O, MaI, MaO, RI, RO> transformBuilder(Predicate<I> inputPredicate, StrongBuilder<I, O> builder) {
+            return transform(inputPredicate, strong(builder));
         }
 
         public Builder<I, O, MaI, MaO, RI, RO> transform(Predicate<I> inputPredicate, Transformer<? super I, ? extends O> transformer) {
@@ -91,6 +116,10 @@ public interface Transformer<I, O> extends Function<I, O> {
             assert root != null : "use transform(I, O) as this is the root";
             root.root.transform(rootInput -> root.inputMapper.apply(rootInput).equals(input) ? Optional.of(transformer.apply(rootInput)) : Optional.empty());
             return this;
+        }
+
+        public Builder<I, O, MaI, MaO, RI, RO> transformBuilder(WeakBuilder<I, O> builder) {
+            return transform(weak(builder));
         }
 
         public Builder<I, O, MaI, MaO, RI, RO> transform(Transformer<? super I, Optional<? extends O>> transformer) {
@@ -153,7 +182,11 @@ public interface Transformer<I, O> extends Function<I, O> {
             transform(_ -> true, finalTransformer);
         }
 
-        public Transformer<RI, RO> finish(Transformer<? super RI, ? extends RO> finalTransformer) {
+        public Transformer<RI, RO> finish(O fallback) {
+            return finish(_ -> fallback);
+        }
+
+        public Transformer<RI, RO> finish(Transformer<? super I, ? extends O> finalTransformer) {
             List<Transformer<? super RI, Optional<? extends RO>>> transformers = gatherTransformers();
             return input -> {
                 for (Transformer<? super RI, Optional<? extends RO>> transformer : transformers) {
@@ -162,7 +195,7 @@ public interface Transformer<I, O> extends Function<I, O> {
                         return result.get();
                     }
                 }
-                return finalTransformer.apply(input);
+                return mapOutput(finalTransformer.apply(mapInput(input))).orElseThrow(() -> new NoSuchElementException("finalTransformer returned an output not supported by the root"));
             };
         }
 
@@ -177,6 +210,22 @@ public interface Transformer<I, O> extends Function<I, O> {
                 }
                 return Optional.empty();
             };
+        }
+
+        @SuppressWarnings("unchecked")
+        private I mapInput(RI input) {
+            if (root == null) {
+                return (I) input;
+            }
+            return root.inputMapper.apply(input);
+        }
+
+        @SuppressWarnings("unchecked")
+        private Optional<? extends RO> mapOutput(O output) {
+            if (root == null) {
+                return Optional.of((RO) output);
+            }
+            return root.outputMapper.apply(output);
         }
 
         private List<Transformer<? super RI, Optional<? extends RO>>> gatherTransformers() {

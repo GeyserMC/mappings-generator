@@ -1,6 +1,7 @@
 package org.geysermc.mappings.transformer;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -9,17 +10,21 @@ import net.minecraft.util.ARGB;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
+import org.geysermc.mappings.transformer.instance.BlockNames;
 import org.geysermc.mappings.transformer.instance.ParticleMappings;
 import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public final class Transformers {
     public static final Transformer<Identifier, Identifier> BIOMES = Transformer.strong(builder -> builder
@@ -60,9 +65,9 @@ public final class Transformers {
             .transform(Biomes.SMALL_END_ISLANDS, "the_end")
             .transform(Biomes.THE_VOID, "river") // Not related to the end. river has similar colours.
 
+            .root()
             .finish(Transformer.identity())); // All other biomes have the same name
-
-    public static final Transformer.Creator<List<Identifier>, ParticleType<?>, Optional<? extends ParticleMapping>> PARTICLES = ParticleMappings.INSTANCE;
+    public static final Transformer<BlockState, String> BLOCKS = BlockNames.INSTANCE;
     public static final Transformer<Identifier, String> ENCHANTMENTS = Transformer.strong(builder -> builder
             .mapInput(enchantment -> ResourceKey.create(Registries.ENCHANTMENT, enchantment))
 
@@ -70,6 +75,7 @@ public final class Transformers {
             .transform(Enchantments.BINDING_CURSE, "CurseOfBinding")
             .transform(Enchantments.VANISHING_CURSE, "CurseOfVanishing")
 
+            .root()
             // Map all other enchantments by simply converting Java name to pascal case
             .finish(identifier -> MappingsUtil.snakeToPascalCase(identifier.getPath())));
     public static final Transformer.Creator<Set<EnumConstant>, Holder<MapDecorationType>, Optional<? extends BedrockMapDecoration.Serialized>> MAP_DECORATIONS = bedrockDecorations -> Transformer.weak(builder -> builder
@@ -117,6 +123,19 @@ public final class Transformers {
 
             // Map the remaining by simply copying Java's name
             .lastly(BedrockMapDecoration::new));
+    public static final Transformer.Creator<List<Identifier>, ParticleType<?>, Optional<? extends ParticleMapping>> PARTICLES = ParticleMappings.INSTANCE;
 
     private Transformers() {}
+
+    public static <R> Transformer<? super R, String> registryKey(Registry<R> registry) {
+        return i -> Objects.requireNonNull(registry.getKey(i)).getPath();
+    }
+
+    public static Transformer<String, String> replace(String target, String replacement) {
+        return s -> s.replace(target, replacement);
+    }
+
+    public static Predicate<String> contains(String string) {
+        return s -> s.contains(string);
+    }
 }
