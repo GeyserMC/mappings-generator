@@ -10,12 +10,15 @@ import net.minecraft.util.ARGB;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
+import org.geysermc.mappings.names.TypeRenamer;
+import org.geysermc.mappings.transformer.instance.BlockClassNames;
 import org.geysermc.mappings.transformer.instance.BlockNames;
 import org.geysermc.mappings.transformer.instance.ParticleMappings;
 import org.geysermc.mappings.util.MappingsUtil;
@@ -68,6 +71,7 @@ public final class Transformers {
             .root()
             .finish(Transformer.identity())); // All other biomes have the same name
     public static final Transformer<BlockState, String> BLOCKS = BlockNames.INSTANCE;
+    public static final Transformer<Block, String> BLOCK_CLASSES = BlockClassNames.INSTANCE;
     public static final Transformer<Identifier, String> ENCHANTMENTS = Transformer.strong(builder -> builder
             .mapInput(enchantment -> ResourceKey.create(Registries.ENCHANTMENT, enchantment))
 
