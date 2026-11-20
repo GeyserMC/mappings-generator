@@ -282,11 +282,11 @@ public interface Transformer<I, O> extends Function<I, O> {
             return (Factory<RI, RO, ?, ?, RI, RO>) this;
         }
 
-        public Transformer<RI, RO> finish(O fallback) {
+        public Transformer<RI, RO> finish(RO fallback) {
             return finish(_ -> fallback);
         }
 
-        public Transformer<RI, RO> finish(Transformer<? super I, ? extends O> finalTransformer) {
+        public Transformer<RI, RO> finish(Transformer<? super RI, ? extends RO> finalTransformer) {
             List<Maybe<? super RI, ? extends RO>> transformers = gatherTransformers();
             return input -> {
                 for (Maybe<? super RI, ? extends RO> transformer : transformers) {
@@ -295,8 +295,7 @@ public interface Transformer<I, O> extends Function<I, O> {
                         return result.get();
                     }
                 }
-                return mapInput(input).map(finalTransformer).flatMap(this::mapOutput)
-                        .orElseThrow(() -> new NoSuchElementException("finalTransformer returned an output not supported by the root"));
+                return finalTransformer.apply(input);
             };
         }
 

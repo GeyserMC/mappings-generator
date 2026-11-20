@@ -218,21 +218,20 @@ public final class BlockNames {
                     .instanceOf(WallBannerBlock.class, "wall_banner")
                     .finish("standing_banner"))
 
-            .maybeInstanceOf(StandingSignBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("sign", "standing_sign")))
-            .maybeInstanceOf(WallHangingSignBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("wall_", "")))
-            .maybeInstanceOf(WallSkullBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("wall_", "")))
+            .maybeInstanceOf(StandingSignBlock.class, Transformers.registryId(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("sign", "standing_sign")))
+            .maybeInstanceOf(WallHangingSignBlock.class, Transformers.registryId(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("wall_", "")))
+            .maybeInstanceOf(WallSkullBlock.class, Transformers.registryId(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("wall_", "")))
 
             .root()
 
             // An edge case
-            .transformBuilder(state -> state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE, sub -> sub
+            .maybeTransformBuilder(state -> state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE, sub -> sub
                     .mapInput(BlockState::getBlock)
-                    .flatMapInput(Transformers.registryKey(BuiltInRegistries.BLOCK))
+                    .flatMapInput(Transformers.registryId(BuiltInRegistries.BLOCK))
                     .transform(Transformers.contains("cut_copper"), Transformers.replace("cut", "double_cut"))
-                    .finish(Transformers.replace("slab", "double_slab")))
+                    .maybeTransform(Transformers.findAndReplace("slab", "double_slab")))
 
-            .mapInput(BlockState::getBlock)
-            .finish(Transformers.registryKey(BuiltInRegistries.BLOCK).orElseThrow()));
+            .finish(Transformers.registryId(BuiltInRegistries.BLOCK).compose(BlockState::getBlock).orElseThrow()));
     
     private BlockNames() {}
 }

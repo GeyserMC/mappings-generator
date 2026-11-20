@@ -74,7 +74,6 @@ public final class Transformers {
             .transform(Biomes.SMALL_END_ISLANDS, "the_end")
             .transform(Biomes.THE_VOID, "river") // Not related to the end. river has similar colours.
 
-            .root()
             .finish(Transformer.identity())); // All other biomes have the same name
     public static final Transformer<BlockState, String> BLOCKS = BlockNames.INSTANCE;
     public static final Transformer<Block, String> BLOCK_CLASSES = BlockClassNames.INSTANCE;
@@ -85,7 +84,6 @@ public final class Transformers {
             .transform(Enchantments.BINDING_CURSE, "CurseOfBinding")
             .transform(Enchantments.VANISHING_CURSE, "CurseOfVanishing")
 
-            .root()
             // Map all other enchantments by simply converting Java name to pascal case
             .finish(identifier -> MappingsUtil.snakeToPascalCase(identifier.getPath())));
     public static final Transformer<Item, Identifier> ITEMS = ItemNames.INSTANCE;
@@ -141,8 +139,12 @@ public final class Transformers {
 
     private Transformers() {}
 
-    public static <R> Transformer.Maybe<? super R, String> registryKey(Registry<R> registry) {
+    public static <R> Transformer.Maybe<? super R, String> registryId(Registry<R> registry) {
         return i -> Optional.ofNullable(registry.getKey(i)).map(Identifier::getPath);
+    }
+
+    public static <R> Transformer.Maybe<? super R, Identifier> registryKey(Registry<R> registry) {
+        return i -> Optional.ofNullable(registry.getKey(i));
     }
 
     public static <R> Transformer<String, String> registryElement(Registry<R> registry, Transformer<R, String> elementTransformer) {
