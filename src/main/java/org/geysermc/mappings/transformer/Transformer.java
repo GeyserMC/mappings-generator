@@ -1,12 +1,14 @@
 package org.geysermc.mappings.transformer;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -122,6 +124,10 @@ public interface Transformer<I, O> extends Function<I, O> {
             });
         }
 
+        static <T> Maybe<T, T> identity() {
+            return Optional::of;
+        }
+
         @FunctionalInterface
         interface Builder<I, O> {
 
@@ -130,25 +136,29 @@ public interface Transformer<I, O> extends Function<I, O> {
     }
 
     final class Factory<I, O, MaI, MaO, RI, RO> {
-        private final @Nullable Root<I, O, RI, RO> root;
-        private final @Nullable List<Maybe<? super I, ? extends O>> transformers;
+        private final Mappers<I, O, RI, RO> mappers;
+        private final Factory<RI, RO, ?, ?, RI, RO> root;
+        private final @Nullable List<TransformerWithMappers<?, ?, RI, RO>> transformers;
 
         private @Nullable Factory<MaI, MaO, MaI, MaO, RI, RO> mark;
 
-        private Factory(@Nullable Root<I, O, RI, RO> root, @Nullable Factory<MaI, MaO, MaI, MaO, RI, RO> mark) {
+        private Factory(Mappers<I, O, RI, RO> mappers, Factory<RI, RO, ?, ?, RI, RO> root, @Nullable Factory<MaI, MaO, MaI, MaO, RI, RO> mark) {
+            this.mappers = mappers;
             this.root = root;
             this.mark = mark;
             this.transformers = null;
         }
 
+        @SuppressWarnings("unchecked")
         private Factory() {
-            this.root = null;
+            this.mappers = (Mappers<I, O, RI, RO>) Mappers.forRoot();
+            this.root = (Factory<RI, RO, ?, ?, RI, RO>) this;
             this.mark = null;
             this.transformers = new ObjectArrayList<>();
         }
 
         private static <I, O, RI, RO> Factory<I, O, I, O, RI, RO> marked(Factory<I, O, ?, ?, RI, RO> factory) {
-            Factory<I, O, I, O, RI, RO> marked = new Factory<>(factory.root, null);
+            Factory<I, O, I, O, RI, RO> marked = new Factory<>(factory.mappers, factory.root, null);
             // A mark has itself as marker
             marked.mark = marked;
             return marked;
@@ -176,7 +186,7 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public Factory<I, O, MaI, MaO, RI, RO> tryAll(Transformer<? super I, ? extends O> finalTransformer) {
-            return transform(_ -> true, finalTransformer);
+            return maybeTransform(finalTransformer.maybe());
         }
 
         @SafeVarargs
@@ -189,8 +199,8 @@ public interface Transformer<I, O> extends Function<I, O> {
         public final Factory<I, O, MaI, MaO, RI, RO> tryAllPermutations(BiFunction<Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>> chainer, int maxDepth,
                                                                         Maybe<? super I, ? extends O>... transformers) {
             maxDepth = Math.min(transformers.length, maxDepth);
-            for (int startDepth = 0; startDepth <= maxDepth; startDepth++) {
-                permute(transformers, null, chainer, new boolean[transformers.length], 0, startDepth, maxDepth);
+            for (int tryDepth = 0; tryDepth <= maxDepth; tryDepth++) {
+                permute(transformers, null, chainer, new boolean[transformers.length], 0, tryDepth);
             }
             return this;
         }
@@ -198,18 +208,17 @@ public interface Transformer<I, O> extends Function<I, O> {
         private void permute(Maybe<? super I, ? extends O>[] transformers,
                              @Nullable Maybe<? super I, ? extends O> prefix,
                              BiFunction<Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>> chainer,
-                             boolean[] used, int depth, int startDepth, int maxDepth) {
+                             boolean[] used, int depth, int tryDepth) {
             for (int i = 0; i < transformers.length; i++) {
                 if (used[i]) {
                     continue;
                 }
                 Maybe<? super I, ? extends O> current = prefix == null ? transformers[i] : chainer.apply(prefix, transformers[i]);
-                if (depth >= startDepth) {
+                if (depth >= tryDepth) {
                     maybeTryAll(current);
-                }
-                if (depth < maxDepth) {
+                } else {
                     used[i] = true;
-                    permute(transformers, current, chainer, used, depth + 1, startDepth, maxDepth);
+                    permute(transformers, current, chainer, used, depth + 1, tryDepth);
                     used[i] = false;
                 }
             }
@@ -220,8 +229,8 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public Factory<I, O, MaI, MaO, RI, RO> transform(I input, Transformer<? super RI, ? extends RO> transformer) {
-            assert root != null : "use transform(I, O) as this is the root";
-            root.root.maybeTransform(rootInput -> root.inputMapper.apply(rootInput).map(i -> i.equals(input)).orElse(false) ? Optional.of(transformer.apply(rootInput)) : Optional.empty());
+            assert root != this : "use transform(I, O) as this is the root";
+            root.maybeTransform(rootInput -> mappers.inputMapper.apply(rootInput).map(i -> i.equals(input)).orElse(false) ? Optional.of(transformer.apply(rootInput)) : Optional.empty());
             return this;
         }
 
@@ -254,12 +263,8 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public Factory<I, O, MaI, MaO, RI, RO> maybeTransform(Maybe<? super I, ? extends O> transformer) {
-            if (root != null) {
-                root.delegate(transformer);
-            } else {
-                assert transformers != null;
-                transformers.add(transformer);
-            }
+            assert root.transformers != null;
+            root.transformers.add(new TransformerWithMappers<>(mappers, transformer));
             return this;
         }
 
@@ -283,17 +288,8 @@ public interface Transformer<I, O> extends Function<I, O> {
             return flatMap(Optional::of, outputMapper);
         }
 
-        @SuppressWarnings("unchecked")
         public <MI, MO> Factory<MI, MO, MaI, MaO, RI, RO> flatMap(Maybe<? super I, ? extends MI> inputMapper, Maybe<? super MO, ? extends O> outputMapper) {
-            Root<MI, MO, RI, RO> mappedRoot;
-            if (root != null) {
-                mappedRoot = root.map(inputMapper, outputMapper);
-            } else {
-                mappedRoot = new Root<>(root(),
-                        (Maybe<? super RI, ? extends MI>) inputMapper,
-                        (Maybe<? super MO, ? extends RO>) outputMapper);
-            }
-            return new Factory<>(mappedRoot, mark);
+            return new Factory<>(mappers.map(inputMapper, outputMapper), root, mark);
         }
 
         public Factory<I, O, I, O, RI, RO> mark() {
@@ -305,12 +301,8 @@ public interface Transformer<I, O> extends Function<I, O> {
             return mark;
         }
 
-        @SuppressWarnings("unchecked")
         public Factory<RI, RO, ?, ?, RI, RO> root() {
-            if (root != null) {
-                return root.root;
-            }
-            return (Factory<RI, RO, ?, ?, RI, RO>) this;
+            return root;
         }
 
         public Transformer<RI, RO> finish(RO fallback) {
@@ -318,12 +310,18 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public Transformer<RI, RO> finish(Transformer<? super RI, ? extends RO> finalTransformer) {
-            List<Maybe<? super RI, ? extends RO>> transformers = gatherTransformers();
+            List<TransformerWithMappers<?, ?, RI, RO>> transformers = gatherTransformers();
             return input -> {
-                for (Maybe<? super RI, ? extends RO> transformer : transformers) {
-                    Optional<? extends RO> result = transformer.apply(input);
-                    if (result.isPresent()) {
-                        return result.get();
+                Set<Mappers<?, ?, RI, RO>> failedMappers = new ObjectOpenHashSet<>();
+                for (TransformerWithMappers<?, ?, RI, RO> transformer : transformers) {
+                    if (failedMappers.contains(transformer.mappers)) {
+                        continue;
+                    }
+                    TransformerWithMappers.Result<RO> result = transformer.apply(input);
+                    if (result.mappersFailed) {
+                        failedMappers.add(transformer.mappers);
+                    } else if (result.result.isPresent()) {
+                        return result.result.get();
                     }
                 }
                 return finalTransformer.apply(input);
@@ -331,49 +329,50 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public Maybe<RI, RO> build() {
-            List<Maybe<? super RI, ? extends RO>> transformers = gatherTransformers();
+            List<TransformerWithMappers<?, ?, RI, RO>> transformers = gatherTransformers();
             return input -> {
-                for (Maybe<? super RI, ? extends RO> transformer : transformers) {
-                    Optional<? extends RO> result = transformer.apply(input);
-                    if (result.isPresent()) {
-                        return result;
+                Set<Mappers<?, ?, RI, RO>> failedMappers = new ObjectOpenHashSet<>();
+                for (TransformerWithMappers<?, ?, RI, RO> transformer : transformers) {
+                    if (failedMappers.contains(transformer.mappers)) {
+                        continue;
+                    }
+                    TransformerWithMappers.Result<RO> result = transformer.apply(input);
+                    if (result.mappersFailed) {
+                        failedMappers.add(transformer.mappers);
+                    } else if (result.result.isPresent()) {
+                        return result.result;
                     }
                 }
                 return Optional.empty();
             };
         }
 
-        @SuppressWarnings("unchecked")
-        private Optional<? extends I> mapInput(RI input) {
-            if (root == null) {
-                return Optional.of((I) input);
-            }
-            return root.inputMapper.apply(input);
-        }
-
-        @SuppressWarnings("unchecked")
-        private Optional<? extends RO> mapOutput(O output) {
-            if (root == null) {
-                return Optional.of((RO) output);
-            }
-            return root.outputMapper.apply(output);
-        }
-
-        private List<Maybe<? super RI, ? extends RO>> gatherTransformers() {
+        private List<TransformerWithMappers<?, ?, RI, RO>> gatherTransformers() {
             return List.copyOf(Objects.requireNonNull(root().transformers));
         }
 
-        private record Root<I, O, RI, RO>(Factory<RI, RO, ?, ?, RI, RO> root,
-                                          Maybe<? super RI, ? extends I> inputMapper,
-                                          Maybe<? super O, ? extends RO> outputMapper) {
+        private record Mappers<I, O, RI, RO>(Maybe<? super RI, ? extends I> inputMapper, Maybe<? super O, ? extends RO> outputMapper) {
 
-            private <MI, MO> Root<MI, MO, RI, RO> map(Maybe<? super I, ? extends MI> inputMapper, Maybe<? super MO, ? extends O> outputMapper) {
-                return new Root<>(root, this.inputMapper.maybeChain(inputMapper), outputMapper.maybeChain(this.outputMapper));
+            private static <RI, RO> Mappers<RI, RO, RI, RO> forRoot() {
+                return new Mappers<>(Maybe.identity(), Maybe.identity());
             }
 
-            private void delegate(Maybe<? super I, ? extends O> transformer) {
-                root.maybeTransform(transformer.maybeCompose(inputMapper).maybeChain(outputMapper));
+            private <MI, MO> Mappers<MI, MO, RI, RO> map(Maybe<? super I, ? extends MI> inputMapper, Maybe<? super MO, ? extends O> outputMapper) {
+                return new Mappers<>(this.inputMapper.maybeChain(inputMapper), outputMapper.maybeChain(this.outputMapper));
             }
+        }
+
+        private record TransformerWithMappers<I, O, RI, RO>(Mappers<I, O, RI, RO> mappers, Maybe<? super I, ? extends O> transformer) {
+
+            private Result<RO> apply(RI input) {
+                Optional<? extends I> mappedInput = mappers.inputMapper.apply(input);
+                if (mappedInput.isEmpty()) {
+                    return new Result<>(Optional.empty(), true);
+                }
+                return new Result<>(mappedInput.flatMap(transformer).flatMap(mappers.outputMapper), false);
+            }
+
+            private record Result<RO>(Optional<RO> result, boolean mappersFailed) {}
         }
     }
 }
