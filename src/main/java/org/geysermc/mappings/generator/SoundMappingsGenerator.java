@@ -1,37 +1,30 @@
 package org.geysermc.mappings.generator;
 
 import com.google.gson.JsonParser;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
-import com.mojang.serialization.JavaOps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
-import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import org.apache.commons.text.similarity.LevenshteinDistance;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.geysermc.mappings.definitions.sound.SoundData;
-import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.definitions.sound.SoundMapping_v1;
+import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.resources.BedrockSamples;
-import org.geysermc.mappings.util.MappingsCodecs;
-import org.geysermc.mappings.util.MappingsUtil;
+import org.geysermc.mappings.transformer.Transformer;
+import org.geysermc.mappings.transformer.Transformers;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEvent, SoundMapping_v1>> {
+public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEvent, SoundMapping>> {
     private static final Logger LOGGER = LogUtils.getLogger();
     private final CompletableFuture<BedrockSamples> bedrockSamples;
 
@@ -47,130 +40,21 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                                 .getAsJsonObject()
                                 .getAsJsonObject("sound_definitions")
                                 .keySet()))
-                .thenCombine(readFile(FileType.SOUND_MAPPINGS_LEGACY), Pair::of).thenCompose(validIdsAndMappings -> {
-                    Set<String> validBedrockSounds = validIdsAndMappings.getFirst();
-                    Map<SoundEvent, SoundMapping> oldMappings = new Object2ObjectOpenHashMap<>();
-                    validIdsAndMappings.getSecond().ifPresent(oldMappings::putAll);
+                .thenCompose(validBedrockSounds -> {
+                    Map<SoundEvent, SoundMapping> mappings = new Object2ObjectOpenHashMap<>();
+                    Transformer<String, Optional<? extends SoundMapping>> transformer = Transformers.SOUND_EVENTS.create(validBedrockSounds);
 
-                    boolean automaticMappingOfBlockSoundsFailed = false;
-                    boolean mappingsAreIncomplete = false;
-
-                    for (SoundEvent soundEvent : BuiltInRegistries.SOUND_EVENT) {
-                        Identifier key = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent);
-                        assert key != null;
-                        String path = key.getPath();
-
-                        SoundMapping mapping = oldMappings.computeIfAbsent(soundEvent, _ -> SoundMapping.EMPTY);
-
-                        Optional<String> identifier = mapping.identifier();
-                        Optional<String> playSoundMapping = getPlaySoundMapping(path, validBedrockSounds)
-                                .or(() -> mapping.playSoundMapping().filter(validBedrockSounds::contains));
-                        Optional<String> bedrockMapping = mapping.bedrockMapping();
-                        int extraData = mapping.extraData();
-                        double pitchAdjust = getPitchAdjust(path, mapping.pitchAdjust());
-                        boolean levelEvent = mapping.levelEvent();
-
-                        if (playSoundMapping.isEmpty()) {
-                            // Auto map place block sounds
-                            if (mapping.bedrockMapping().isEmpty() && mapping.identifier().isEmpty()
-                                    && path.startsWith("block") && path.endsWith("place")) {
-                                LOGGER.info("Attempting to automatically map PLACE sound: {}", key);
-                                Block block = BuiltInRegistries.BLOCK.getValue(Identifier.parse("minecraft:" + path.split("\\.")[1]));
-                                bedrockMapping = Optional.of("PLACE");
-                                if (block != Blocks.AIR) {
-                                    identifier = Optional.of(MappingsUtil.blockStateToString(block.defaultBlockState()));
-                                } else {
-                                    LOGGER.warn("Unable to automatically map PLACE sound: {}", key);
-                                    identifier = Optional.of("MANUALMAP");
-                                    automaticMappingOfBlockSoundsFailed = true;
-                                }
-                            } else {
-                                String closestBedrockSound = getClosestBedrockSound(validBedrockSounds, path);
-                                LOGGER.warn("Java sound {} has no valid playsound mapping, the closest sound found is {}", key, closestBedrockSound);
-                            }
-                        }
-
-                        if (levelEvent) {
-                            if (bedrockMapping.isPresent()) {
-                                try {
-                                    LevelEvent.valueOf(bedrockMapping.get());
-                                } catch (IllegalArgumentException exception) {
-                                    LOGGER.warn("Level event mapping for Java sound {} ({}) does not exist, removing", key, bedrockMapping.get());
-                                    bedrockMapping = Optional.empty();
-                                    levelEvent = false;
-                                }
-                            } else {
-                                LOGGER.warn("Mapping for Java sound {} is marked as level event, but has no level event specified", key);
-                                LOGGER.warn("Setting level_event to false");
-                                levelEvent = false;
-                            }
-                        } else if (bedrockMapping.isPresent()) {
-                            try {
-                                org.cloudburstmc.protocol.bedrock.data.SoundEvent.valueOf(bedrockMapping.get());
-                            } catch (IllegalArgumentException exception) {
-                                LOGGER.warn("Sound event mapping for Java sound {} ({}) does not exist, removing", key, bedrockMapping.get());
-                                bedrockMapping = Optional.empty();
-                            }
-                        }
-
-                        if (extraData <= 0 && !path.equals("block.note_block.harp")) {
-                            extraData = -1;
-                        }
-
-                        if (playSoundMapping.isEmpty() && bedrockMapping.isEmpty()) {
-                            LOGGER.error("Java sound {} has no valid sound mapping", key);
-                            mappingsAreIncomplete = true;
-                        }
-
-                        oldMappings.put(soundEvent, new SoundMapping(identifier, playSoundMapping, bedrockMapping, extraData, pitchAdjust, levelEvent));
+                    AtomicInteger missed = new AtomicInteger();
+                    for (SoundEvent event : BuiltInRegistries.SOUND_EVENT) {
+                        String identifier = Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
+                        transformer.apply(identifier).ifPresentOrElse(mapping -> mappings.put(event, mapping),
+                                () -> {
+                                    LOGGER.error("No sound mapped for {}, closest is {}", identifier, getClosestBedrockSound(validBedrockSounds, identifier));
+                                    missed.getAndIncrement();
+                                });
                     }
 
-                    if (automaticMappingOfBlockSoundsFailed) {
-                        LOGGER.warn("Some PLACE sounds need to be manually mapped, please search for \"MANUALMAP\" in sounds.json");
-                    }
-                    if (mappingsAreIncomplete) {
-                        LOGGER.error("Sound mappings are incomplete, please check the logs above");
-                    }
-
-                    Map<SoundEvent, SoundMapping_v1> mappings = new Object2ObjectOpenHashMap<>();
-
-                    oldMappings.forEach((event, oldMapping) -> {
-                        SoundMapping_v1 mapping;
-
-                        if (oldMapping.playSoundMapping().isPresent()) {
-                            mapping = SoundMapping_v1.playSound(oldMapping.playSoundMapping().orElseThrow());
-                        } else if (oldMapping.levelEvent()) {
-                            mapping = SoundMapping_v1.levelEvent(LevelEvent.valueOf(oldMapping.bedrockMapping().orElseThrow()));
-                        } else {
-                            org.cloudburstmc.protocol.bedrock.data.SoundEvent sound;
-                            if (oldMapping.bedrockMapping().isPresent()) {
-                                sound = org.cloudburstmc.protocol.bedrock.data.SoundEvent.valueOf(oldMapping.bedrockMapping().get().toUpperCase(Locale.ROOT).replace(".", "_"));
-                            } else {
-                                try {
-                                    sound = org.cloudburstmc.protocol.bedrock.data.SoundEvent.valueOf(BuiltInRegistries.SOUND_EVENT.getKey(event).getPath().toUpperCase(Locale.ROOT).replace(".", "_"));
-                                } catch (IllegalArgumentException exception) {
-                                    LOGGER.warn("Missed " + oldMapping + " for " + event + " !!!");
-                                    return;
-                                }
-                            }
-
-                            Optional<SoundData> data;
-                            if (sound == org.cloudburstmc.protocol.bedrock.data.SoundEvent.NOTE) {
-                                data = Optional.of(SoundData.note(oldMapping.extraData()));
-                            } else if (sound == org.cloudburstmc.protocol.bedrock.data.SoundEvent.PLACE && oldMapping.extraData() == -1
-                                        && oldMapping.identifier().isPresent()) {
-                                data = Optional.of(SoundData.block(MappingsCodecs.BLOCK_STATE_STRING_CODEC.parse(JavaOps.INSTANCE, oldMapping.identifier().get()).getOrThrow()));
-                            } else if (oldMapping.extraData() != -1) {
-                                data = Optional.of(SoundData.constant(oldMapping.extraData()));
-                            } else {
-                                data = Optional.empty();
-                            }
-
-                            mapping = new SoundMapping_v1.SoundEventMapping(sound, data);
-                        }
-
-                        mappings.put(event, mapping);
-                    });
+                    LOGGER.error("Missed sound mappings: {}", missed.get());
 
                     return saveFile(cache, mappings);
                 });

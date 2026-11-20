@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -21,19 +22,22 @@ public interface Transformer<I, O> extends Function<I, O> {
         return input -> after.apply(apply(input));
     }
 
-    default <MO> Transformer<I, MO> strongChain(StrongBuilder<O, MO> after) {
-        return chain(strong(after));
-    }
-
-    default Transformer<I, O> weakChain(WeakBuilder<O, O> after) {
-        Transformer<? super O, Optional<? extends O>> built = weak(after);
+    default Transformer<I, O> optionalChain(Transformer<? super O, Optional<? extends O>> after) {
         return chain(output -> {
-            Optional<? extends O> mapped = built.apply(output);
+            Optional<? extends O> mapped = after.apply(output);
             if (mapped.isPresent()) {
                 return mapped.get();
             }
             return output;
         });
+    }
+
+    default <MO> Transformer<I, MO> strongChainBuilder(StrongBuilder<O, MO> after) {
+        return chain(strong(after));
+    }
+
+    default Transformer<I, O> optionalChainBuilder(WeakBuilder<O, O> after) {
+        return optionalChain(weak(after));
     }
 
     static <T> Transformer<T, T> identity() {
@@ -114,6 +118,27 @@ public interface Transformer<I, O> extends Function<I, O> {
             return transform(i -> clazz.isInstance(i) ? transformer.apply((C) i) : Optional.empty());
         }
 
+        @SafeVarargs
+        public final Builder<I, O, MaI, MaO, RI, RO> groupedCatch(BiFunction<Transformer<? super I, ? extends O>, Transformer<? super I, ? extends O>, Transformer<? super I, ? extends O>> chainer,
+                                                                  Transformer<? super I, ? extends O>... transformers) {
+            for (Transformer<? super I, ? extends O> first : transformers) {
+                Transformer<? super I, ? extends O> current = first;
+                for (Transformer<? super I, ? extends O> second : transformers) {
+                    if (first == second) {
+                        continue;
+                    }
+                    current = chainer.apply(current, second);
+                    catchAll(current);
+                }
+                catchAll(first);
+            }
+            return this;
+        }
+
+        public Builder<I, O, MaI, MaO, RI, RO> catchAll(Transformer<? super I, ? extends O> finalTransformer) {
+            return transform(_ -> true, finalTransformer);
+        }
+
         public Builder<I, O, MaI, MaO, RI, RO> transform(I input, O to) {
             return transform(Predicate.isEqual(input), to);
         }
@@ -132,7 +157,7 @@ public interface Transformer<I, O> extends Function<I, O> {
 
         public Builder<I, O, MaI, MaO, RI, RO> transform(I input, Transformer<? super RI, ? extends RO> transformer) {
             assert root != null : "use transform(I, O) as this is the root";
-            root.root.transform(rootInput -> root.inputMapper.apply(rootInput).equals(input) ? Optional.of(transformer.apply(rootInput)) : Optional.empty());
+            root.root.transform(rootInput -> root.inputMapper.apply(rootInput).map(i -> i.equals(input)).orElse(false) ? Optional.of(transformer.apply(rootInput)) : Optional.empty());
             return this;
         }
 
@@ -155,25 +180,29 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public <MI> Builder<MI, O, MaI, MaO, RI, RO> mapInput(Transformer<? super I, ? extends MI> inputMapper) {
-            return mapBoth(inputMapper, Optional::of);
+            return flatMap(inputMapper.chain(Optional::of), Optional::of);
+        }
+
+        public <MI> Builder<MI, O, MaI, MaO, RI, RO> flatMapInput(Transformer<? super I, Optional<? extends MI>> inputMapper) {
+            return flatMap(inputMapper, Optional::of);
         }
 
         public <MO> Builder<I, MO, MaI, MaO, RI, RO> mapOutput(Transformer<? super MO, ? extends O> outputMapper) {
-            return mapBoth(Transformer.identity(), outputMapper.chain(Optional::of));
+            return flatMap(Optional::of, outputMapper.chain(Optional::of));
         }
 
         public <MO> Builder<I, MO, MaI, MaO, RI, RO> flatMapOutput(Transformer<? super MO, Optional<? extends O>> outputMapper) {
-            return mapBoth(Transformer.identity(), outputMapper);
+            return flatMap(Optional::of, outputMapper);
         }
 
         @SuppressWarnings("unchecked")
-        public <MI, MO> Builder<MI, MO, MaI, MaO, RI, RO> mapBoth(Transformer<? super I, ? extends MI> inputMapper, Transformer<? super MO, Optional<? extends O>> outputMapper) {
+        public <MI, MO> Builder<MI, MO, MaI, MaO, RI, RO> flatMap(Transformer<? super I, Optional<? extends MI>> inputMapper, Transformer<? super MO, Optional<? extends O>> outputMapper) {
             Root<MI, MO, RI, RO> mappedRoot;
             if (root != null) {
                 mappedRoot = root.map(inputMapper, outputMapper);
             } else {
                 mappedRoot = new Root<>(root(),
-                        (Transformer<? super RI, ? extends MI>) inputMapper,
+                        (Transformer<? super RI, Optional<? extends MI>>) inputMapper,
                         (Transformer<? super MO, Optional<? extends RO>>) (Object) outputMapper);
             }
             return new Builder<>(mappedRoot, mark);
@@ -196,10 +225,6 @@ public interface Transformer<I, O> extends Function<I, O> {
             return (Builder<RI, RO, ?, ?, RI, RO>) this;
         }
 
-        public void lastly(Transformer<? super I, ? extends O> finalTransformer) {
-            transform(_ -> true, finalTransformer);
-        }
-
         public Transformer<RI, RO> finish(O fallback) {
             return finish(_ -> fallback);
         }
@@ -213,7 +238,8 @@ public interface Transformer<I, O> extends Function<I, O> {
                         return result.get();
                     }
                 }
-                return mapOutput(finalTransformer.apply(mapInput(input))).orElseThrow(() -> new NoSuchElementException("finalTransformer returned an output not supported by the root"));
+                return mapInput(input).map(finalTransformer).flatMap(this::mapOutput)
+                        .orElseThrow(() -> new NoSuchElementException("finalTransformer returned an output not supported by the root"));
             };
         }
 
@@ -231,9 +257,9 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         @SuppressWarnings("unchecked")
-        private I mapInput(RI input) {
+        private Optional<? extends I> mapInput(RI input) {
             if (root == null) {
-                return (I) input;
+                return Optional.of((I) input);
             }
             return root.inputMapper.apply(input);
         }
@@ -251,15 +277,16 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         private record Root<I, O, RI, RO>(Builder<RI, RO, ?, ?, RI, RO> root,
-                                          Transformer<? super RI, ? extends I> inputMapper,
+                                          Transformer<? super RI, Optional<? extends I>> inputMapper,
                                           Transformer<? super O, Optional<? extends RO>> outputMapper) {
 
-            private <MI, MO> Root<MI, MO, RI, RO> map(Transformer<? super I, ? extends MI> inputMapper, Transformer<? super MO, Optional<? extends O>> outputMapper) {
-                return new Root<>(root, inputMapper.compose(this.inputMapper), outputMapper.chain(optional -> optional.flatMap(this.outputMapper)));
+            private <MI, MO> Root<MI, MO, RI, RO> map(Transformer<? super I, Optional<? extends MI>> inputMapper, Transformer<? super MO, Optional<? extends O>> outputMapper) {
+                return new Root<>(root, this.inputMapper.chain(optional -> optional.flatMap(inputMapper)),
+                        outputMapper.chain(optional -> optional.flatMap(this.outputMapper)));
             }
 
             private void delegate(Transformer<? super I, Optional<? extends O>> transformer) {
-                root.transform(transformer.compose(inputMapper).chain(optional -> optional.flatMap(outputMapper)));
+                root.transform(inputMapper.chain(i -> i.flatMap(transformer).flatMap(outputMapper)));
             }
         }
     }

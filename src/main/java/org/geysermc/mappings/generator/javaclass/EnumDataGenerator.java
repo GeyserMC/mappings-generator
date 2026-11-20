@@ -14,7 +14,6 @@ import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.ProviderGroupBuilder;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.generator.MappingsGenerator;
-import org.geysermc.mappings.names.TypeRenamer;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.util.MappingsUtil;

@@ -177,6 +177,6 @@ public final class ParticleMappings {
 
             .reset()
             // Try to map the remaining particles - if an identical name exists it'll be used, if not the validator will fail it
-            .lastly(type -> ParticleMapping.ofIdentifier(Objects.requireNonNull(BuiltInRegistries.PARTICLE_TYPE.getKey(type)).getPath()))
+            .catchAll(type -> ParticleMapping.ofIdentifier(Objects.requireNonNull(BuiltInRegistries.PARTICLE_TYPE.getKey(type)).getPath()))
     );
 }

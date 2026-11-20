@@ -18,18 +18,23 @@ import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
+import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.transformer.instance.BlockClassNames;
 import org.geysermc.mappings.transformer.instance.BlockNames;
 import org.geysermc.mappings.transformer.instance.ItemClassNames;
 import org.geysermc.mappings.transformer.instance.ItemNames;
 import org.geysermc.mappings.transformer.instance.ParticleMappings;
+import org.geysermc.mappings.transformer.instance.sound.SoundMappings;
 import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class Transformers {
     public static final Transformer<Identifier, Identifier> BIOMES = Transformer.strong(builder -> builder
@@ -130,8 +135,10 @@ public final class Transformers {
             .transform(MapDecorationTypes.TARGET_X, new BedrockMapDecoration("XWhite", 0xFF000000))
 
             // Map the remaining by simply copying Java's name
-            .lastly(BedrockMapDecoration::new));
+            .catchAll(BedrockMapDecoration::new));
     public static final Transformer.Creator<List<Identifier>, ParticleType<?>, Optional<? extends ParticleMapping>> PARTICLES = ParticleMappings.INSTANCE;
+    // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
+    public static final Transformer.Creator<Set<String>, String, Optional<? extends SoundMapping>> SOUND_EVENTS = SoundMappings.INSTANCE;
 
     private Transformers() {}
 
@@ -139,8 +146,67 @@ public final class Transformers {
         return i -> Objects.requireNonNull(registry.getKey(i)).getPath();
     }
 
+    public static <R> Transformer<String, String> registryElement(Registry<R> registry, Transformer<R, String> elementTransformer) {
+        return i -> registry.get(Identifier.parse(i)).map(Holder::value).map(elementTransformer).orElse(i);
+    }
+
     public static Transformer<String, String> replace(String target, String replacement) {
         return s -> s.replace(target, replacement);
+    }
+
+    public static Transformer<String, Optional<? extends String>> findAndReplace(String regex, String replacement) {
+        return string -> {
+            String replaced = string.replaceAll(regex, replacement);
+            if (replaced.equals(string)) {
+                return Optional.empty();
+            }
+            return Optional.of(replaced);
+        };
+    }
+
+    public static Transformer<String, String> replace(Map<String, String> map) {
+        return string -> {
+            for (Map.Entry<String, String> replacement : map.entrySet()) {
+                string = string.replace(replacement.getKey(), replacement.getValue());
+            }
+            return string;
+        };
+    }
+
+    public static Transformer<String, String> replaceRegex(String regex, String replacement) {
+        Pattern pattern = Pattern.compile(regex);
+        return string -> {
+            Matcher matcher = pattern.matcher(string);
+            if (matcher.matches()) {
+                return matcher.replaceFirst(replacement);
+            }
+            return string;
+        };
+    }
+
+    public static Transformer<String, String> replaceGroup(String regex, Transformer<String, String> replacement) {
+        Pattern pattern = Pattern.compile(regex);
+        return string -> {
+            Matcher matcher = pattern.matcher(string);
+            if (matcher.matches()) {
+                return string.substring(0, matcher.start(1)) + replacement.apply(matcher.group(1)) + string.substring(matcher.end(1));
+            }
+            return string;
+        };
+    }
+
+    public static Transformer<String, String> segment(String separatorRegex, int index) {
+        return string -> {
+            String[] split = string.split(separatorRegex);
+            if (index >= split.length) {
+                return string;
+            }
+            return split[index];
+        };
+    }
+
+    public static <T> Transformer<T, Optional<T>> filter(Predicate<T> predicate) {
+        return t -> predicate.test(t) ? Optional.of(t) : Optional.empty();
     }
 
     public static Predicate<String> contains(String string) {
