@@ -86,8 +86,16 @@ public interface Transformer<I, O> extends Function<I, O> {
             return maybeCompose(Transformer.maybe(before));
         }
 
+        default <MO> Maybe<I, MO> maybeMap(Transformer<? super O, ? extends MO> after) {
+            return input -> apply(input).map(after);
+        }
+
         default <MO> Maybe<I, MO> maybeChain(Maybe<? super O, ? extends MO> after) {
             return input -> apply(input).flatMap(after);
+        }
+
+        default <MO> Maybe<I, MO> maybeMapBuilder(Transformer.Builder<? super O, ? extends MO> after) {
+            return maybeMap(of(after));
         }
 
         default <MO> Maybe<I, MO> maybeChainBuilder(Builder<? super O, ? extends MO> after) {
@@ -167,25 +175,48 @@ public interface Transformer<I, O> extends Function<I, O> {
             return maybeTransform(i -> clazz.isInstance(i) ? transformer.apply((C) i) : Optional.empty());
         }
 
+        public Factory<I, O, MaI, MaO, RI, RO> tryAll(Transformer<? super I, ? extends O> finalTransformer) {
+            return transform(_ -> true, finalTransformer);
+        }
+
         @SafeVarargs
-        public final Factory<I, O, MaI, MaO, RI, RO> groupedCatch(BiFunction<Transformer<? super I, ? extends O>, Transformer<? super I, ? extends O>, Transformer<? super I, ? extends O>> chainer,
-                                                                  Transformer<? super I, ? extends O>... transformers) {
-            for (Transformer<? super I, ? extends O> first : transformers) {
-                Transformer<? super I, ? extends O> current = first;
-                for (Transformer<? super I, ? extends O> second : transformers) {
-                    if (first == second) {
-                        continue;
-                    }
-                    current = chainer.apply(current, second);
-                    catchAll(current);
-                }
-                catchAll(first);
+        public final Factory<I, O, MaI, MaO, RI, RO> tryAllPermutations(BiFunction<Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>> chainer,
+                                                                        Maybe<? super I, ? extends O>... transformers) {
+            return tryAllPermutations(chainer, 2, transformers);
+        }
+
+        @SafeVarargs
+        public final Factory<I, O, MaI, MaO, RI, RO> tryAllPermutations(BiFunction<Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>> chainer, int maxDepth,
+                                                                        Maybe<? super I, ? extends O>... transformers) {
+            maxDepth = Math.min(transformers.length, maxDepth);
+            for (int startDepth = 0; startDepth <= maxDepth; startDepth++) {
+                permute(transformers, null, chainer, new boolean[transformers.length], 0, startDepth, maxDepth);
             }
             return this;
         }
 
-        public Factory<I, O, MaI, MaO, RI, RO> catchAll(Transformer<? super I, ? extends O> finalTransformer) {
-            return transform(_ -> true, finalTransformer);
+        private void permute(Maybe<? super I, ? extends O>[] transformers,
+                             @Nullable Maybe<? super I, ? extends O> prefix,
+                             BiFunction<Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>, Maybe<? super I, ? extends O>> chainer,
+                             boolean[] used, int depth, int startDepth, int maxDepth) {
+            for (int i = 0; i < transformers.length; i++) {
+                if (used[i]) {
+                    continue;
+                }
+                Maybe<? super I, ? extends O> current = prefix == null ? transformers[i] : chainer.apply(prefix, transformers[i]);
+                if (depth >= startDepth) {
+                    maybeTryAll(current);
+                }
+                if (depth < maxDepth) {
+                    used[i] = true;
+                    permute(transformers, current, chainer, used, depth + 1, startDepth, maxDepth);
+                    used[i] = false;
+                }
+            }
+        }
+
+        public Factory<I, O, MaI, MaO, RI, RO> maybeTryAll(Maybe<? super I, ? extends O> finalTransformer) {
+            return maybeTransform(_ -> true, finalTransformer);
         }
 
         public Factory<I, O, MaI, MaO, RI, RO> transform(I input, Transformer<? super RI, ? extends RO> transformer) {

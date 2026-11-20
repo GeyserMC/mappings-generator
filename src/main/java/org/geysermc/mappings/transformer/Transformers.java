@@ -28,7 +28,6 @@ import org.geysermc.mappings.transformer.instance.sound.SoundMappings;
 import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -132,7 +131,7 @@ public final class Transformers {
             .transform(MapDecorationTypes.TARGET_X, new BedrockMapDecoration("XWhite", 0xFF000000))
 
             // Map the remaining by simply copying Java's name
-            .catchAll(BedrockMapDecoration::new));
+            .tryAll(BedrockMapDecoration::new));
     public static final Transformer.MaybeCreator<List<Identifier>, ParticleType<?>, ParticleMapping> PARTICLES = ParticleMappings.INSTANCE;
     // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
     public static final Transformer.MaybeCreator<Set<String>, String, SoundMapping> SOUND_EVENTS = SoundMappings.INSTANCE;
@@ -147,8 +146,8 @@ public final class Transformers {
         return i -> Optional.ofNullable(registry.getKey(i));
     }
 
-    public static <R> Transformer<String, String> registryElement(Registry<R> registry, Transformer<R, String> elementTransformer) {
-        return i -> registry.get(Identifier.parse(i)).map(Holder::value).map(elementTransformer).orElse(i);
+    public static <R> Transformer.Maybe<String, R> registryElement(Registry<R> registry) {
+        return i -> registry.get(Identifier.parse(i)).map(Holder::value);
     }
 
     public static Transformer<String, String> replace(String target, String replacement) {
@@ -156,43 +155,24 @@ public final class Transformers {
     }
 
     public static Transformer.Maybe<String, String> findAndReplace(String regex, String replacement) {
+        Pattern pattern = Pattern.compile(regex);
         return string -> {
-            String replaced = string.replaceAll(regex, replacement);
-            if (replaced.equals(string)) {
-                return Optional.empty();
+            Matcher matcher = pattern.matcher(string);
+            if (matcher.find()) {
+                return Optional.of(matcher.replaceAll(replacement));
             }
-            return Optional.of(replaced);
+            return Optional.empty();
         };
     }
 
-    public static Transformer<String, String> replace(Map<String, String> map) {
-        return string -> {
-            for (Map.Entry<String, String> replacement : map.entrySet()) {
-                string = string.replace(replacement.getKey(), replacement.getValue());
-            }
-            return string;
-        };
-    }
-
-    public static Transformer<String, String> replaceRegex(String regex, String replacement) {
+    public static Transformer.Maybe<String, String> replaceGroup(String regex, Transformer.Maybe<String, String> replacement) {
         Pattern pattern = Pattern.compile(regex);
         return string -> {
             Matcher matcher = pattern.matcher(string);
             if (matcher.matches()) {
-                return matcher.replaceFirst(replacement);
+                return replacement.apply(matcher.group(1)).map(replaced -> string.substring(0, matcher.start(1)) + replaced + string.substring(matcher.end(1)));
             }
-            return string;
-        };
-    }
-
-    public static Transformer<String, String> replaceGroup(String regex, Transformer<String, String> replacement) {
-        Pattern pattern = Pattern.compile(regex);
-        return string -> {
-            Matcher matcher = pattern.matcher(string);
-            if (matcher.matches()) {
-                return string.substring(0, matcher.start(1)) + replacement.apply(matcher.group(1)) + string.substring(matcher.end(1));
-            }
-            return string;
+            return Optional.empty();
         };
     }
 

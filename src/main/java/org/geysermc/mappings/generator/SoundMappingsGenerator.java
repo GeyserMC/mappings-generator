@@ -2,6 +2,7 @@ package org.geysermc.mappings.generator;
 
 import com.google.gson.JsonParser;
 import com.mojang.logging.LogUtils;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
@@ -41,18 +42,19 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                                 .getAsJsonObject("sound_definitions")
                                 .keySet()))
                 .thenCompose(validBedrockSounds -> {
-                    Map<SoundEvent, SoundMapping> mappings = new Object2ObjectOpenHashMap<>();
+                    Map<SoundEvent, SoundMapping> mappings = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
                     Transformer<String, Optional<? extends SoundMapping>> transformer = Transformers.SOUND_EVENTS.create(validBedrockSounds);
 
                     AtomicInteger missed = new AtomicInteger();
-                    for (SoundEvent event : BuiltInRegistries.SOUND_EVENT) {
-                        String identifier = Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
-                        transformer.apply(identifier).ifPresentOrElse(mapping -> mappings.put(event, mapping),
-                                () -> {
-                                    LOGGER.error("No sound mapped for {}, closest is {}", identifier, getClosestBedrockSound(validBedrockSounds, identifier));
-                                    missed.getAndIncrement();
-                                });
-                    }
+                    BuiltInRegistries.SOUND_EVENT.stream().parallel()
+                            .forEach(event -> {
+                                String identifier = Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
+                                transformer.apply(identifier).ifPresentOrElse(mapping -> mappings.put(event, mapping),
+                                        () -> {
+                                            LOGGER.error("No sound mapped for {}, closest is {}", identifier, getClosestBedrockSound(validBedrockSounds, identifier));
+                                            missed.getAndIncrement();
+                                        });
+                            });
 
                     LOGGER.error("Missed sound mappings: {}", missed.get());
 
