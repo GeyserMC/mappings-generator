@@ -165,7 +165,7 @@ public final class Transformers {
         };
     }
 
-    public static Transformer.Maybe<String, String> replaceGroup(String regex, Transformer.Maybe<String, String> replacement) {
+    public static Transformer.Maybe<String, String> findAndReplaceGroup(String regex, Transformer.Maybe<String, String> replacement) {
         Pattern pattern = Pattern.compile(regex);
         return string -> {
             Matcher matcher = pattern.matcher(string);
@@ -173,6 +173,19 @@ public final class Transformers {
                 return replacement.apply(matcher.group(1)).map(replaced -> string.substring(0, matcher.start(1)) + replaced + string.substring(matcher.end(1)));
             }
             return Optional.empty();
+        };
+    }
+
+    public static Transformer.Maybe<String, String> swap(String target, String replacement) {
+        return string -> {
+            String replaced = string.replace(target, replacement);
+            if (replaced.equals(string)) {
+                replaced = string.replace(replacement, target);
+                if (replaced.equals(string)) {
+                    return Optional.empty();
+                }
+            }
+            return Optional.of(replaced);
         };
     }
 

@@ -10,8 +10,6 @@ import java.util.Set;
 
 // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
 public final class SoundMappings {
-    private static final Transformer.Maybe<String, String> IDLE_AMBIENT = Transformers.findAndReplace("idle", "ambient");
-
     public static final Transformer.MaybeCreator<Set<String>, String, SoundMapping> INSTANCE = validIds -> Transformer.maybe(builder -> builder
             .check(mapping -> mapping.validate(validIds))
             // Playsound mappings
@@ -25,7 +23,7 @@ public final class SoundMappings {
 
             .mark()
             // Try to map all block names to Bedrock first
-            .flatMapInput(Transformers.filter(Transformers.startsWith("block.")).maybeMap(Transformers.replaceGroup("block\\.([\\w_]+)\\.[\\w_]+",
+            .flatMapInput(Transformers.filter(Transformers.startsWith("block.")).maybeMap(Transformers.findAndReplaceGroup("block\\.([\\w_]+)\\.[\\w_]+",
                             Transformers.registryElement(BuiltInRegistries.BLOCK).maybeMap(Block::defaultBlockState).maybeMap(Transformers.BLOCKS))
                     .orElse(Transformer.identity())))
             // Catch any exact matches
@@ -37,7 +35,7 @@ public final class SoundMappings {
                     // block.stone.break -> break.stone
                     Transformers.findAndReplace("block\\.([\\w_]+)\\.([\\w_]+)", "$2.$1"),
                     // idle -> ambient
-                    IDLE_AMBIENT,
+                    Transformers.findAndReplace("idle", "ambient"),
                     // block variants that could use their regular sound
                     Transformers.findAndReplace("polished_", ""),
                     Transformers.findAndReplace("_tiles", ""),
@@ -57,14 +55,28 @@ public final class SoundMappings {
                     Transformers.findAndReplace("metal", "stone"),
                     Transformers.findAndReplace("moss_carpet", "moss"),
                     Transformers.findAndReplace("noteblock", "note"),
+                    Transformers.findAndReplace("wool", "cloth"),
                     // try replacing hit with break sound if hit doesn't exist
-                    Transformers.findAndReplace("hit", "break"),
+                    Transformers.swap("hit", "break"),
                     // if all else fails, try using step sound
                     Transformers.findAndReplace("break|place|hit|fall|slide", "step")
             )
             .reset()
 
-            .maybeTransform(Transformers.findAndReplace("entity.", "mob."))
+            .mark()
+            // Filter for entity. and rename to mob. first
+            .flatMapInput(Transformers.findAndReplace("^entity\\.", "mob."))
+            // Find any exact matches
+            .tryAll(Transformer.identity())
+            // Try permutations for other things
+            .tryAllPermutations(Transformer.Maybe::maybeChain,
+                    // Try replacing underscores in the mob's name with nothing
+                    Transformers.findAndReplaceGroup("mob\\.([\\w_]+)\\.[\\w_]+", Transformers.findAndReplace("_", "")),
+                    // Common synonyms for idle/ambient/etc
+                    Transformers.findAndReplace("ambient", "say"),
+                    Transformers.swap("idle", "ambient")
+            )
+            .reset()
 
             .maybeTransform(Transformers.findAndReplace("music\\.[a-z_]+\\.", "music.game."))
             .maybeTransform(Transformers.findAndReplace("music_disc\\.", "record."))

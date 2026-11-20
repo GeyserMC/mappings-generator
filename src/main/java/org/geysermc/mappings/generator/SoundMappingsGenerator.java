@@ -56,7 +56,8 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                                         });
                             });
 
-                    LOGGER.error("Missed sound mappings: {}", missed.get());
+                    int mapped = 100 - Math.round(((float) missed.get() / BuiltInRegistries.SOUND_EVENT.size()) * 100.0F);
+                    LOGGER.error("Missed sound mappings: {} out of {} ({}% mapped)", missed.get(), BuiltInRegistries.SOUND_EVENT.size(), mapped);
 
                     return saveFile(cache, mappings);
                 });
