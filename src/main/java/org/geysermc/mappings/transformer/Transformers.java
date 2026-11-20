@@ -29,7 +29,6 @@ import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -37,7 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Transformers {
-    public static final Transformer<Identifier, Identifier> BIOMES = Transformer.strong(builder -> builder
+    public static final Transformer<Identifier, Identifier> BIOMES = Transformer.of(builder -> builder
             .<ResourceKey<Biome>>mapInput(biome -> ResourceKey.create(Registries.BIOME, biome))
             .mapOutput(Identifier::withDefaultNamespace)
             // Different names:
@@ -79,7 +78,7 @@ public final class Transformers {
             .finish(Transformer.identity())); // All other biomes have the same name
     public static final Transformer<BlockState, String> BLOCKS = BlockNames.INSTANCE;
     public static final Transformer<Block, String> BLOCK_CLASSES = BlockClassNames.INSTANCE;
-    public static final Transformer<Identifier, String> ENCHANTMENTS = Transformer.strong(builder -> builder
+    public static final Transformer<Identifier, String> ENCHANTMENTS = Transformer.of(builder -> builder
             .mapInput(enchantment -> ResourceKey.create(Registries.ENCHANTMENT, enchantment))
 
             // Sweeping Edge doesn't exist on bedrock :(
@@ -91,7 +90,7 @@ public final class Transformers {
             .finish(identifier -> MappingsUtil.snakeToPascalCase(identifier.getPath())));
     public static final Transformer<Item, Identifier> ITEMS = ItemNames.INSTANCE;
     public static final Transformer<Item, String> ITEM_CLASSES = ItemClassNames.INSTANCE;
-    public static final Transformer.Creator<Set<EnumConstant>, Holder<MapDecorationType>, Optional<? extends BedrockMapDecoration.Serialized>> MAP_DECORATIONS = bedrockDecorations -> Transformer.weak(builder -> builder
+    public static final Transformer.MaybeCreator<Set<EnumConstant>, Holder<MapDecorationType>, BedrockMapDecoration.Serialized> MAP_DECORATIONS = bedrockDecorations -> Transformer.maybe(builder -> builder
             .<BedrockMapDecoration>flatMapOutput(decoration -> decoration.serialize(bedrockDecorations))
             .mark()
 
@@ -136,14 +135,14 @@ public final class Transformers {
 
             // Map the remaining by simply copying Java's name
             .catchAll(BedrockMapDecoration::new));
-    public static final Transformer.Creator<List<Identifier>, ParticleType<?>, Optional<? extends ParticleMapping>> PARTICLES = ParticleMappings.INSTANCE;
+    public static final Transformer.MaybeCreator<List<Identifier>, ParticleType<?>, ParticleMapping> PARTICLES = ParticleMappings.INSTANCE;
     // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
-    public static final Transformer.Creator<Set<String>, String, Optional<? extends SoundMapping>> SOUND_EVENTS = SoundMappings.INSTANCE;
+    public static final Transformer.MaybeCreator<Set<String>, String, SoundMapping> SOUND_EVENTS = SoundMappings.INSTANCE;
 
     private Transformers() {}
 
-    public static <R> Transformer<? super R, String> registryKey(Registry<R> registry) {
-        return i -> Objects.requireNonNull(registry.getKey(i)).getPath();
+    public static <R> Transformer.Maybe<? super R, String> registryKey(Registry<R> registry) {
+        return i -> Optional.ofNullable(registry.getKey(i)).map(Identifier::getPath);
     }
 
     public static <R> Transformer<String, String> registryElement(Registry<R> registry, Transformer<R, String> elementTransformer) {
@@ -154,7 +153,7 @@ public final class Transformers {
         return s -> s.replace(target, replacement);
     }
 
-    public static Transformer<String, Optional<? extends String>> findAndReplace(String regex, String replacement) {
+    public static Transformer.Maybe<String, String> findAndReplace(String regex, String replacement) {
         return string -> {
             String replaced = string.replaceAll(regex, replacement);
             if (replaced.equals(string)) {
@@ -205,7 +204,7 @@ public final class Transformers {
         };
     }
 
-    public static <T> Transformer<T, Optional<T>> filter(Predicate<T> predicate) {
+    public static <T> Transformer.Maybe<T, T> filter(Predicate<T> predicate) {
         return t -> predicate.test(t) ? Optional.of(t) : Optional.empty();
     }
 

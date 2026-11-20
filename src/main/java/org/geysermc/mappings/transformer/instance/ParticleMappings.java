@@ -11,7 +11,6 @@ import org.geysermc.mappings.transformer.Transformer;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class ParticleMappings {
     // From the top to the bottom:
@@ -22,7 +21,7 @@ public final class ParticleMappings {
     // - Cloudburst/LevelEvent enum mappings, only a few
     // - Built-in handling in Geyser, for special particles, only a few
     // Also see Mojang's ParticleTypes class, we're following the same order
-    public static final Transformer.Creator<List<Identifier>, ParticleType<?>, Optional<? extends ParticleMapping>> INSTANCE = validParticles -> Transformer.weak(builder -> builder
+    public static final Transformer.MaybeCreator<List<Identifier>, ParticleType<?>, ParticleMapping> INSTANCE = validParticles -> Transformer.maybe(builder -> builder
             .check(mapping -> mapping.validate(validParticles))
             .mark()
 

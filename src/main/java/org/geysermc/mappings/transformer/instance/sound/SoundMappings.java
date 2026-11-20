@@ -4,13 +4,12 @@ import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.transformer.Transformers;
 
-import java.util.Optional;
 import java.util.Set;
 
 public final class SoundMappings {
     private static final Transformer<String, String> IDLE_AMBIENT = Transformers.replace("idle", "ambient");
 
-    public static final Transformer.Creator<Set<String>, String, Optional<? extends SoundMapping>> INSTANCE = validIds -> Transformer.weak(builder -> builder
+    public static final Transformer.MaybeCreator<Set<String>, String, SoundMapping> INSTANCE = validIds -> Transformer.maybe(builder -> builder
             .check(mapping -> mapping.validate(validIds))
             // Playsound mappings
             .mapOutput(SoundMapping::playSound)
@@ -45,8 +44,8 @@ public final class SoundMappings {
 
             .catchAll(Transformers.replace("entity.", "mob."))
 
-            .transform(Transformers.findAndReplace("music\\.[a-z_]+\\.", "music.game."))
-            .transform(Transformers.findAndReplace("music_disc\\.", "record."))
+            .maybeTransform(Transformers.findAndReplace("music\\.[a-z_]+\\.", "music.game."))
+            .maybeTransform(Transformers.findAndReplace("music_disc\\.", "record."))
     );
 
     private SoundMappings() {}

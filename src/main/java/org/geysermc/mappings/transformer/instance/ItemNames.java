@@ -10,7 +10,7 @@ import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.transformer.Transformers;
 
 public final class ItemNames {
-    public static final Transformer<Item, Identifier> INSTANCE = Transformer.strong(builder -> builder
+    public static final Transformer<Item, Identifier> INSTANCE = Transformer.of(builder -> builder
             .mapOutput(Identifier::withDefaultNamespace)
 
             // Conflicts
@@ -76,7 +76,7 @@ public final class ItemNames {
             .transform(Items.DEBUG_STICK, "stick")
             .transform(Items.FURNACE_MINECART, "hopper_minecart")
 
-            .finish(Transformers.registryKey(BuiltInRegistries.ITEM)));
+            .finish(Transformers.registryKey(BuiltInRegistries.ITEM).orElseThrow()));
 
     private ItemNames() {}
 }

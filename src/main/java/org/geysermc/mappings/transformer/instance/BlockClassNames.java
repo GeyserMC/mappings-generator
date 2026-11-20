@@ -26,14 +26,14 @@ public final class BlockClassNames {
             FlowerPotBlock.class, FurnaceBlock.class, LecternBlock.class, MovingPistonBlock.class,
             ShulkerBoxBlock.class, TrapDoorBlock.class, SkullBlock.class, WallSkullBlock.class, ButtonBlock.class);
 
-    public static final Transformer<Block, String> INSTANCE = Transformer.strong(builder -> builder
+    public static final Transformer<Block, String> INSTANCE = Transformer.of(builder -> builder
             .transform(Blocks.PISTON, "PistonBlock")
             .transform(Blocks.STICKY_PISTON, "PistonBlock")
             .instanceOf(AbstractBannerBlock.class, "BannerBlock")
             .instanceOf(SkullBlock.class, "SkullBlock")
             .instanceOf(AbstractCauldronBlock.class, "CauldronBlock")
 
-            .transform(BlockClassNames::getMirroredClassName)
+            .maybeTransform(BlockClassNames::getMirroredClassName)
             .finish("Block"));
 
     private BlockClassNames() {}

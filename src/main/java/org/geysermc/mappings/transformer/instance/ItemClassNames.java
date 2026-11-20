@@ -24,7 +24,7 @@ public final class ItemClassNames {
     private static final List<Class<? extends Item>> MIRRORED_CLASSES = List.of(DyeItem.class, SpawnEggItem.class,
             PotionItem.class, BannerItem.class, BoatItem.class, MapItem.class);
 
-    public static final Transformer<Item, String> INSTANCE = Transformer.strong(builder -> builder
+    public static final Transformer<Item, String> INSTANCE = Transformer.of(builder -> builder
             .transform(Items.COMPASS, "CompassItem")
             .transform(Items.GOAT_HORN, "GoatHornItem")
             .transform(Items.TIPPED_ARROW, "TippedArrowItem")
@@ -44,9 +44,9 @@ public final class ItemClassNames {
             .transform(Items.OMINOUS_BOTTLE, "OminousBottleItem")
             .transform(Items.LIGHT, "LightItem")
 
-            .transform(ItemClassNames::getMirroredClassName)
+            .maybeTransform(ItemClassNames::getMirroredClassName)
 
-            .instanceOfStrong(BlockItem.class, sub -> sub
+            .instanceOfBuilder(BlockItem.class, sub -> sub
                     .mapInput(BlockItem::getBlock)
                     .instanceOf(ShulkerBoxBlock.class, "ShulkerBoxItem")
                     .instanceOf(DecoratedPotBlock.class, "DecoratedPotItem")

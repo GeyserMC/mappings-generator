@@ -21,7 +21,7 @@ import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.transformer.Transformers;
 
 public final class BlockNames {
-    public static final Transformer<BlockState, String> INSTANCE = Transformer.strong(builder -> builder
+    public static final Transformer<BlockState, String> INSTANCE = Transformer.of(builder -> builder
             .mapInput(BlockState::getBlock)
 
             // These don't exist on Bedrock
@@ -214,27 +214,25 @@ public final class BlockNames {
             // Class-dependent names
             .instanceOf(BedBlock.class, "bed")
             .instanceOf(FlowerPotBlock.class, "flower_pot")
-            .instanceOfStrong(AbstractBannerBlock.class, sub -> sub
+            .instanceOfBuilder(AbstractBannerBlock.class, sub -> sub
                     .instanceOf(WallBannerBlock.class, "wall_banner")
                     .finish("standing_banner"))
 
-            .instanceOf(StandingSignBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).chain(Transformers.replace("sign", "standing_sign")))
-            .instanceOf(WallHangingSignBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).chain(Transformers.replace("wall_", "")))
-            .instanceOf(WallSkullBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).chain(Transformers.replace("wall_", "")))
+            .maybeInstanceOf(StandingSignBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("sign", "standing_sign")))
+            .maybeInstanceOf(WallHangingSignBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("wall_", "")))
+            .maybeInstanceOf(WallSkullBlock.class, Transformers.registryKey(BuiltInRegistries.BLOCK).maybeChain(Transformers.findAndReplace("wall_", "")))
 
             .root()
 
             // An edge case
             .transformBuilder(state -> state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE, sub -> sub
                     .mapInput(BlockState::getBlock)
-                    .mark()
-                    .mapInput(Transformers.registryKey(BuiltInRegistries.BLOCK))
+                    .flatMapInput(Transformers.registryKey(BuiltInRegistries.BLOCK))
                     .transform(Transformers.contains("cut_copper"), Transformers.replace("cut", "double_cut"))
-                    .reset()
-                    .finish(Transformers.registryKey(BuiltInRegistries.BLOCK).chain(Transformers.replace("slab", "double_slab"))))
+                    .finish(Transformers.replace("slab", "double_slab")))
 
             .mapInput(BlockState::getBlock)
-            .finish(Transformers.registryKey(BuiltInRegistries.BLOCK)));
+            .finish(Transformers.registryKey(BuiltInRegistries.BLOCK).orElseThrow()));
     
     private BlockNames() {}
 }
