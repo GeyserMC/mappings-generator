@@ -26,7 +26,7 @@ public final class EnumDataGenerators {
     private EnumDataGenerators() {}
 
     // These are all alphabetically ordered after their FileType counterparts, please keep it that way.
-    public static ProviderGroupBuilder mcpl(ProviderGroupBuilder builder) {
+    public static ProviderGroup.Builder mcpl(ProviderGroup.Builder builder) {
         return builder.withFactory(mcplRegistry("Block Entity Type", FileType.MCPL_BLOCK_ENTITY_TYPE, BuiltInRegistries.BLOCK_ENTITY_TYPE))
                 .withFactory(BuiltinSoundGenerator::new)
                 .withFactory(mcplRegistry("Command Parser", FileType.MCPL_COMMAND_PARSER, BuiltInRegistries.COMMAND_ARGUMENT_TYPE))
@@ -38,7 +38,7 @@ public final class EnumDataGenerators {
                 .withFactory(mcplRegistry("Particle Type", FileType.MCPL_PARTICLE_TYPE, BuiltInRegistries.PARTICLE_TYPE));
     }
 
-    public static ProviderGroupBuilder enums(ProviderGroupBuilder builder) {
+    public static ProviderGroup.Builder enums(ProviderGroup.Builder builder) {
         return builder.withRegistryAndSamplesFactory(EnumDataGenerator.protocolBasedRegistry("Bedrock Enchantment", FileType.BEDROCK_ENCHANTMENT,
                         Registries.ENCHANTMENT, FileType.BEDROCK_ENCHANTMENTS, Transformers.ENCHANTMENTS))
                 .withSamplesFactory(EnumDataGenerators.interactiveTags())

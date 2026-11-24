@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.StringRepresentable;
 import org.geysermc.mappings.EnumDataGenerators;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.ProviderGroupBuilder;
+import org.geysermc.mappings.ProviderGroup;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.generator.MappingsGenerator;
 import org.geysermc.mappings.resources.BedrockSamples;
@@ -152,10 +152,10 @@ public final class EnumDataGenerator extends MappingsGenerator<String> {
     /// @param transformer a {@link Transformer} renaming the Java {@link Identifier} to an entry in the Bedrock enum
     /// @param <T> the type of the registry
     /// @return the factory
-    public static <T> ProviderGroupBuilder.ProviderFactory<EnumDataGenerator> protocolBasedRegistry(String name, FileType<String> fileType,
-                                                                                                    ResourceKey<? extends Registry<T>> registryKey,
-                                                                                                    FileType<Set<EnumConstant>> bedrockSource,
-                                                                                                    Transformer<Identifier, String> transformer) {
+    public static <T> ProviderGroup.ProviderFactory<EnumDataGenerator> protocolBasedRegistry(String name, FileType<String> fileType,
+                                                                                             ResourceKey<? extends Registry<T>> registryKey,
+                                                                                             FileType<Set<EnumConstant>> bedrockSource,
+                                                                                             Transformer<Identifier, String> transformer) {
         return (output, registryFuture, samplesFuture) -> new EnumDataGenerator(output, fileType, name,
                 () -> CompletableFuture.allOf(registryFuture, samplesFuture).thenCompose(_ -> {
                     Registry<T> registry = registryFuture.join().lookupOrThrow(registryKey);

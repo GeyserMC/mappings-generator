@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -56,7 +55,7 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String SELECTED_PROVIDER_GROUP = System.getProperty("geyser.providers.selected");
 
-    private static final Map<String, List<ProviderGroupBuilder.ProviderFactory<? extends DataProvider>>> providerGroups = new Object2ObjectLinkedOpenHashMap<>();
+    private static final Map<String, ProviderGroup> providerGroups = new Object2ObjectLinkedOpenHashMap<>();
 
     static {
         // These are sorted according to their respective FileType, please keep it that way!!
@@ -117,30 +116,33 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
             }
         }
 
-        CompletableFuture<BedrockSamples> bedrockSamples = BedrockSamples.load(((PackGeneratorAccessor) (Object) pack).getOutput().getOutputFolder());
-        // Have to use this instead of the registries provided by Fabric because these have tags
-        CompletableFuture<RegistryAccess> registryAccess = RegistryAccessUtil.create();
-
-        List<ProviderGroupBuilder.ProviderFactory<? extends DataProvider>> factories;
+        ProviderGroup providers;
         if (SELECTED_PROVIDER_GROUP != null) {
-            factories = providerGroups.get(SELECTED_PROVIDER_GROUP);
-            if (factories == null) {
+            providers = providerGroups.get(SELECTED_PROVIDER_GROUP);
+            if (providers == null) {
                 throw new RuntimeException("Unknown provider group\"" + SELECTED_PROVIDER_GROUP + "\"");
             }
             LOGGER.info("Running provider group \"{}\"", SELECTED_PROVIDER_GROUP);
         } else {
-            factories = providerGroups.entrySet().stream().flatMap(entry -> entry.getValue().stream()).toList();
+            providers = providerGroups.values().stream().reduce(ProviderGroup::merge).orElseThrow();
             LOGGER.info("Running all providers");
         }
 
+        // Have to use this instead of the registries provided by Fabric because these have tags
+        CompletableFuture<RegistryAccess> registryAccess = providers.requiresRegistries() ? RegistryAccessUtil.create() : null;
+        CompletableFuture<BedrockSamples> bedrockSamples = providers.requiresSamples()
+                ? BedrockSamples.load(((PackGeneratorAccessor) (Object) pack).getOutput().getOutputFolder())
+                : null;
+
         // Java stuff
-        factories.forEach(provider -> pack.addProvider((FabricDataGenerator.Pack.Factory<? extends DataProvider>)output -> provider.create(output, registryAccess, bedrockSamples)));
+        providers.factories()
+                .forEach(provider -> pack.addProvider((FabricDataGenerator.Pack.Factory<? extends DataProvider>)output -> provider.create(output, registryAccess, bedrockSamples)));
     }
 
-    private static void registerProviderGroup(String name, UnaryOperator<ProviderGroupBuilder> builder) {
+    private static void registerProviderGroup(String name, UnaryOperator<ProviderGroup.Builder> builder) {
         if (providerGroups.containsKey(name)) {
             throw new IllegalArgumentException("Tried to register provider group for name " + name + " twice!");
         }
-        providerGroups.put(name, builder.apply(new ProviderGroupBuilder()).build());
+        providerGroups.put(name, ProviderGroup.of(builder));
     }
 }

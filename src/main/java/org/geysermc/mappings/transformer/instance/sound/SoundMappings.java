@@ -10,26 +10,13 @@ import java.util.Set;
 
 // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
 public final class SoundMappings {
-    private static final Transformer.Maybe<String, String> JAVA_BLOCKS = Transformer.maybe(builder -> builder
-            // Use the same sound
-            .transform("cherry_sapling", "bamboo_sapling")
-            .transform("gilded_blackstone", "nether_gold_ore")
-            .transform("glass", "stone") // Except for breaking, mapped explicitly below
-
-            .flatMapInput(Transformers.registryElement(BuiltInRegistries.BLOCK))
-            .mapInput(Block::defaultBlockState)
-            .mapInput(Transformers.BLOCKS)
-            .tryAll(Transformer.identity()));
+    private static final Transformer.Maybe<String, String> JAVA_BLOCKS = Transformers.registryElement(BuiltInRegistries.BLOCK)
+            .maybeMap(Block::defaultBlockState).maybeMap(Transformers.BLOCKS);
     // Bedrock block name -> bedrock block sound name
     private static final Transformer.Maybe<String, String> LEGACY_BLOCKS = Transformer.maybe(builder -> builder
             .maybeTransform(Transformers.findAndReplace("copper_chest_oxidized", "copper_chest.oxidized"))
             .maybeTransform(Transformers.findAndReplace("copper_chest_weathered", "copper_chest.weathered"))
             .maybeTransform(Transformers.findAndReplace("enchantment_table", "enchanting_table"))
-            .maybeTransform(Transformers.findAndReplace("flowering_azalea", "azalea"))
-            .maybeTransform(Transformers.findAndReplace("hanging_sign", "sign"))
-            .maybeTransform(Transformers.findAndReplace("ladder", "wood"))
-            .maybeTransform(Transformers.findAndReplace("metal", "stone"))
-            .maybeTransform(Transformers.findAndReplace("moss_carpet", "moss"))
             .maybeTransform(Transformers.findAndReplace("noteblock", "note"))
             .maybeTransform(Transformers.findAndReplace("wool", "cloth"))
             .maybeTransform(Transformers.findAndReplace("chorus_flower", "chorusflower"))
@@ -64,9 +51,6 @@ public final class SoundMappings {
             .transform("bubble_column.upwards_inside", "bubble.upinside")
             .transform("bubble_column.whirlpool_ambient", "bubble.down")
             .transform("bubble_column.whirlpool_inside", "bubble.downinside")
-
-            // Java uses break sounds for fall/step of saplings
-            .maybeTransform(multipleToOne("cherry_sapling", "block.bamboo_sapling.break", "fall", "step"))
 
             .transform("chest.close", "random.chestclosed")
             .transform("chest.locked", "random.door_open")

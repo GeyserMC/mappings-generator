@@ -15,7 +15,6 @@ import org.geysermc.mappings.transformer.Transformers;
 import org.slf4j.Logger;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public final class MapDecorationMappingsGenerator extends MappingsGenerator<Map<Holder<MapDecorationType>, BedrockMapDecoration.Serialized>> {
@@ -32,7 +31,7 @@ public final class MapDecorationMappingsGenerator extends MappingsGenerator<Map<
         return bedrockSamples.thenCompose(samples -> samples.protocol().open(protocol -> protocol.readFileOrThrow(FileType.BEDROCK_MAP_DECORATIONS))
                 .thenCompose(bedrockDecorations -> {
                     Map<Holder<MapDecorationType>, BedrockMapDecoration.Serialized> mappings = new Object2ObjectOpenHashMap<>();
-                    Transformer<Holder<MapDecorationType>, Optional<? extends BedrockMapDecoration.Serialized>> transformer = Transformers.MAP_DECORATIONS.create(bedrockDecorations);
+                    Transformer.Maybe<Holder<MapDecorationType>, BedrockMapDecoration.Serialized> transformer = Transformers.MAP_DECORATIONS.create(bedrockDecorations);
 
                     for (Holder<MapDecorationType> decorationType : BuiltInRegistries.MAP_DECORATION_TYPE.asHolderIdMap()) {
                         transformer.apply(decorationType).ifPresentOrElse(mapped -> mappings.put(decorationType, mapped),

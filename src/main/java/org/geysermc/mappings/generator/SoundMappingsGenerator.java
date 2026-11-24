@@ -10,6 +10,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.sounds.SoundEvent;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.geysermc.mappings.FileType;
+import org.geysermc.mappings.definitions.sound.SoundEventAliases;
 import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.transformer.Transformer;
@@ -36,24 +37,39 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
 
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
-        return bedrockSamples.thenCompose(samples -> samples.samples().openRaw(opened ->
-                        JsonParser.parseString(Files.readString(opened.getPath("resource_pack/sounds/sound_definitions.json")))
-                                .getAsJsonObject()
-                                .getAsJsonObject("sound_definitions")
-                                .keySet()))
-                .thenCompose(validBedrockSounds -> {
+        CompletableFuture<Set<String>> bedrockSoundsFuture = bedrockSamples.thenCompose(samples -> samples.samples().openRaw(opened ->
+                JsonParser.parseString(Files.readString(opened.getPath("resource_pack/sounds/sound_definitions.json")))
+                        .getAsJsonObject()
+                        .getAsJsonObject("sound_definitions")
+                        .keySet()));
+        CompletableFuture<SoundEventAliases> aliasesFuture = bedrockSamples.thenApplyAsync(samples -> SoundEventAliases.load(samples.resources()));
+
+        return CompletableFuture.allOf(bedrockSoundsFuture, aliasesFuture)
+                .thenCompose(_ -> {
+                    Set<String> validBedrockSounds = bedrockSoundsFuture.join();
+                    SoundEventAliases aliases = aliasesFuture.join();
+
                     Map<SoundEvent, SoundMapping> mappings = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
-                    Transformer<String, Optional<? extends SoundMapping>> transformer = Transformers.SOUND_EVENTS.create(validBedrockSounds);
+                    Transformer.Maybe<String, SoundMapping> transformer = Transformers.SOUND_EVENTS.create(validBedrockSounds);
 
                     AtomicInteger missed = new AtomicInteger();
                     BuiltInRegistries.SOUND_EVENT.stream().parallel()
                             .forEach(event -> {
                                 String identifier = Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
-                                transformer.apply(identifier).ifPresentOrElse(mapping -> mappings.put(event, mapping),
-                                        () -> {
-                                            LOGGER.error("No sound mapped for {}, closest is {}", identifier, getClosestBedrockSound(validBedrockSounds, identifier));
-                                            missed.getAndIncrement();
-                                        });
+
+                                Optional<? extends SoundMapping> mapping = transformer.apply(identifier);
+                                if (mapping.isPresent()) {
+                                    mappings.put(event, mapping.get());
+                                } else {
+                                    Optional<? extends SoundMapping> aliased = aliases.find(identifier)
+                                            .flatMap(alias -> transformer.apply(alias.key())); // TODO volume + picth
+                                    if (aliased.isPresent()) {
+                                        mappings.put(event, aliased.get());
+                                    } else {
+                                        LOGGER.error("No sound mapped for {}, closest is {}", identifier, getClosestBedrockSound(validBedrockSounds, identifier));
+                                        missed.incrementAndGet();
+                                    }
+                                }
                             });
 
                     int mapped = 100 - Math.round(((float) missed.get() / BuiltInRegistries.SOUND_EVENT.size()) * 100.0F);

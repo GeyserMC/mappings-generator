@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -69,7 +68,7 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Parti
             return validParticleIds;
         }).thenCompose(validParticleIds -> {
             Map<ParticleType<?>, ParticleMapping> mappings = new Object2ObjectOpenHashMap<>();
-            Transformer<ParticleType<?>, Optional<? extends ParticleMapping>> transformer = Transformers.PARTICLES.create(validParticleIds);
+            Transformer.Maybe<ParticleType<?>, ParticleMapping> transformer = Transformers.PARTICLES.create(validParticleIds);
 
             // Then, loop over all particles, mapping them to their bedrock counterpart
             for (ParticleType<?> particle : BuiltInRegistries.PARTICLE_TYPE) {
