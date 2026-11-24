@@ -235,6 +235,10 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         public Factory<I, O, MaI, MaO, RI, RO> transform(I input, O to) {
+            if (root != this) {
+                // Ensure the output is valid
+                mappers.outputMapper.apply(to).orElseThrow(() -> new IllegalStateException("Hardcoded transformation failed to map to root: " + to));
+            }
             return transform(Predicate.isEqual(input), to);
         }
 

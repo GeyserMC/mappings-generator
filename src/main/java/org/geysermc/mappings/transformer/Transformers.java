@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -155,6 +156,17 @@ public final class Transformers {
     }
 
     public static Transformer.Maybe<String, String> findAndReplace(String regex, String replacement) {
+        Pattern pattern = Pattern.compile(regex);
+        return string -> {
+            Matcher matcher = pattern.matcher(string);
+            if (matcher.find()) {
+                return Optional.of(matcher.replaceAll(replacement));
+            }
+            return Optional.empty();
+        };
+    }
+
+    public static Transformer.Maybe<String, String> findAndReplace(String regex, Transformer<MatchResult, String> replacement) {
         Pattern pattern = Pattern.compile(regex);
         return string -> {
             Matcher matcher = pattern.matcher(string);
