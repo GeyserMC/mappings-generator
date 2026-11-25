@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -56,13 +57,22 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                     BuiltInRegistries.SOUND_EVENT.stream().parallel()
                             .forEach(event -> {
                                 String identifier = Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
+                                if (aliases.isEmpty(identifier)) {
+                                    LOGGER.info("Skipping {} because it's empty on Java", identifier);
+                                }
 
                                 Optional<? extends SoundMapping> mapping = transformer.apply(identifier);
                                 if (mapping.isPresent()) {
                                     mappings.put(event, mapping.get());
                                 } else {
-                                    Optional<? extends SoundMapping> aliased = aliases.find(identifier)
-                                            .flatMap(alias -> transformer.apply(alias.key())); // TODO volume + picth
+                                    Collection<SoundEventAliases.Alias> alias = aliases.find(identifier);
+                                    Optional<? extends SoundMapping> aliased = Optional.empty();
+                                    for (SoundEventAliases.Alias a : alias) {
+                                        aliased = transformer.apply(a.key()); // TODO volume + picth
+                                        if (aliased.isPresent()) {
+                                            break;
+                                        }
+                                    }
                                     if (aliased.isPresent()) {
                                         mappings.put(event, aliased.get());
                                     } else {

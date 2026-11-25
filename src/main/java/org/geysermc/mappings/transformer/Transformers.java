@@ -215,8 +215,9 @@ public final class Transformers {
         return t -> predicate.test(t) ? Optional.of(t) : Optional.empty();
     }
 
-    public static Predicate<String> contains(String string) {
-        return s -> s.contains(string);
+    public static Predicate<String> contains(String regex) {
+        Pattern pattern = Pattern.compile(regex);
+        return s -> pattern.matcher(s).find();
     }
 
     public static Predicate<String> startsWith(String string) {

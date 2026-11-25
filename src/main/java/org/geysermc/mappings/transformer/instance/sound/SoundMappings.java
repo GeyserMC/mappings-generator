@@ -10,18 +10,24 @@ import java.util.Set;
 
 // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
 public final class SoundMappings {
-    private static final Transformer.Maybe<String, String> JAVA_BLOCKS = Transformers.registryElement(BuiltInRegistries.BLOCK)
-            .maybeMap(Block::defaultBlockState).maybeMap(Transformers.BLOCKS);
-    // Bedrock block name -> bedrock block sound name
-    private static final Transformer.Maybe<String, String> LEGACY_BLOCKS = Transformer.maybe(builder -> builder
-            .maybeTransform(Transformers.findAndReplace("copper_chest_oxidized", "copper_chest.oxidized"))
-            .maybeTransform(Transformers.findAndReplace("copper_chest_weathered", "copper_chest.weathered"))
-            .maybeTransform(Transformers.findAndReplace("enchantment_table", "enchanting_table"))
-            .maybeTransform(Transformers.findAndReplace("noteblock", "note"))
-            .maybeTransform(Transformers.findAndReplace("wool", "cloth"))
-            .maybeTransform(Transformers.findAndReplace("chorus_flower", "chorusflower"))
-            .maybeTransform(Transformers.findAndReplace("end_gateway", "end_portal"))
-            .maybeTransform(Transformers.findAndReplace("nether_ore", "nether_gold_ore")));
+    // Java block sound -> bedrock block sound
+    private static final Transformer.Maybe<String, String> JAVA_BLOCKS = Transformer.maybe(builder -> builder
+            .transform("copper_chest_oxidized", "copper_chest.oxidized")
+            .transform("copper_chest_weathered", "copper_chest.weathered")
+            .transform("enchantment_table", "enchanting_table")
+            .transform("note_block", "note")
+            .transform("wool", "cloth")
+            .transform("chorus_flower", "chorusflower")
+            .transform("end_gateway", "end_portal")
+            .transform("nether_ore", "nether_gold_ore")
+            // Sounds similar. wet_grass = kelp, seagrass, etc.
+            .transform("wet_grass", "coral")
+            // Bedrock uses the same name as Java for sounds, but not for the actual block
+            .transform("snow", "snow")
+            .transform("vine", "vines")
+            .transform("wart_block", "nether_wart")
+            .maybeTransform(Transformers.registryElement(BuiltInRegistries.BLOCK)
+                    .maybeMap(Block::defaultBlockState).maybeMap(Transformers.BLOCKS)));
     // M
     public static final Transformer.MaybeCreator<Set<String>, String, SoundMapping> INSTANCE = validIds -> Transformer.maybe(builder -> builder
             .check(mapping -> mapping.validate(validIds))
@@ -73,6 +79,8 @@ public final class SoundMappings {
 
             .transform("ender_chest.close", "random.enderchestclosed")
             .transform("ender_chest.open", "random.enderchestopen")
+            .transform("shulker_box.close", "random.shulkerboxclosed")
+            .transform("shulker_box.open", "random.shulkerboxopen")
 
             .transform("fire.ambient", "fire.fire")
             .transform("glass.break", "random.glass")
@@ -80,6 +88,99 @@ public final class SoundMappings {
             // Java uses break sounds for fall/step of fungi
             .maybeTransform(multipleToOne("fungus", "dig.fungus", "fall", "step"))
             .transform("furnace.fire_crackle", "block.furnace.lit")
+
+            .transform("potent_sulfur.geyser_continuous_eruption", "block.potent_sulfur.geyser_continuous_eruption_start")
+            .transform("potent_sulfur.geyser_eruption", "block.potent_sulfur.geyser_eruption_start")
+            .transform("potent_sulfur.noxious_gas", "block.potent_sulfur.ambient")
+
+            .transform("sniffer_egg.plop", "mob.sniffer.plop")
+            .transform("water.ambient", "liquid.water")
+            .transform("lava.ambient", "liquid.lava")
+            .transform("lava.pop", "random.pop")
+            .transform("portal.ambient", "portal.portal")
+            .transform("wet_sponge.dries", "random.fizz")
+            // Funny enough cave_vines.pick_berries on Java aliases to sweet berry bush, on Bedrock it's the other way around
+            .transform("sweet_berry_bush.pick_berries", "pick_berries.cave_vines")
+            .transform("lever.click", "random.lever_click")
+            .transform("tripwire.detach", "random.bowhit")
+            .transform("redstone_torch.burnout", "random.fizz")
+            .transform("piston.contract", "tile.piston.in")
+            .transform("piston.extend", "tile.piston.out")
+            .transform("sculk_sensor.clicking", "power.on.sculk_sensor")
+            .transform("sculk_sensor.clicking_stop", "power.off.sculk_sensor")
+
+            .reset()
+
+            .transform("enchant.thorns.hit", "damage.thorns")
+
+            .mark()
+            .flatMapInput(category("entity"))
+
+            .transform("allay.ambient_with_item", "mob.allay.idle_holding")
+            .transform("allay.ambient_without_item", "mob.allay.idle")
+            .transform("arrow.hit", "random.bowhit")
+            .transform("arrow.hit_player", "random.orb")
+            .transform("arrow.shoot", "random.bow")
+            .transform("axolotl.idle_air", "mob.axolotl.idle")
+            .transform("baby_horse.step", "mob.horse.soft") // Doesn't exist on Bedrock?
+            // TODO can this be one statement (baby nautilus)
+            .transform("baby_nautilus.ambient", "mob.baby_nautilus.ambient.in.water")
+            .transform("baby_nautilus.ambient_land", "mob.baby_nautilus.ambient")
+            .transform("baby_nautilus.death", "mob.baby_nautilus.death.in.water")
+            .transform("baby_nautilus.death_land", "mob.baby_nautilus.death")
+            .transform("baby_nautilus.hurt", "mob.baby_nautilus.hurt.in.water")
+            .transform("baby_nautilus.hurt_land", "mob.baby_nautilus.hurt")
+            .transform("bee.loop_aggressive", "mob.bee.aggressive")
+            .transform("breeze.wind_burst", "breeze_wind_charge.burst")
+            .transform("copper_golem_become_statue", "mob.copper_golem.becoming_statue")
+            .transform("creeper.hurt", "mob.creeper.say")
+            .transform("creeper.primed", "random.fuse")
+            .transform("dragon_fireball.explode", "random.explode")
+            .transform("elder_guardian.ambient_land", "mob.guardian.land_idle")
+            .transform("elder_guardian.death_land", "mob.guardian.land_death")
+            .transform("elder_guardian.hurt_land", "mob.guardian.land_hit")
+            .transform("experience_orb.pickup", "random.orb")
+            .transform("fishing_bobber.splash", "random.splash")
+            .transform("generic.big_fall", "damage.fallbig")
+            .transform("generic.burn", "random.fizz")
+            .transform("generic.death", "game.player.die")
+            .transform("generic.drink", "random.drink")
+            .transform("generic.eat", "random.eat")
+            .transform("generic.explode", "random.explode")
+            .transform("generic.extinguish_fire", "random.fizz")
+            .transform("generic.hurt", "random.hurt")
+            .transform("generic.small_fall", "damage.fallsmall")
+            .transform("generic.swim", "random.swim")
+            .transform("goat.long_jump", "component.jump_to_block") // ???
+            .transform("goat.screaming.long_jump", "component.jump_to_block") // ???
+            .transform("item.break", "random.break")
+            .transform("item.pickup", "random.pop")
+            .transform("lightning_bolt.impact", "ambient.weather.lightning.impact")
+            .transform("lightning_bolt.thunder", "ambient.weather.thunder")
+            .transform("mooshroom.milk", "mob.mooshroom.suspicious_milk")
+            .transform("pig.hurt", "mob.pig.say")
+            .transform("player.attack.crit", "game.player.attack.critical")
+            .transform("player.attack.nodamage", "game.player.attack.nodamage")
+            .transform("player.attack.strong", "game.player.attack.strong")
+            .transform("player.burp", "random.burp")
+            .transform("player.hurt", "game.player.hurt")
+            .transform("player.hurt_sweet_berry_bush", "block.sweet_berry_bush.hurt")
+            .transform("player.levelup", "random.levelup")
+            .transform("player.splash", "random.splash")
+            .transform("player.swim", "random.swim")
+            .transform("sheep.death", "mob.sheep.say")
+            .transform("sheep.hurt", "mob.sheep.say")
+            .transform("shulker.hurt_closed", "random.shulkerboxclosed")
+            .transform("minecart.inside.underwater", "minecart.inside")
+            .transform("minecart.riding", "minecart.base")
+            .transform("polar_bear.ambient_baby", "mob.polarbear_baby.idle")
+            .transform("spider.death", "mob.spider.say")
+            .transform("villager.work_leatherworker", "cauldron.adddye")
+            .transform("villager.work_mason", "ui.stonecutter.take_result")
+            .transform("wind_charge.wind_burst", "wind_charge.burst")
+            .transform("zombie_villager.converted", "mob.zombie.unfect")
+            .transform("zombie_villager.cure", "mob.zombie.remedy")
+
             .reset()
 
             // Simply map any sound that has an exact match on Bedrock
@@ -94,6 +195,16 @@ public final class SoundMappings {
                     .orElse(Transformer.identity())))
             // Catch any exact matches
             .tryAll(Transformer.identity())
+
+            // The drip
+            .maybeTransform(Transformers.findAndReplace("^block\\.([\\w_]+)\\.drip_(water|lava)_into_cauldron$", "cauldron_drip.$2.$1"))
+            .maybeTransform(Transformers.findAndReplace("^block\\.([\\w_]+)\\.drip_(water|lava)$", "drip.$2.$1"))
+            // Button clicks
+            .transform(Transformers.contains("stone_button\\.click_(off|on)"), "random.click")
+            .transform(Transformers.contains("wooden_button\\.click_(off|on)"), "random.wood_click")
+            // Tripwire clicks
+            .transform(Transformers.contains("trip_wire"), "random.click")
+
             // Try various other things combined if not
             .tryAllPermutations(Transformer.Maybe::maybeChain,
                     // block.stone.break -> stone.break
@@ -111,10 +222,13 @@ public final class SoundMappings {
                     Transformers.findAndReplace("break", "dig"),
                     Transformers.findAndReplace("close", "closed"),
                     Transformers.findAndReplace("place", "use"),
+                    Transformers.findAndReplace("bounce", "land"),
                     Transformers.findAndReplace("(insert|pickup)\\.enchanted", "$1"), // chiseled bookshelf
                     Transformers.findAndReplace("transition", "state_change"), // dried ghast
-                    // different block names: coral_block -> coral, etc. note that the block has already been mapped to its bedrock name according to Transformers.BLOCKS
-                    LEGACY_BLOCKS,
+                    Transformers.findAndReplace("ominous_activate", "charge_activate"), // trial spawner
+                    Transformers.findAndReplace("basedrum", "bd"), // note block
+                    // try with a different block name: important for some blocks which use some of their own sounds and some of others
+                    Transformers.findAndReplace("trial_spawner", "ominous_item_spawner"),
                     // try replacing hit with break sound if hit doesn't exist
                     Transformers.swap("hit", "break"),
                     // if all else fails, try using step sound
@@ -129,39 +243,117 @@ public final class SoundMappings {
             .flatMapInput(Transformers.findAndReplace("^entity\\.", "mob."))
             // Find any exact matches
             .tryAll(Transformer.identity())
-            // Item frames turn into blocks
+            // Item frames/paintings turn into blocks
             .maybeTransform(Transformers.findAndReplace("mob\\.(?:glow_)?item_frame\\.([\\w_]+)", "block.itemframe.$1"))
+            .maybeTransform(Transformers.findAndReplace("mob\\.painting\\.([\\w_]+)", "block.painting.$1"))
             // Parrot imitate noises
             .maybeTransform(Transformers.findAndReplace("mob\\.parrot\\.imitate\\.([\\w_]+)", "mob.imitate.$1"))
             // firework has no prefix at all, and no _far sounds on bedrock
             .maybeTransform(Transformers.findAndReplace("mob\\.firework_rocket\\.([\\w_]+)", match -> "firework." + match.group(1).replace("_far", "")))
             // squids
             .maybeTransform(Transformers.findAndReplace("squirt", "ink_squirt"))
+            // turtle eggs turn into blocks
+            .maybeTransform(Transformers.findAndReplace("mob\\.turtle\\.egg_([\\w_]+)", "block.turtle_egg.$1"))
+            // zombified_piglin.angry > zombiepig.zpigangry (yeah idk)
+            .maybeTransform(Transformers.findAndReplace("mob\\.zombified_piglin\\.([\\w_]+)", match -> {
+                String type = match.group(1);
+                if (type.equals("ambient")) {
+                    type = ""; // Ambient is just "zpig"
+                }
+                return "mob.zombiepig.zpig" + type;
+            }))
             // Try permutations for other things
             .tryAllPermutations(Transformer.Maybe::maybeChain,
                     // Try replacing underscores in the mob's name with nothing
                     Transformers.findAndReplaceGroup("mob\\.([\\w_]+)\\.[\\w_]+", Transformers.findAndReplace("_", "")),
                     // Common synonyms for idle/ambient/etc
                     Transformers.swap("idle", "ambient"),
-                    Transformers.findAndReplace("loop", "ambient"),
-                    Transformers.findAndReplace("ambient", "say"),
-                    Transformers.findAndReplace("ambient", "breathe"),
                     Transformers.swap("fall", "land"),
                     Transformers.swap("hurt", "hit"),
                     Transformers.swap("step", "walk"),
                     Transformers.swap("riding", "ride"),
+                    Transformers.swap("death", "kill"),
+                    Transformers.findAndReplace("loop", "ambient"),
+                    Transformers.findAndReplace("ambient", "say"),
+                    Transformers.findAndReplace("ambient", "breathe"),
+                    Transformers.findAndReplace("ambient_land", "land_idle"),
+                    Transformers.findAndReplace("attack", "attack_loop"),
+                    Transformers.findAndReplace("attack", "hurt"),
+                    Transformers.findAndReplace("death_land", "land_death"),
+                    Transformers.findAndReplace("hurt_land", "land_hit"),
+                    Transformers.findAndReplace("swim", "step"),
+                    Transformers.findAndReplace("ambient", "bark"), // wolf
+                    Transformers.findAndReplace("pant", "panting"), // wolf
+                    Transformers.findAndReplace("ambient", "meow"), // cat
+                    Transformers.findAndReplace("stray_ambient", "straymeow"), // cat
+                    Transformers.findAndReplace("saddle", "leather"), // horse/other mobs that can be saddled
+                    Transformers.findAndReplace("step", "soft"), // horse
+                    Transformers.findAndReplace("step_wood", "wood"), // horse
+                    Transformers.findAndReplace("egg", "plop"), // chicken
+                    Transformers.findAndReplace("item_drop", "chest_interaction.put_item"), // copper golem
+                    Transformers.findAndReplace("item_no_drop", "chest_interaction.put_item_fail"), // copper golem
+                    Transformers.findAndReplace("no_item_get", "chest_interaction.take_item"), // copper golem
+                    Transformers.findAndReplace("no_item_no_get", "chest_interaction.take_item_fail"), // copper golem
+                    Transformers.findAndReplace("long_jump", "jump_to_block"), // frog/goat
+                    Transformers.findAndReplace("ambient", "moan"), // ghast
+                    Transformers.findAndReplace("hurt", "scream"), // ghast
+                    Transformers.findAndReplace("shoot", "fireball"), // ghast
+                    Transformers.findAndReplace("warn", "charge"), // ghast
+                    Transformers.findAndReplace("equip", "harness_equip"), // happy ghast
+                    Transformers.findAndReplace("unequip", "harness_unequip"), // happy ghast
+                    Transformers.findAndReplace("harness_", ""), // happy ghast
+                    Transformers.findAndReplace("teleport", "portal"), // enderman
+                    Transformers.findAndReplace("converted_to_zombie", "convert_to_zombie"), // husk
+                    Transformers.findAndReplace("attack", "throw"), // iron golem
+                    Transformers.findAndReplace("damage", "crack"), // iron golem
+                    Transformers.findAndReplace("squish", "big"), // magma cube/slime
+                    Transformers.findAndReplace("squish_small", "small"), // magma cube/slime
+                    Transformers.findAndReplace("aggressive_ambient", "idle.aggressive"), // panda
+                    Transformers.findAndReplace("pre_sneeze", "presneeze"), // panda
+                    Transformers.findAndReplace("worried_ambient", "idle.worried"), // panda
+                    Transformers.findAndReplace("jump", "hop"), // bunny
+                    Transformers.findAndReplace("attack", "bite"), // ravager
+                    Transformers.findAndReplace("stunned", "stun"), // ravager
+                    Transformers.findAndReplace("converted_to_stray", "convert_to_stray"), // skeleton
+                    Transformers.findAndReplace("digging_stop", "stand_up"), // sniffer
+                    Transformers.findAndReplace("scenting", "sniffsniff"), // sniffer
+                    Transformers.findAndReplace("sniffing", "long_sniff"), // sniffer
+                    Transformers.findAndReplace("happy", "tempt"), // strider
+                    Transformers.findAndReplace("retreat", "panic"), // strider
+                    Transformers.findAndReplace("squish", "landing"), // sulfur cube
+                    Transformers.findAndReplace("grow_up", "convert_to_frog"), // tadpole
+                    Transformers.findAndReplace("trade", "haggle"), // villager
+                    Transformers.findAndReplace("attack_impact", "attack"), // warden
+                    Transformers.findAndReplace("tendril_clicks", "clicking"), // warden
+                    Transformers.findAndReplace("attack_wooden_door", "wood"), // zombie
+                    Transformers.findAndReplace("break_wooden_door", "woodbreak"), // zombie
                     // Different mob names: evoker -> evocation_illager, etc.
                     Transformers.findAndReplace("evoker", "evocation_illager"),
                     Transformers.findAndReplace("evoker_fangs", "evocation_fangs"),
-                    Transformers.findAndReplace("cow_moody", "moody_cow")
+                    Transformers.findAndReplace("cow_moody", "moody_cow"),
+                    Transformers.findAndReplace("cat_royal", "royal_cat"),
+                    Transformers.findAndReplace("chicken_picky", "picky_chicken"),
+                    Transformers.findAndReplace("copper_golem_oxidized", "copper_golem.oxidized"),
+                    Transformers.findAndReplace("copper_golem_weathered", "copper_golem.weathered"),
+                    Transformers.findAndReplace("donkey", "horse.donkey"),
+                    Transformers.findAndReplace("skeleton_horse", "horse.skeleton"),
+                    Transformers.findAndReplace("zombie_horse", "horse.zombie"),
+                    Transformers.findAndReplace("enderman", "endermen"),
+                    Transformers.findAndReplace("illusioner", "evocation_illager"), // Doesn't exist on bedrock
+                    Transformers.findAndReplace("pig_big", "big_pig"),
+                    Transformers.findAndReplace("pig_mini", "mini_pig"),
+                    Transformers.findAndReplace("shulker_bullet", "shulker.bullet"),
+                    Transformers.findAndReplace("small_sulfur_cube", "sulfur_cube.small"),
+                    Transformers.findAndReplace("wolf_(angry|big|cute|grumpy|puglin|sad)", "wolf.$1"),
+                    // goat.screaming.ambient -> goat.ambient.screamer
+                    Transformers.findAndReplace("goat\\.screaming\\.([\\w_]+)", "goat.$1.screamer"),
+                    // turtle.death_baby -> turtle_baby.death
+                    Transformers.findAndReplace("turtle\\.([\\w_]+)_baby", "turtle_baby.$1")
             )
             .reset()
 
             .maybeTransform(Transformers.findAndReplace("music\\.[a-z_]+\\.", "music.game."))
             .maybeTransform(Transformers.findAndReplace("music_disc\\.", "record."))
-
-            // Explicit entity mappings
-            .flatMapInput(Transformers.findAndReplace("^entity\\.", ""))
     );
 
     private SoundMappings() {}
