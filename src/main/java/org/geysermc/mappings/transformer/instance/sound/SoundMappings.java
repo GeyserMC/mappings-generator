@@ -123,13 +123,6 @@ public final class SoundMappings {
             .transform("arrow.shoot", "random.bow")
             .transform("axolotl.idle_air", "mob.axolotl.idle")
             .transform("baby_horse.step", "mob.horse.soft") // Doesn't exist on Bedrock?
-            // TODO can this be one statement (baby nautilus)
-            .transform("baby_nautilus.ambient", "mob.baby_nautilus.ambient.in.water")
-            .transform("baby_nautilus.ambient_land", "mob.baby_nautilus.ambient")
-            .transform("baby_nautilus.death", "mob.baby_nautilus.death.in.water")
-            .transform("baby_nautilus.death_land", "mob.baby_nautilus.death")
-            .transform("baby_nautilus.hurt", "mob.baby_nautilus.hurt.in.water")
-            .transform("baby_nautilus.hurt_land", "mob.baby_nautilus.hurt")
             .transform("bee.loop_aggressive", "mob.bee.aggressive")
             .transform("breeze.wind_burst", "breeze_wind_charge.burst")
             .transform("copper_golem_become_statue", "mob.copper_golem.becoming_statue")
@@ -180,6 +173,8 @@ public final class SoundMappings {
             .transform("wind_charge.wind_burst", "wind_charge.burst")
             .transform("zombie_villager.converted", "mob.zombie.unfect")
             .transform("zombie_villager.cure", "mob.zombie.remedy")
+            .transform("turtle.egg_hatch", "mob.turtle_baby.born")
+            .transform("turtle.lay_egg", "block.turtle_egg.drop")
 
             .reset()
 
@@ -241,8 +236,6 @@ public final class SoundMappings {
             .mark()
             // Filter for "entity." and rename to "mob." first
             .flatMapInput(Transformers.findAndReplace("^entity\\.", "mob."))
-            // Find any exact matches
-            .tryAll(Transformer.identity())
             // Item frames/paintings turn into blocks
             .maybeTransform(Transformers.findAndReplace("mob\\.(?:glow_)?item_frame\\.([\\w_]+)", "block.itemframe.$1"))
             .maybeTransform(Transformers.findAndReplace("mob\\.painting\\.([\\w_]+)", "block.painting.$1"))
@@ -256,12 +249,24 @@ public final class SoundMappings {
             .maybeTransform(Transformers.findAndReplace("mob\\.turtle\\.egg_([\\w_]+)", "block.turtle_egg.$1"))
             // zombified_piglin.angry > zombiepig.zpigangry (yeah idk)
             .maybeTransform(Transformers.findAndReplace("mob\\.zombified_piglin\\.([\\w_]+)", match -> {
-                String type = match.group(1);
-                if (type.equals("ambient")) {
-                    type = ""; // Ambient is just "zpig"
+                String action = match.group(1);
+                if (action.equals("ambient")) {
+                    action = ""; // Ambient is just "zpig"
                 }
-                return "mob.zombiepig.zpig" + type;
+                return "mob.zombiepig.zpig" + action;
             }))
+            // _nautilus.ambient -> _nautilus.ambient.in.water
+            .maybeTransform(Transformers.findAndReplace("mob\\.([\\w_]+_)?nautilus\\.([\\w_]+)", match -> {
+                String type = match.group(1);
+                String action = match.group(2);
+                boolean land = action.endsWith("_land");
+                if (land) {
+                    action = action.replaceFirst("_land$", "");
+                }
+                return "mob." + type + "nautilus." + action + (land ? "" : ".in.water");
+            }))
+            // Find any exact matches
+            .tryAll(Transformer.identity())
             // Try permutations for other things
             .tryAllPermutations(Transformer.Maybe::maybeChain,
                     // Try replacing underscores in the mob's name with nothing
