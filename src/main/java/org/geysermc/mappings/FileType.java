@@ -29,7 +29,7 @@ import org.geysermc.mappings.definitions.item.RuntimeItemStates;
 import org.geysermc.mappings.definitions.mcpl.NetworkCodec;
 import org.geysermc.mappings.definitions.mcpl.NetworkTags;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
-import org.geysermc.mappings.definitions.sound.SoundMapping;
+import org.geysermc.mappings.definitions.sound.SoundMappingInstance;
 import org.geysermc.mappings.definitions.util.UtilMappings;
 import org.geysermc.mappings.util.MappingsCodecs;
 
@@ -112,7 +112,7 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<Map<ParticleType<?>, ParticleMapping>> PARTICLE_MAPPINGS = jsonMappings("particles", Codec.unboundedMap(BuiltInRegistries.PARTICLE_TYPE.byNameCodec(), ParticleMapping.CODEC));
     public static final FileType<String> README = text("mappings/README.md", Codec.STRING, true); // An edge case
     public static final FileType<List<List<TypedResolvableDataComponent>>> RESOLVABLE_ITEM_DATA_COMPONENTS = jsonMappings("resolvable_item_data_components", TypedResolvableDataComponent.CODEC.listOf().listOf().fieldOf("value").codec());
-    public static final FileType<Map<SoundEvent, SoundMapping>> SOUND_MAPPINGS = jsonMappings("sounds", Codec.unboundedMap(BuiltInRegistries.SOUND_EVENT.byNameCodec(), SoundMapping.CODEC));
+    public static final FileType<Map<SoundEvent, SoundMappingInstance>> SOUND_MAPPINGS = jsonMappings("sounds", Codec.unboundedMap(BuiltInRegistries.SOUND_EVENT.byNameCodec(), SoundMappingInstance.CODEC));
     public static final FileType<UtilMappings> UTIL_MAPPINGS = jsonMappings("util", UtilMappings.CODEC);
 
     // bedrock-data files

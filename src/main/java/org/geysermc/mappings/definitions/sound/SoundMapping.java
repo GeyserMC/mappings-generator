@@ -11,8 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public sealed interface SoundMapping {
-    Codec<SoundMapping> CODEC = MappingsCodecs.fuzzyCodec(Set.of(PlaySoundMapping.MAP_CODEC, SoundEventMapping.MAP_CODEC,
-            LevelEventMapping.MAP_CODEC), SoundMapping::codec).codec();
+    MapCodec<SoundMapping> MAP_CODEC = MappingsCodecs.fuzzyCodec(Set.of(PlaySoundMapping.MAP_CODEC, SoundEventMapping.MAP_CODEC,
+            LevelEventMapping.MAP_CODEC), SoundMapping::codec);
 
     static SoundMapping playSound(String sound) {
         return new PlaySoundMapping(sound);
