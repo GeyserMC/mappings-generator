@@ -181,8 +181,29 @@ public final class Transformers {
         Pattern pattern = Pattern.compile(regex);
         return string -> {
             Matcher matcher = pattern.matcher(string);
+            if (matcher.matches() && matcher.group(1) != null) {
+                return replacement.apply(matcher.group(1))
+                        .map(replaced -> string.substring(0, matcher.start(1)) + replaced + string.substring(matcher.end(1)));
+            }
+            return Optional.empty();
+        };
+    }
+
+    public static Transformer.Maybe<String, String> findAndReplaceGroups(String regex, Transformer.Maybe<String, String> firstReplacement,
+                                                                         Transformer.MaybeCreator<String, String, String> secondReplacement) {
+        Pattern pattern = Pattern.compile(regex);
+        return string -> {
+            Matcher matcher = pattern.matcher(string);
             if (matcher.matches()) {
-                return replacement.apply(matcher.group(1)).map(replaced -> string.substring(0, matcher.start(1)) + replaced + string.substring(matcher.end(1)));
+                String group1 = matcher.group(1);
+                String group2 = matcher.group(2);
+                if (group1 == null || group2 == null) {
+                    return Optional.empty();
+                }
+                return firstReplacement.apply(group1).flatMap(firstReplaced -> secondReplacement.create(firstReplaced).apply(group2)
+                        .map(secondReplaced
+                                -> string.substring(0, matcher.start(1)) + firstReplaced
+                                + string.substring(matcher.end(1), matcher.start(2)) + secondReplaced + string.substring(matcher.end(2))));
             }
             return Optional.empty();
         };
@@ -218,6 +239,11 @@ public final class Transformers {
     public static Predicate<String> contains(String regex) {
         Pattern pattern = Pattern.compile(regex);
         return s -> pattern.matcher(s).find();
+    }
+
+    public static Predicate<String> matches(String regex) {
+        Pattern pattern = Pattern.compile(regex);
+        return s -> pattern.matcher(s).matches();
     }
 
     public static Predicate<String> startsWith(String string) {

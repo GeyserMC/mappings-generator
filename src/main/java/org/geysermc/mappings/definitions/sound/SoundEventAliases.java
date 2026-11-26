@@ -126,6 +126,9 @@ public final class SoundEventAliases {
                 volume = sound.volume();
                 pitch = sound.pitch();
             } else if (volume != sound.volume() || pitch != sound.pitch()) {
+                if (strings.contains(sound.name().getPath())) {
+                    continue;
+                }
                 return Optional.empty();
             }
             strings.add(sound.name().getPath());

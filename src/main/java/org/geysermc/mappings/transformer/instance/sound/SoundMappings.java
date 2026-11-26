@@ -7,6 +7,7 @@ import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.transformer.Transformers;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
 public final class SoundMappings {
@@ -28,6 +29,34 @@ public final class SoundMappings {
             .transform("wart_block", "nether_wart")
             .maybeTransform(Transformers.registryElement(BuiltInRegistries.BLOCK)
                     .maybeMap(Block::defaultBlockState).maybeMap(Transformers.BLOCKS)));
+    private static final Transformer<String, String> ITEM_NAMES = Transformer.of(builder -> builder
+            .transform("spear_wood", "wooden_spear")
+            .finish(Transformer.identity()));
+    private static final Transformer.Creator<String, String, String> ITEM_TYPES = name -> Transformer.of(builder -> builder
+            .root().flatMapInput(filterForName(name, "(wooden_)?spear"))
+            .transform("attack", "attack_hit")
+            .root().flatMapInput(filterForName(name, "ominous_bottle"))
+            .transform("dispose", "end_use")
+            .root().flatMapInput(filterForName(name, "mace"))
+            .transform("smash_ground_heavy", "heavy_smash_ground")
+            .root().flatMapInput(filterForName(name, "lodestone_compass"))
+            .transform("lock", "link_compass_to_lodestone")
+            .root().flatMapInput(filterForName(name, "elytra"))
+            .transform("flying", "loop")
+            .root().flatMapInput(filterForName(name, "crossbow"))
+            .transform("loading_end", "loading.end")
+            .transform("loading_middle", "loading.middle")
+            .transform("loading_start", "loading.start")
+            .transform("quick_charge_1", "quick_charge.start")
+            .transform("quick_charge_2", "quick_charge.middle")
+            .transform("quick_charge_3", "quick_charge.end")
+            .root().flatMapInput(filterForName(name, "bucket"))
+            .transform("empty", "empty_water")
+            .transform("fill", "fill_water")
+            .transform("fill_axolotl", "fill_fish") // FIXME
+            .root().flatMapInput(filterForName(name, "bottle"))
+            .transform("fill_dragonbreath", "dragonbreath")
+            .finish(Transformer.identity()));
     // M
     public static final Transformer.MaybeCreator<Set<String>, String, SoundMapping> INSTANCE = validIds -> Transformer.maybe(builder -> builder
             .check(mapping -> mapping.validate(validIds))
@@ -155,6 +184,7 @@ public final class SoundMappings {
             .transform("player.attack.crit", "game.player.attack.critical")
             .transform("player.attack.nodamage", "game.player.attack.nodamage")
             .transform("player.attack.strong", "game.player.attack.strong")
+            .transform("player.attack.weak", "game.player.attack.nodamage")
             .transform("player.burp", "random.burp")
             .transform("player.hurt", "game.player.hurt")
             .transform("player.hurt_sweet_berry_bush", "block.sweet_berry_bush.hurt")
@@ -164,10 +194,11 @@ public final class SoundMappings {
             .transform("sheep.death", "mob.sheep.say")
             .transform("sheep.hurt", "mob.sheep.say")
             .transform("shulker.hurt_closed", "random.shulkerboxclosed")
+            .transform("minecart.inside", "minecart.inside")
             .transform("minecart.inside.underwater", "minecart.inside")
             .transform("minecart.riding", "minecart.base")
             .transform("polar_bear.ambient_baby", "mob.polarbear_baby.idle")
-            .transform("spider.death", "mob.spider.say")
+            .transform("spider.hurt", "mob.spider.say")
             .transform("villager.work_leatherworker", "cauldron.adddye")
             .transform("villager.work_mason", "ui.stonecutter.take_result")
             .transform("wind_charge.wind_burst", "wind_charge.burst")
@@ -175,14 +206,61 @@ public final class SoundMappings {
             .transform("zombie_villager.cure", "mob.zombie.remedy")
             .transform("turtle.egg_hatch", "mob.turtle_baby.born")
             .transform("turtle.lay_egg", "block.turtle_egg.drop")
+            .transform("turtle.ambient_land", "mob.turtle.ambient")
+
+            .reset()
+            .mark()
+            .flatMapInput(category("item"))
+
+            .transform("armor.unequip_nautilus", "mob.nautilus.armor_unequip")
+            .transform("axe.scrape", "scrape") // Yes, it's really just this.
+            .transform("axe.strip", "use.wood")
+            .transform("axe.wax_off", "copper.wax.off")
+            .transform("bucket.empty_sulfur_cube", "item.sulfur_cube.empty")
+            .transform("bucket.fill_sulfur_cube", "item.sulfur_cube.fill")
+            .transform("crossbow.hit", "random.bowhit")
+            .transform("dye.use", "sign.dye.use")
+            .transform("flintandsteel.use", "fire.ignite")
+            .transform("golden_dandelion.unuse", "mob.reset_growth")
+            .transform("golden_dandelion.use", "mob.pause_growth")
+            .transform("hoe.till", "use.gravel")
+            .transform("honey_bottle.drink", "random.drink_honey")
+            .transform("honeycomb.wax_on", "copper.wax.on")
+            .transform("horse_armor.unequip", "mob.horse.horse_armor_unequip")
+            .transform("ink_sac.use", "sign.ink_sac.use")
+            .transform("lead.tied", "leashknot.place")
+            .transform("lead.untied", "leashknot.break")
+            .transform("llama_carpet.unequip", "mob.llama.carpet_unequip")
+            .transform("nautilus_saddle_equip", "mob.nautilus.saddle")
+            .transform("nautilus_saddle_underwater_equip", "mob.nautilus.saddle_underwater")
+            .transform("nether_wart.plant", "place.nether_wart")
+            .transform("saddle.unequip", "mob.unsaddle")
+            .transform("shovel.flatten", "use.grass")
+            .transform("totem.use", "random.totem")
 
             .reset()
 
+            .transform("event.raid.horn", "raid.horn")
+
+            .transform("music.creative", "music.game.creative")
+            .transform("music.credits", "music.game.credits")
+            .transform("music.dragon", "music.game.endboss")
+            .transform("music.end", "music.game.end")
+            .transform("music.nether.soul_sand_valley", "music.game.soulsand_valley")
+            .transform("music.overworld.badlands", "music.overworld.mesa")
+            .transform("music.overworld.sparse_jungle", "music.overworld.jungle_edge")
+            .transform("music.overworld.swamp", "music.game.swamp_music")
+            .transform("music.under_water", "music.game.water")
+            .transform("ui.button.click", "random.click")
+            .transform("ui.hud.bubble_pop", "hud.bubble.pop")
+            .transform("ui.toast.in", "random.toast_recipe_unlocking_in")
+            .transform("ui.toast.out", "random.toast_recipe_unlocking_out")
+            .transform("weather.end_flash", "ambient.weather.the_end_light_flash")
+            .transform("weather.rain", "ambient.weather.rain")
+            .transform("weather.rain.above", "ambient.weather.rain")
+
             // Simply map any sound that has an exact match on Bedrock
             .tryAll(Transformer.identity())
-
-            // Try without prefix (block., item., etc.: block.stone.break -> stone.break)
-            .maybeTransform(Transformers.findAndReplace("^[\\w_]+\\.", ""))
 
             .mark()
             // Try to map all block names to Bedrock first
@@ -263,7 +341,7 @@ public final class SoundMappings {
                 if (land) {
                     action = action.replaceFirst("_land$", "");
                 }
-                return "mob." + type + "nautilus." + action + (land ? "" : ".in.water");
+                return "mob." + (type == null ? "" : type) + "nautilus." + action + (land ? "" : ".in.water");
             }))
             // Find any exact matches
             .tryAll(Transformer.identity())
@@ -327,11 +405,12 @@ public final class SoundMappings {
                     Transformers.findAndReplace("retreat", "panic"), // strider
                     Transformers.findAndReplace("squish", "landing"), // sulfur cube
                     Transformers.findAndReplace("grow_up", "convert_to_frog"), // tadpole
-                    Transformers.findAndReplace("trade", "haggle"), // villager
+                    Transformers.findAndReplace("trade", "haggle"), // villager/wandering trader
                     Transformers.findAndReplace("attack_impact", "attack"), // warden
                     Transformers.findAndReplace("tendril_clicks", "clicking"), // warden
                     Transformers.findAndReplace("attack_wooden_door", "wood"), // zombie
                     Transformers.findAndReplace("break_wooden_door", "woodbreak"), // zombie
+                    Transformers.findAndReplace("shamble", "step"), // turtle
                     // Different mob names: evoker -> evocation_illager, etc.
                     Transformers.findAndReplace("evoker", "evocation_illager"),
                     Transformers.findAndReplace("evoker_fangs", "evocation_fangs"),
@@ -349,7 +428,13 @@ public final class SoundMappings {
                     Transformers.findAndReplace("pig_mini", "mini_pig"),
                     Transformers.findAndReplace("shulker_bullet", "shulker.bullet"),
                     Transformers.findAndReplace("small_sulfur_cube", "sulfur_cube.small"),
-                    Transformers.findAndReplace("wolf_(angry|big|cute|grumpy|puglin|sad)", "wolf.$1"),
+                    Transformers.findAndReplace("wolf_(angry|big|cute|grumpy|puglin|sad)", match -> {
+                        String variant = match.group(1);
+                        if (variant.equals("angry")) {
+                            variant = "mad";
+                        }
+                        return "wolf." + variant;
+                    }),
                     // goat.screaming.ambient -> goat.ambient.screamer
                     Transformers.findAndReplace("goat\\.screaming\\.([\\w_]+)", "goat.$1.screamer"),
                     // turtle.death_baby -> turtle_baby.death
@@ -357,6 +442,27 @@ public final class SoundMappings {
             )
             .reset()
 
+            .mark()
+            .flatMapInput(Transformers.findAndReplaceGroups("item\\.([\\w_]+)\\.([\\w_.]+)", ITEM_NAMES.maybe(), ITEM_TYPES.maybe()))
+
+            // Try without suffix
+            .maybeTransform(Transformers.findAndReplace("^item\\.", ""))
+            // item.wolf_armor.break -> armor.break_wolf
+            .maybeTransform(Transformers.findAndReplace("item\\.wolf_armor\\.([\\w_]+)", "armor.$1_wolf"))
+            // item.spear.lunge_1 -> item.enchant.lunge1
+            .maybeTransform(Transformers.findAndReplace("item\\.spear\\.lunge_(\\d+)", "item.enchant.lunge$1"))
+            // item.goat_horn.sound.1 -> horn.call.1
+            .maybeTransform(Transformers.findAndReplace("item\\.goat_horn\\.sound\\.(\\d+)", "horn.call.$1"))
+            // item.brush.brushing.generic -> brush.generic
+            .maybeTransform(Transformers.findAndReplace("item\\.brush\\.brushing\\.([\\w_]+)", "brush.$1"))
+            .maybeTransform(Transformers.findAndReplace("item\\.brush\\.brushing\\.(sand|gravel)", "brush.suspicious_$1"))
+            .maybeTransform(Transformers.findAndReplace("item\\.brush\\.brushing\\.(sand|gravel)\\.complete", "brush_completed.suspicious_$1"))
+
+            .tryAll(Transformer.identity())
+
+            .reset()
+
+            .maybeTransform(Transformers.findAndReplace("event\\.mob_effect", "apply_effect"))
             .maybeTransform(Transformers.findAndReplace("music\\.[a-z_]+\\.", "music.game."))
             .maybeTransform(Transformers.findAndReplace("music_disc\\.", "record."))
     );
@@ -369,5 +475,10 @@ public final class SoundMappings {
 
     private static Transformer.Maybe<String, String> multipleToOne(String base, String to, String... types) {
         return Transformers.findAndReplace(base + "\\.(" + String.join("|", types) + ")", to);
+    }
+
+    private static Transformer.Maybe<String, String> filterForName(String name, String bedrockNameRegex) {
+        Pattern pattern = Pattern.compile(bedrockNameRegex);
+        return pattern.matcher(name).matches() ? Transformer.Maybe.identity() : Transformer.Maybe.empty();
     }
 }

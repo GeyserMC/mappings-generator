@@ -54,6 +54,10 @@ public interface Transformer<I, O> extends Function<I, O> {
     interface Creator<BI, I, O> {
 
         Transformer<I, O> create(BI builderInput);
+
+        default MaybeCreator<BI, I, O> maybe() {
+            return builderInput -> create(builderInput).maybe();
+        }
     }
 
     @FunctionalInterface
@@ -126,6 +130,10 @@ public interface Transformer<I, O> extends Function<I, O> {
 
         static <T> Maybe<T, T> identity() {
             return Optional::of;
+        }
+
+        static <T> Maybe<T, T> empty() {
+            return _ -> Optional.empty();
         }
 
         @FunctionalInterface

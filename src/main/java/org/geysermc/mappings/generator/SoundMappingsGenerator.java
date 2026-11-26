@@ -8,6 +8,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.definitions.sound.SoundEventAliases;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,6 +30,22 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEvent, SoundMapping>> {
+    private static final List<SoundEvent> MISSING = List.of(
+            SoundEvents.VILLAGER_WORK_FLETCHER, SoundEvents.FISHING_BOBBER_RETRIEVE,
+            SoundEvents.SULFUR_CUBE_SMALL_EAT, SoundEvents.PUFFER_FISH_BLOW_OUT,
+            SoundEvents.BOAT_PADDLE_LAND, SoundEvents.PUFFER_FISH_BLOW_UP,
+            SoundEvents.BOAT_PADDLE_WATER, SoundEvents.ZOMBIE_ATTACK_IRON_DOOR,
+            SoundEvents.GOAT_MILK, SoundEvents.PUFFER_FISH_STING,
+            SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundEvents.SKELETON_HORSE_SWIM,
+            SoundEvents.PLAYER_ATTACK_SWEEP, SoundEvents.SKELETON_HORSE_AMBIENT_WATER,
+            SoundEvents.SKELETON_HORSE_GALLOP_WATER, SoundEvents.SKELETON_HORSE_JUMP_WATER,
+            SoundEvents.PLAYER_BREATH, SoundEvents.SKELETON_HORSE_STEP_WATER,
+            SoundEvents.PLAYER_SPLASH_HIGH_SPEED, SoundEvents.ILLUSIONER_MIRROR_MOVE,
+            SoundEvents.ILLUSIONER_PREPARE_BLINDNESS, SoundEvents.ILLUSIONER_PREPARE_MIRROR,
+            SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundEvents.CROP_PLANTED,
+            SoundEvents.ARMOR_EQUIP_TURTLE.value(), SoundEvents.ZOMBIE_INFECT
+    );
+
     private static final Logger LOGGER = LogUtils.getLogger();
     private final CompletableFuture<BedrockSamples> bedrockSamples;
 
@@ -59,6 +77,10 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                                 String identifier = Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
                                 if (aliases.isEmpty(identifier)) {
                                     LOGGER.info("Skipping {} because it's empty on Java", identifier);
+                                    return;
+                                } else if (MISSING.contains(event)) {
+                                    LOGGER.warn("Skipping {} because it's missing on Bedrock", identifier);
+                                    return;
                                 }
 
                                 Optional<? extends SoundMapping> mapping = transformer.apply(identifier);
