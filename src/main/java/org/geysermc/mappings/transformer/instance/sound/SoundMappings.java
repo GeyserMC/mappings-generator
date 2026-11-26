@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
 public final class SoundMappings {
     // Java block sound -> bedrock block sound
-    private static final Transformer.Maybe<String, String> JAVA_BLOCKS = Transformer.maybe(builder -> builder
+    private static final Transformer.Maybe<String, String> BLOCK_NAMES = Transformer.maybe(builder -> builder
             .transform("copper_chest_oxidized", "copper_chest.oxidized")
             .transform("copper_chest_weathered", "copper_chest.weathered")
             .transform("enchantment_table", "enchanting_table")
@@ -29,6 +29,114 @@ public final class SoundMappings {
             .transform("wart_block", "nether_wart")
             .maybeTransform(Transformers.registryElement(BuiltInRegistries.BLOCK)
                     .maybeMap(Block::defaultBlockState).maybeMap(Transformers.BLOCKS)));
+
+    private static final Transformer<String, String> ENTITY_NAMES = Transformer.of(builder -> builder
+            .transform("evoker", "evocation_illager")
+            .transform("evoker_fangs", "evocation_fangs")
+            .transform("cow_moody", "moody_cow")
+            .transform("cat_royal", "royal_cat")
+            .transform("chicken_picky", "picky_chicken")
+            .transform("copper_golem_oxidized", "copper_golem.oxidized")
+            .transform("copper_golem_weathered", "copper_golem.weathered")
+            .transform("donkey", "horse.donkey")
+            .transform("skeleton_horse", "horse.skeleton")
+            .transform("zombie_horse", "horse.zombie")
+            .transform("enderman", "endermen")
+            .transform("illusioner", "evocation_illager") // Doesn't exist on bedrock
+            .transform("pig_big", "big_pig")
+            .transform("pig_mini", "mini_pig")
+            .transform("shulker_bullet", "shulker.bullet")
+            .transform("small_sulfur_cube", "sulfur_cube.small")
+            .transform("elder_guardian", "elderguardian")
+            .transform("ender_dragon", "enderdragon")
+            .transform("iron_golem", "irongolem")
+            .transform("magma_cube", "magmacube")
+            .transform("polar_bear", "polarbear")
+            .transform("snow_golem", "snowgolem")
+            .transform("wandering_trader", "wanderingtrader")
+            .maybeTransform(Transformers.findAndReplace("wolf_(angry|big|cute|grumpy|puglin|sad)", match -> {
+                String variant = match.group(1);
+                if (variant.equals("angry")) {
+                    variant = "mad";
+                }
+                return "wolf." + variant;
+            }))
+            .finish(Transformer.identity()));
+
+    private static final Transformer.Creator<String, String, String> ENTITY_TYPES = name -> Transformer.of(builder -> builder
+            .root().flatMapInput(filterForName(name, "(baby_)?wolf(\\.[\\w_]+)?"))
+            .transform("ambient", "bark")
+            .transform("pant", "panting")
+            .root().flatMapInput(filterForName(name, "cat"))
+            .transform("ambient", "meow")
+            .transform("stray_ambient", "straymeow")
+            .root().flatMapInput(filterForName(name, "horse"))
+            .transform("saddle", "leather")
+            .transform("step", "soft")
+            .transform("step_wood", "wood")
+            .root().flatMapInput(filterForName(name, "chicken"))
+            .transform("egg", "plop")
+            .root().flatMapInput(filterForName(name, "copper_golem"))
+            .transform("item_drop", "chest_interaction.put_item")
+            .transform("item_no_drop", "chest_interaction.put_item_fail")
+            .transform("no_item_get", "chest_interaction.take_item")
+            .transform("no_item_no_get", "chest_interaction.take_item_fail")
+            .root().flatMapInput(filterForName(name, "frog|goat"))
+            .transform("long_jump", "jump_to_block")
+            .root().flatMapInput(filterForName(name, "ghast"))
+            .transform("ambient", "moan")
+            .transform("hurt", "scream")
+            .transform("shoot", "fireball")
+            .transform("warn", "charge")
+            .root().flatMapInput(filterForName(name, "happy_ghast"))
+            .transform("equip", "harness_equip")
+            .transform("unequip", "harness_unequip")
+            .maybeTransform(Transformers.findAndReplace("harness_", ""))
+            .root().flatMapInput(filterForName(name, "endermen"))
+            .transform("teleport", "portal")
+            .root().flatMapInput(filterForName(name, "husk"))
+            .transform("converted_to_zombie", "convert_to_zombie")
+            .root().flatMapInput(filterForName(name, "irongolem"))
+            .transform("attack", "throw")
+            .transform("damage", "crack")
+            .root().flatMapInput(filterForName(name, "magmacube|slime"))
+            .transform("squish", "big")
+            .transform("squish_small", "small")
+            .root().flatMapInput(filterForName(name, "panda"))
+            .transform("aggressive_ambient", "idle.aggressive")
+            .transform("pre_sneeze", "presneeze")
+            .transform("worried_ambient", "idle.worried")
+            .root().flatMapInput(filterForName(name, "rabbit")) // bunny
+            .transform("jump", "hop")
+            .root().flatMapInput(filterForName(name, "ravager"))
+            .transform("attack", "bite")
+            .transform("stunned", "stun")
+            .root().flatMapInput(filterForName(name, "skeleton"))
+            .transform("converted_to_stray", "convert_to_stray")
+            .root().flatMapInput(filterForName(name, "sniffer"))
+            .transform("digging_stop", "stand_up")
+            .transform("scenting", "sniffsniff")
+            .transform("sniffing", "long_sniff")
+            .root().flatMapInput(filterForName(name, "strider"))
+            .transform("happy", "tempt")
+            .transform("retreat", "panic")
+            .root().flatMapInput(filterForName(name, "sulfur_cube(\\.small)?"))
+            .transform("squish", "landing")
+            .root().flatMapInput(filterForName(name, "tadpole"))
+            .transform("grow_up", "convert_to_frog")
+            .root().flatMapInput(filterForName(name, "villager|wanderingtrader"))
+            .transform("trade", "haggle")
+            .root().flatMapInput(filterForName(name, "warden"))
+            .transform("attack_impact", "attack")
+            .transform("tendril_clicks", "clicking")
+            .root().flatMapInput(filterForName(name, "zombie"))
+            .transform("attack_wooden_door", "wood")
+            .transform("break_wooden_door", "woodbreak")
+            .root().flatMapInput(filterForName(name, "turtle"))
+            .transform("shamble", "step")
+            .transform("shamble_baby", "step_baby")
+            .finish(Transformer.identity()));
+
     private static final Transformer<String, String> ITEM_NAMES = Transformer.of(builder -> builder
             .transform("spear_wood", "wooden_spear")
             .finish(Transformer.identity()));
@@ -264,7 +372,7 @@ public final class SoundMappings {
 
             .mark()
             // Try to map all block names to Bedrock first
-            .flatMapInput(Transformers.filter(Transformers.startsWith("block.")).maybeMap(Transformers.findAndReplaceGroup("block\\.([\\w_]+)\\.[\\w_]+", JAVA_BLOCKS)
+            .flatMapInput(Transformers.filter(Transformers.startsWith("block.")).maybeMap(Transformers.findAndReplaceGroup("block\\.([\\w_]+)\\.[\\w_]+", BLOCK_NAMES)
                     .orElse(Transformer.identity())))
             // Catch any exact matches
             .tryAll(Transformer.identity())
@@ -313,7 +421,8 @@ public final class SoundMappings {
 
             .mark()
             // Filter for "entity." and rename to "mob." first
-            .flatMapInput(Transformers.findAndReplace("^entity\\.", "mob."))
+            .flatMapInput(Transformers.findAndReplace("^entity\\.", "mob.")
+                    .maybeChain(Transformers.findAndReplaceGroups("mob\\.([\\w_]+)\\.([\\w_.]+)", ENTITY_NAMES.maybe(), ENTITY_TYPES.maybe())))
             // Item frames/paintings turn into blocks
             .maybeTransform(Transformers.findAndReplace("mob\\.(?:glow_)?item_frame\\.([\\w_]+)", "block.itemframe.$1"))
             .maybeTransform(Transformers.findAndReplace("mob\\.painting\\.([\\w_]+)", "block.painting.$1"))
@@ -343,12 +452,13 @@ public final class SoundMappings {
                 }
                 return "mob." + (type == null ? "" : type) + "nautilus." + action + (land ? "" : ".in.water");
             }))
+            // turtle.death_baby -> turtle_baby.death
+            .maybeTransform(Transformers.findAndReplace("turtle\\.([\\w_]+)_baby", "turtle_baby.$1"))
+
             // Find any exact matches
             .tryAll(Transformer.identity())
             // Try permutations for other things
             .tryAllPermutations(Transformer.Maybe::maybeChain,
-                    // Try replacing underscores in the mob's name with nothing
-                    Transformers.findAndReplaceGroup("mob\\.([\\w_]+)\\.[\\w_]+", Transformers.findAndReplace("_", "")),
                     // Common synonyms for idle/ambient/etc
                     Transformers.swap("idle", "ambient"),
                     Transformers.swap("fall", "land"),
@@ -365,80 +475,8 @@ public final class SoundMappings {
                     Transformers.findAndReplace("death_land", "land_death"),
                     Transformers.findAndReplace("hurt_land", "land_hit"),
                     Transformers.findAndReplace("swim", "step"),
-                    Transformers.findAndReplace("ambient", "bark"), // wolf
-                    Transformers.findAndReplace("pant", "panting"), // wolf
-                    Transformers.findAndReplace("ambient", "meow"), // cat
-                    Transformers.findAndReplace("stray_ambient", "straymeow"), // cat
-                    Transformers.findAndReplace("saddle", "leather"), // horse/other mobs that can be saddled
-                    Transformers.findAndReplace("step", "soft"), // horse
-                    Transformers.findAndReplace("step_wood", "wood"), // horse
-                    Transformers.findAndReplace("egg", "plop"), // chicken
-                    Transformers.findAndReplace("item_drop", "chest_interaction.put_item"), // copper golem
-                    Transformers.findAndReplace("item_no_drop", "chest_interaction.put_item_fail"), // copper golem
-                    Transformers.findAndReplace("no_item_get", "chest_interaction.take_item"), // copper golem
-                    Transformers.findAndReplace("no_item_no_get", "chest_interaction.take_item_fail"), // copper golem
-                    Transformers.findAndReplace("long_jump", "jump_to_block"), // frog/goat
-                    Transformers.findAndReplace("ambient", "moan"), // ghast
-                    Transformers.findAndReplace("hurt", "scream"), // ghast
-                    Transformers.findAndReplace("shoot", "fireball"), // ghast
-                    Transformers.findAndReplace("warn", "charge"), // ghast
-                    Transformers.findAndReplace("equip", "harness_equip"), // happy ghast
-                    Transformers.findAndReplace("unequip", "harness_unequip"), // happy ghast
-                    Transformers.findAndReplace("harness_", ""), // happy ghast
-                    Transformers.findAndReplace("teleport", "portal"), // enderman
-                    Transformers.findAndReplace("converted_to_zombie", "convert_to_zombie"), // husk
-                    Transformers.findAndReplace("attack", "throw"), // iron golem
-                    Transformers.findAndReplace("damage", "crack"), // iron golem
-                    Transformers.findAndReplace("squish", "big"), // magma cube/slime
-                    Transformers.findAndReplace("squish_small", "small"), // magma cube/slime
-                    Transformers.findAndReplace("aggressive_ambient", "idle.aggressive"), // panda
-                    Transformers.findAndReplace("pre_sneeze", "presneeze"), // panda
-                    Transformers.findAndReplace("worried_ambient", "idle.worried"), // panda
-                    Transformers.findAndReplace("jump", "hop"), // bunny
-                    Transformers.findAndReplace("attack", "bite"), // ravager
-                    Transformers.findAndReplace("stunned", "stun"), // ravager
-                    Transformers.findAndReplace("converted_to_stray", "convert_to_stray"), // skeleton
-                    Transformers.findAndReplace("digging_stop", "stand_up"), // sniffer
-                    Transformers.findAndReplace("scenting", "sniffsniff"), // sniffer
-                    Transformers.findAndReplace("sniffing", "long_sniff"), // sniffer
-                    Transformers.findAndReplace("happy", "tempt"), // strider
-                    Transformers.findAndReplace("retreat", "panic"), // strider
-                    Transformers.findAndReplace("squish", "landing"), // sulfur cube
-                    Transformers.findAndReplace("grow_up", "convert_to_frog"), // tadpole
-                    Transformers.findAndReplace("trade", "haggle"), // villager/wandering trader
-                    Transformers.findAndReplace("attack_impact", "attack"), // warden
-                    Transformers.findAndReplace("tendril_clicks", "clicking"), // warden
-                    Transformers.findAndReplace("attack_wooden_door", "wood"), // zombie
-                    Transformers.findAndReplace("break_wooden_door", "woodbreak"), // zombie
-                    Transformers.findAndReplace("shamble", "step"), // turtle
-                    // Different mob names: evoker -> evocation_illager, etc.
-                    Transformers.findAndReplace("evoker", "evocation_illager"),
-                    Transformers.findAndReplace("evoker_fangs", "evocation_fangs"),
-                    Transformers.findAndReplace("cow_moody", "moody_cow"),
-                    Transformers.findAndReplace("cat_royal", "royal_cat"),
-                    Transformers.findAndReplace("chicken_picky", "picky_chicken"),
-                    Transformers.findAndReplace("copper_golem_oxidized", "copper_golem.oxidized"),
-                    Transformers.findAndReplace("copper_golem_weathered", "copper_golem.weathered"),
-                    Transformers.findAndReplace("donkey", "horse.donkey"),
-                    Transformers.findAndReplace("skeleton_horse", "horse.skeleton"),
-                    Transformers.findAndReplace("zombie_horse", "horse.zombie"),
-                    Transformers.findAndReplace("enderman", "endermen"),
-                    Transformers.findAndReplace("illusioner", "evocation_illager"), // Doesn't exist on bedrock
-                    Transformers.findAndReplace("pig_big", "big_pig"),
-                    Transformers.findAndReplace("pig_mini", "mini_pig"),
-                    Transformers.findAndReplace("shulker_bullet", "shulker.bullet"),
-                    Transformers.findAndReplace("small_sulfur_cube", "sulfur_cube.small"),
-                    Transformers.findAndReplace("wolf_(angry|big|cute|grumpy|puglin|sad)", match -> {
-                        String variant = match.group(1);
-                        if (variant.equals("angry")) {
-                            variant = "mad";
-                        }
-                        return "wolf." + variant;
-                    }),
                     // goat.screaming.ambient -> goat.ambient.screamer
-                    Transformers.findAndReplace("goat\\.screaming\\.([\\w_]+)", "goat.$1.screamer"),
-                    // turtle.death_baby -> turtle_baby.death
-                    Transformers.findAndReplace("turtle\\.([\\w_]+)_baby", "turtle_baby.$1")
+                    Transformers.findAndReplace("goat\\.screaming\\.([\\w_]+)", "goat.$1.screamer")
             )
             .reset()
 
@@ -477,8 +515,8 @@ public final class SoundMappings {
         return Transformers.findAndReplace(base + "\\.(" + String.join("|", types) + ")", to);
     }
 
-    private static Transformer.Maybe<String, String> filterForName(String name, String bedrockNameRegex) {
-        Pattern pattern = Pattern.compile(bedrockNameRegex);
+    private static Transformer.Maybe<String, String> filterForName(String name, String regex) {
+        Pattern pattern = Pattern.compile(regex);
         return pattern.matcher(name).matches() ? Transformer.Maybe.identity() : Transformer.Maybe.empty();
     }
 }
