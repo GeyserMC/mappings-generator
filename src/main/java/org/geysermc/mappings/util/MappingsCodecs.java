@@ -7,11 +7,6 @@ import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapEncoder;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.state.BlockState;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
@@ -29,17 +24,6 @@ import java.util.function.Supplier;
 
 /// Holds various utility codecs.
 public final class MappingsCodecs {
-    /// Discards the namespace when encoding the {@link Identifier}, if it is `minecraft`.
-    public static final Codec<Identifier> TRIMMED_IDENTIFIER_CODEC = Codec.of(Codec.STRING.comap(Identifier::toShortString), Identifier.CODEC);
-    /// Discards the namespace when encoding the {@link SoundEvent}, if it is `minecraft`.
-    public static final Codec<SoundEvent> TRIMMED_SOUND_EVENT_CODEC = TRIMMED_IDENTIFIER_CODEC.flatXmap(identifier -> BuiltInRegistries.SOUND_EVENT.get(identifier)
-                    .map(Holder::value)
-                    .map(DataResult::success)
-                    .orElseGet(() -> DataResult.error(() -> "Unknown sound event: " + identifier)),
-            soundEvent -> BuiltInRegistries.SOUND_EVENT.getResourceKey(soundEvent)
-                    .map(ResourceKey::identifier)
-                    .map(DataResult::success)
-                    .orElseGet(() -> DataResult.error(() -> "Unregistered sound event: " + soundEvent)));
     /// Encodes/decodes the {@link BlockState} using the same format used in Minecraft's `/setblock` command.
     public static final Codec<BlockState> BLOCK_STATE_STRING_CODEC = Codec.STRING.comapFlatMap(MappingsUtil::blockStateFromString, MappingsUtil::blockStateToString);
     /// Preferably don't use this codec - rather, use codecs of proper types and encode these instead
