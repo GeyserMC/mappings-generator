@@ -34,8 +34,7 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
             SoundEvents.SULFUR_CUBE_SMALL_EAT, SoundEvents.PUFFER_FISH_BLOW_OUT,
             SoundEvents.BOAT_PADDLE_LAND, SoundEvents.PUFFER_FISH_BLOW_UP,
             SoundEvents.BOAT_PADDLE_WATER, SoundEvents.ZOMBIE_ATTACK_IRON_DOOR,
-            SoundEvents.GOAT_MILK, SoundEvents.PUFFER_FISH_STING,
-            SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundEvents.SKELETON_HORSE_SWIM,
+            SoundEvents.PUFFER_FISH_STING, SoundEvents.PLAYER_ATTACK_KNOCKBACK,
             SoundEvents.PLAYER_ATTACK_SWEEP, SoundEvents.SKELETON_HORSE_AMBIENT_WATER,
             SoundEvents.SKELETON_HORSE_GALLOP_WATER, SoundEvents.SKELETON_HORSE_JUMP_WATER,
             SoundEvents.PLAYER_BREATH, SoundEvents.SKELETON_HORSE_STEP_WATER,
@@ -45,8 +44,8 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
             SoundEvents.ARMOR_EQUIP_TURTLE.value(), SoundEvents.ZOMBIE_INFECT,
             SoundEvents.BELL_RESONATE, SoundEvents.LILY_PAD_PLACE
     );
-
     private static final Logger LOGGER = LogUtils.getLogger();
+
     private final CompletableFuture<BedrockSamples> bedrockSamples;
 
     public SoundMappingsGenerator(PackOutput output, CompletableFuture<BedrockSamples> bedrockSamples) {

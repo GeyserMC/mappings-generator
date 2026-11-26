@@ -204,7 +204,7 @@ public final class SoundMappings {
             .root().flatMapInput(filterForName(name, "bucket"))
             .transform("empty", "empty_water")
             .transform("fill", "fill_water")
-            .transform("fill_axolotl", "fill_fish") // FIXME
+            .transform("fill_axolotl", "fill_fish") // Doesn't exist on Bedrock?
             // Crossbow
             .root().flatMapInput(filterForName(name, "crossbow"))
             .transform("loading_end", "loading.end")
@@ -363,6 +363,7 @@ public final class SoundMappings {
             .transform("sheep.death", "mob.sheep.say")
             .transform("sheep.hurt", "mob.sheep.say")
             .transform("shulker.hurt_closed", "random.shulkerboxclosed")
+            .transform("skeleton_horse.swim", "random.swim")
             .transform("spider.hurt", "mob.spider.say")
 
             .transform("turtle.ambient_land", "mob.turtle.ambient")
