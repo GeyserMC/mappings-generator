@@ -5,12 +5,15 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.fabric.api.client.datagen.v1.builder.SoundTypeBuilder;
 import net.fabricmc.fabric.impl.datagen.client.SoundTypeBuilderImpl;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.sounds.SoundEvent;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import java.io.BufferedReader;
@@ -18,36 +21,41 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 // Mojang doesn't have codecs for sounds.json (yet), but Fabric does for their data generator module
 @SuppressWarnings("UnstableApiUsage")
-public final class SoundEventAliases {
+public final class JavaSoundEvents {
     private static final Codec<Map<String, SoundTypeBuilderImpl.SoundType>> SOUNDS_CODEC = Codec.unboundedMap(Codec.STRING, SoundTypeBuilderImpl.SoundType.CODEC);
 
-    private final Multimap<String, Alias> map;
-    private final Set<String> emptyEvents;
+    private final Multimap<SoundEvent, Alias> aliases;
+    private final Set<SoundEvent> emptyEvents;
 
-    private SoundEventAliases(Multimap<String, Alias> map, Set<String> emptyEvents) {
-        this.map = map;
-        this.emptyEvents = Collections.unmodifiableSet(emptyEvents);
+    private JavaSoundEvents(Multimap<SoundEvent, Alias> aliases, Set<SoundEvent> emptyEvents) {
+        this.aliases = aliases;
+        this.emptyEvents = emptyEvents;
     }
 
-    public Collection<Alias> find(String key) {
-        return map.get(key);
+    public Collection<Alias> findAlias(SoundEvent event) {
+        return aliases.get(event);
     }
 
-    public boolean isEmpty(String key) {
-        return emptyEvents.contains(key);
+    public boolean isEmpty(SoundEvent event) {
+        return emptyEvents.contains(event);
     }
 
-    public record Alias(String key, float volume, float pitch) {}
+    public record Alias(SoundEvent event, float volume, float pitch) {
 
-    public static SoundEventAliases load(ResourceManager resources) {
+        public String key() {
+            return Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
+        }
+    }
+
+    public static JavaSoundEvents load(ResourceManager resources) {
         Map<String, SoundTypeBuilderImpl.SoundType> sounds;
         try (BufferedReader soundsInput = resources.openAsReader(Identifier.withDefaultNamespace("sounds.json"))) {
             sounds = SOUNDS_CODEC.parse(JsonOps.INSTANCE, JsonParser.parseReader(soundsInput).getAsJsonObject()).getOrThrow();
@@ -56,27 +64,25 @@ public final class SoundEventAliases {
         }
 
         // First gather a map of all sound events using a simple list of raw paths
-        Map<String, List<String>> rawPaths = new Object2ObjectOpenHashMap<>();
-        sounds.forEach((key, definition)
-                -> filterForDefaultSettings(definition.sounds()).ifPresent(strings -> rawPaths.put(filterNamespace(key), strings)));
+        Map<SoundEvent, List<String>> rawPaths = new Object2ObjectLinkedOpenHashMap<>();
+        sounds.forEach((key, definition) -> getEvent(key)
+                .ifPresent(event -> filterPathsForDefaultSettings(definition.sounds()).ifPresent(strings -> rawPaths.put(event, strings))));
 
         // Then gather aliases/empty events
-        Multimap<String, Alias> overrides = MultimapBuilder.hashKeys().hashSetValues().build();
-        Set<String> emptyEvents = new ObjectOpenHashSet<>();
-        sounds.forEach((key, definition) -> {
-            // We're filtering the namespace out here
-            key = filterNamespace(key);
-            if (overrides.containsKey(key)) {
+        Multimap<SoundEvent, Alias> overrides = MultimapBuilder.hashKeys().arrayListValues().build();
+        Set<SoundEvent> emptyEvents = new ObjectOpenHashSet<>();
+        sounds.forEach((key, definition) -> getEvent(key).ifPresent(event -> {
+            if (overrides.containsKey(event)) {
                 return;
             } else if (definition.sounds().isEmpty()) {
-                emptyEvents.add(key);
+                emptyEvents.add(event);
                 return;
             }
 
-            List<String> paths = rawPaths.get(key);
+            List<String> paths = rawPaths.get(event);
             if (paths != null && !paths.isEmpty()) {
                 // If this sound event uses a list of paths, find all sound events using the same paths
-                List<String> allEvents = new ArrayList<>();
+                List<SoundEvent> allEvents = new ArrayList<>();
                 rawPaths.forEach((otherEvent, otherPaths) -> {
                     if (otherPaths.equals(paths)) {
                         allEvents.add(otherEvent);
@@ -85,16 +91,15 @@ public final class SoundEventAliases {
 
                 if (allEvents.size() > 1) {
                     // If other events also use this list of paths, find the event matching closely with the first path
-                    Optional<String> closestEvent = findClosestMatch(allEvents, paths.getFirst());
-                    closestEvent.ifPresentOrElse(closest -> {
-                        allEvents.forEach(event -> {
-                            if (!event.equals(closest)) {
-                                overrides.put(event, new Alias(closest, 1.0F, 1.0F));
-                            }
-                        });
-                    }, () -> allEvents.forEach(event -> allEvents.forEach(otherEvent -> {
-                        if (!event.equals(otherEvent)) {
-                            overrides.put(event, new Alias(otherEvent, 1.0F, 1.0F));
+                    Optional<SoundEvent> closestEvent = findClosestMatch(allEvents, paths.getFirst());
+                    closestEvent.ifPresentOrElse(closest -> allEvents.forEach(otherEvent -> {
+                        if (!otherEvent.equals(closest)) {
+                            overrides.put(otherEvent, new Alias(closest, 1.0F, 1.0F));
+                        }
+                    }), () -> allEvents.forEach(first -> allEvents.forEach(second -> {
+                        // If no closest match was found (all matches were pretty close), alias all to all
+                        if (!first.equals(second)) {
+                            overrides.put(first, new Alias(second, 1.0F, 1.0F));
                         }
                     })));
                 }
@@ -102,19 +107,15 @@ public final class SoundEventAliases {
                 // If the definition only has one sound, and it aliases to another sound event, this is an easy case
                 SoundTypeBuilderImpl.Entry sound = definition.sounds().getFirst();
                 if (sound.type() == SoundTypeBuilder.RegistrationType.SOUND_EVENT) {
-                    overrides.put(key, new Alias(sound.name().getPath(), sound.volume(), sound.pitch()));
+                    getEvent(sound.name()).ifPresent(alias -> overrides.put(event, new Alias(alias, sound.volume(), sound.pitch())));
                 }
             }
-        });
+        }));
 
-        return new SoundEventAliases(overrides, emptyEvents);
+        return new JavaSoundEvents(overrides, emptyEvents);
     }
 
-    private static String filterNamespace(String key) {
-        return Identifier.parse(key).getPath();
-    }
-
-    private static Optional<List<String>> filterForDefaultSettings(List<SoundTypeBuilderImpl.Entry> sounds) {
+    private static Optional<List<String>> filterPathsForDefaultSettings(List<SoundTypeBuilderImpl.Entry> sounds) {
         List<String> strings = new ArrayList<>();
         float volume = -1.0F;
         float pitch = -1.0F;
@@ -143,14 +144,14 @@ public final class SoundEventAliases {
                 && !sound.stream() && !sound.preload();
     }
 
-    private static Optional<String> findClosestMatch(List<String> events, String path) {
+    private static Optional<SoundEvent> findClosestMatch(List<SoundEvent> events, String path) {
         LevenshteinDistance distanceInstance = LevenshteinDistance.getDefaultInstance();
 
         int closestDistance = Integer.MAX_VALUE;
         int furthestDistance = Integer.MIN_VALUE;
-        String closestEvent = null;
-        for (String event : events) {
-            int distance = distanceInstance.apply(event, path);
+        SoundEvent closestEvent = null;
+        for (SoundEvent event : events) {
+            int distance = distanceInstance.apply(Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath(), path);
             if (distance < closestDistance) {
                 closestDistance = distance;
                 closestEvent = event;
@@ -162,5 +163,13 @@ public final class SoundEventAliases {
 
         double distanceFraction = (double) (furthestDistance - closestDistance) / furthestDistance;
         return distanceFraction < 0.2 ? Optional.empty() : Optional.of(closestEvent);
+    }
+
+    private static Optional<SoundEvent> getEvent(String identifier) {
+        return getEvent(Identifier.parse(identifier));
+    }
+
+    private static Optional<SoundEvent> getEvent(Identifier identifier) {
+        return BuiltInRegistries.SOUND_EVENT.get(identifier).map(Holder::value);
     }
 }

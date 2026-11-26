@@ -10,7 +10,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.definitions.sound.SoundEventAliases;
+import org.geysermc.mappings.definitions.sound.JavaSoundEvents;
 import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.definitions.sound.SoundMappingInstance;
 import org.geysermc.mappings.resources.BedrockSamples;
@@ -43,7 +43,7 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
             SoundEvents.ILLUSIONER_PREPARE_BLINDNESS, SoundEvents.ILLUSIONER_PREPARE_MIRROR,
             SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundEvents.CROP_PLANTED,
             SoundEvents.ARMOR_EQUIP_TURTLE.value(), SoundEvents.ZOMBIE_INFECT,
-            SoundEvents.BELL_RESONATE
+            SoundEvents.BELL_RESONATE, SoundEvents.LILY_PAD_PLACE
     );
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -61,53 +61,56 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                         .getAsJsonObject()
                         .getAsJsonObject("sound_definitions")
                         .keySet()));
-        CompletableFuture<SoundEventAliases> aliasesFuture = bedrockSamples.thenApplyAsync(samples -> SoundEventAliases.load(samples.resources()));
+        CompletableFuture<JavaSoundEvents> javaEventsFuture = bedrockSamples.thenApplyAsync(samples -> JavaSoundEvents.load(samples.resources()));
 
-        return CompletableFuture.allOf(bedrockSoundsFuture, aliasesFuture)
+        return CompletableFuture.allOf(bedrockSoundsFuture, javaEventsFuture)
                 .thenCompose(_ -> {
                     Set<String> validBedrockSounds = bedrockSoundsFuture.join();
-                    SoundEventAliases aliases = aliasesFuture.join();
+                    JavaSoundEvents javaSoundEvents = javaEventsFuture.join();
 
                     Map<SoundEvent, SoundMappingInstance> mappings = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
                     Transformer.Maybe<String, SoundMapping> transformer = Transformers.SOUND_EVENTS.create(validBedrockSounds);
 
-                    AtomicInteger missed = new AtomicInteger();
-                    BuiltInRegistries.SOUND_EVENT.stream().parallel()
-                            .forEach(event -> {
-                                String identifier = Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
-                                if (aliases.isEmpty(identifier)) {
-                                    LOGGER.info("Skipping {} because it's empty on Java", identifier);
-                                    return;
-                                } else if (MISSING.contains(event)) {
-                                    LOGGER.warn("Skipping {} because it's missing on Bedrock", identifier);
-                                    return;
-                                }
+                    int missed = 0;
+                    for (SoundEvent event : BuiltInRegistries.SOUND_EVENT) {
+                        String identifier = Objects.requireNonNull(BuiltInRegistries.SOUND_EVENT.getKey(event)).getPath();
+                        if (javaSoundEvents.isEmpty(event)) {
+                            LOGGER.info("Skipping {} because it's empty on Java", identifier);
+                            continue;
+                        } else if (MISSING.contains(event)) {
+                            LOGGER.warn("Skipping {} because it's missing on Bedrock", identifier);
+                            continue;
+                        }
 
-                                Optional<? extends SoundMapping> mapping = transformer.apply(identifier);
-                                if (mapping.isPresent()) {
-                                    mappings.put(event, new SoundMappingInstance(mapping.get()));
-                                } else {
-                                    Collection<SoundEventAliases.Alias> alias = aliases.find(identifier);
-                                    SoundEventAliases.Alias usedAlias = null;
-                                    Optional<? extends SoundMapping> aliased = Optional.empty();
-                                    for (SoundEventAliases.Alias a : alias) {
-                                        aliased = transformer.apply(a.key()); // TODO volume + picth
-                                        if (aliased.isPresent()) {
-                                            usedAlias = a;
-                                            break;
-                                        }
-                                    }
-                                    if (aliased.isPresent()) {
-                                        mappings.put(event, new SoundMappingInstance(aliased.get(), usedAlias.volume(), usedAlias.pitch()));
-                                    } else {
-                                        LOGGER.error("No sound mapped for {}", identifier);
-                                        missed.incrementAndGet();
-                                    }
+                        // First try mapping the identifier normally
+                        Optional<? extends SoundMapping> mapping = transformer.apply(identifier);
+                        if (mapping.isPresent()) {
+                            mappings.put(event, new SoundMappingInstance(mapping.get()));
+                        } else {
+                            // If no mapping was found, look for aliases
+                            Collection<JavaSoundEvents.Alias> aliases = javaSoundEvents.findAlias(event);
+                            Optional<? extends SoundMapping> aliased = Optional.empty();
+                            JavaSoundEvents.Alias usedAlias = null;
+                            for (JavaSoundEvents.Alias alias : aliases) {
+                                aliased = transformer.apply(alias.key());
+                                if (aliased.isPresent()) {
+                                    usedAlias = alias;
+                                    break;
                                 }
-                            });
+                            }
 
-                    int mapped = 100 - Math.round(((float) missed.get() / BuiltInRegistries.SOUND_EVENT.size()) * 100.0F);
-                    LOGGER.error("Missed sound mappings: {} out of {} ({}% mapped)", missed.get(), BuiltInRegistries.SOUND_EVENT.size(), mapped);
+                            // If an alias was found, map it, else error
+                            if (aliased.isPresent()) {
+                                mappings.put(event, new SoundMappingInstance(aliased.get(), usedAlias.volume(), usedAlias.pitch()));
+                            } else {
+                                LOGGER.error("No sound mapped for {}", identifier);
+                                missed++;
+                            }
+                        }
+                    }
+
+                    int mapped = 100 - Math.round(((float) missed / BuiltInRegistries.SOUND_EVENT.size()) * 100.0F);
+                    LOGGER.error("Missed sound mappings: {} out of {} ({}% mapped)", missed, BuiltInRegistries.SOUND_EVENT.size(), mapped);
 
                     return saveFile(cache, mappings);
                 });
