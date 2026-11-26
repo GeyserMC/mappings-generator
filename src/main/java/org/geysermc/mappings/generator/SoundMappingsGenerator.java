@@ -42,7 +42,8 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
             SoundEvents.PLAYER_SPLASH_HIGH_SPEED, SoundEvents.ILLUSIONER_MIRROR_MOVE,
             SoundEvents.ILLUSIONER_PREPARE_BLINDNESS, SoundEvents.ILLUSIONER_PREPARE_MIRROR,
             SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundEvents.CROP_PLANTED,
-            SoundEvents.ARMOR_EQUIP_TURTLE.value(), SoundEvents.ZOMBIE_INFECT
+            SoundEvents.ARMOR_EQUIP_TURTLE.value(), SoundEvents.ZOMBIE_INFECT,
+            SoundEvents.BELL_RESONATE
     );
 
     private static final Logger LOGGER = LogUtils.getLogger();
