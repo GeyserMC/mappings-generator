@@ -41,7 +41,18 @@ public final class JavaSoundEvents {
     }
 
     public Collection<Alias> findAlias(SoundEvent event) {
-        return aliases.get(event);
+        return unflatten(aliases.get(event), new ArrayList<>());
+    }
+
+    private Collection<Alias> unflatten(Collection<Alias> aliases, List<Alias> current) {
+        for (Alias alias : aliases) {
+            if (current.contains(alias)) {
+                continue;
+            }
+            current.add(alias);
+            unflatten(this.aliases.get(alias.event), current);
+        }
+        return current;
     }
 
     public boolean isEmpty(SoundEvent event) {
