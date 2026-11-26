@@ -12,7 +12,6 @@ import net.minecraft.sounds.SoundEvents;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.definitions.sound.JavaSoundEvents;
 import org.geysermc.mappings.definitions.sound.SoundMapping;
-import org.geysermc.mappings.definitions.sound.SoundMappingInstance;
 import org.geysermc.mappings.resources.BedrockSamples;
 import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.transformer.Transformers;
@@ -26,9 +25,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 
-public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEvent, SoundMappingInstance>> {
+public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEvent, SoundMapping>> {
     private static final List<SoundEvent> MISSING = List.of(
             SoundEvents.VILLAGER_WORK_FLETCHER, SoundEvents.FISHING_BOBBER_RETRIEVE,
             SoundEvents.SULFUR_CUBE_SMALL_EAT, SoundEvents.PUFFER_FISH_BLOW_OUT,
@@ -67,8 +65,8 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                     Set<String> validBedrockSounds = bedrockSoundsFuture.join();
                     JavaSoundEvents javaSoundEvents = javaEventsFuture.join();
 
-                    Map<SoundEvent, SoundMappingInstance> mappings = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
-                    Transformer.Maybe<String, SoundMapping> transformer = Transformers.SOUND_EVENTS.create(validBedrockSounds);
+                    Map<SoundEvent, SoundMapping> mappings = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
+                    Transformer.Maybe<String, String> transformer = Transformers.SOUND_EVENTS.create(validBedrockSounds);
 
                     int missed = 0;
                     for (SoundEvent event : BuiltInRegistries.SOUND_EVENT) {
@@ -82,25 +80,24 @@ public final class SoundMappingsGenerator extends MappingsGenerator<Map<SoundEve
                         }
 
                         // First try mapping the identifier normally
-                        Optional<? extends SoundMapping> mapping = transformer.apply(identifier);
+                        Optional<? extends String> mapping = transformer.apply(identifier);
                         if (mapping.isPresent()) {
-                            mappings.put(event, new SoundMappingInstance(mapping.get()));
+                            mappings.put(event, new SoundMapping(mapping.get()));
                         } else {
                             // If no mapping was found, look for aliases
                             Collection<JavaSoundEvents.Alias> aliases = javaSoundEvents.findAlias(event);
-                            Optional<? extends SoundMapping> aliased = Optional.empty();
                             JavaSoundEvents.Alias usedAlias = null;
                             for (JavaSoundEvents.Alias alias : aliases) {
-                                aliased = transformer.apply(alias.key());
-                                if (aliased.isPresent()) {
+                                mapping = transformer.apply(alias.key());
+                                if (mapping.isPresent()) {
                                     usedAlias = alias;
                                     break;
                                 }
                             }
 
                             // If an alias was found, map it, else error
-                            if (aliased.isPresent()) {
-                                mappings.put(event, new SoundMappingInstance(aliased.get(), usedAlias.volume(), usedAlias.pitch()));
+                            if (mapping.isPresent()) {
+                                mappings.put(event, new SoundMapping(mapping.get(), usedAlias.volume(), usedAlias.pitch()));
                             } else {
                                 LOGGER.error("No sound mapped for {}", identifier);
                                 missed++;

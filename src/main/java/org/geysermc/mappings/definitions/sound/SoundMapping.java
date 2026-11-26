@@ -1,79 +1,28 @@
 package org.geysermc.mappings.definitions.sound;
 
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.geysermc.mappings.util.MappingsCodecs;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.function.Function;
 
-public sealed interface SoundMapping {
-    MapCodec<SoundMapping> MAP_CODEC = MappingsCodecs.fuzzyCodec(Set.of(PlaySoundMapping.MAP_CODEC, SoundEventMapping.MAP_CODEC,
-            LevelEventMapping.MAP_CODEC), SoundMapping::codec);
+public record SoundMapping(String sound, float volume, float pitch) {
+    public static final Codec<SoundMapping> FULL_CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                    Codec.STRING.fieldOf("play_sound").forGetter(SoundMapping::sound),
+                    Codec.FLOAT.optionalFieldOf("volume", 1.0F).forGetter(SoundMapping::volume),
+                    Codec.FLOAT.optionalFieldOf("pitch", 1.0F).forGetter(SoundMapping::pitch)
+            ).apply(instance, SoundMapping::new)
+    );
+    public static final Codec<SoundMapping> CODEC = Codec.either(Codec.STRING, FULL_CODEC)
+            .xmap(either -> either.map(SoundMapping::new, Function.identity()),
+                    mapping -> mapping.simple() ? Either.left(mapping.sound) : Either.right(mapping));
 
-    static SoundMapping playSound(String sound) {
-        return new PlaySoundMapping(sound);
+    public SoundMapping(String sound) {
+        this(sound, 1.0F, 1.0F);
     }
 
-    static SoundMapping soundEvent(SoundEvent event) {
-        return new SoundEventMapping(event, Optional.empty());
-    }
-
-    static SoundMapping soundEvent(SoundEvent event, SoundData data) {
-        return new SoundEventMapping(event, Optional.of(data));
-    }
-
-    static SoundMapping levelEvent(LevelEvent event) {
-        return new LevelEventMapping(event);
-    }
-
-    default boolean validate(Set<String> validIds) {
-        return true;
-    }
-
-    MapCodec<? extends SoundMapping> codec();
-
-    record PlaySoundMapping(String sound) implements SoundMapping {
-        private static final MapCodec<PlaySoundMapping> MAP_CODEC = Codec.STRING
-                .xmap(PlaySoundMapping::new, PlaySoundMapping::sound)
-                .fieldOf("play_sound");
-
-        @Override
-        public boolean validate(Set<String> validIds) {
-            return validIds.contains(sound);
-        }
-
-        @Override
-        public MapCodec<PlaySoundMapping> codec() {
-            return MAP_CODEC;
-        }
-    }
-
-    record SoundEventMapping(SoundEvent event, Optional<SoundData> data) implements SoundMapping {
-        private static final MapCodec<SoundEventMapping> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
-                instance.group(
-                        MappingsCodecs.enumCodec(SoundEvent::values, SoundEvent::getSerializeName).fieldOf("sound_event").forGetter(SoundEventMapping::event),
-                        SoundData.CODEC.optionalFieldOf("data").forGetter(SoundEventMapping::data)
-                ).apply(instance, SoundEventMapping::new)
-        );
-
-        @Override
-        public MapCodec<SoundEventMapping> codec() {
-            return MAP_CODEC;
-        }
-    }
-
-    record LevelEventMapping(LevelEvent event) implements SoundMapping {
-        private static final MapCodec<LevelEventMapping> MAP_CODEC = MappingsCodecs.LEVEL_EVENT
-                .xmap(LevelEventMapping::new, LevelEventMapping::event)
-                .fieldOf("level_event");
-
-        @Override
-        public MapCodec<LevelEventMapping> codec() {
-            return MAP_CODEC;
-        }
+    public boolean simple() {
+        return volume == 1.0F && pitch == 1.0F;
     }
 }

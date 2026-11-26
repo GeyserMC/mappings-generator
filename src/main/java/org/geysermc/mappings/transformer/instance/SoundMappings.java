@@ -2,14 +2,13 @@ package org.geysermc.mappings.transformer.instance;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
-import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.transformer.Transformers;
 
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/// Geyser's sound mappings, mapping a Java sound event identifier to its Bedrock counterpart. They differ a lot
+/// Java to Bedrock sound mappings, mapping a Java sound event identifier to its Bedrock counterpart. They differ a lot
 /// across editions, so this class is quite the monstrosity. We try to map sounds automatically as much as possible,
 /// by trying various permutations and matching them against the list of Bedrock sounds.
 ///
@@ -230,10 +229,9 @@ public final class SoundMappings {
             .transform("attack", "attack_hit")
             .finish(Transformer.identity()));
 
-    public static final Transformer.MaybeCreator<Set<String>, String, SoundMapping> INSTANCE = validIds -> Transformer.maybe(builder -> builder
-            .check(mapping -> mapping.validate(validIds))
-            // Playsound mappings
-            .mapOutput(SoundMapping::playSound)
+    // Not mapping Java SoundEvent directly because we directly perform regex operations on the string identifier
+    public static final Transformer.MaybeCreator<Set<String>, String, String> INSTANCE = validIds -> Transformer.maybe(builder -> builder
+            .check(validIds::contains)
 
             // Explicit mappings have priority over any other and go first
 

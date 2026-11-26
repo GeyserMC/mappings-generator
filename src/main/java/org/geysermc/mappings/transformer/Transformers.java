@@ -18,7 +18,6 @@ import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
-import org.geysermc.mappings.definitions.sound.SoundMapping;
 import org.geysermc.mappings.transformer.instance.BlockClassNames;
 import org.geysermc.mappings.transformer.instance.BlockNames;
 import org.geysermc.mappings.transformer.instance.ItemClassNames;
@@ -135,7 +134,7 @@ public final class Transformers {
             .tryAll(BedrockMapDecoration::new));
     public static final Transformer.MaybeCreator<List<Identifier>, ParticleType<?>, ParticleMapping> PARTICLES = ParticleMappings.INSTANCE;
     // Not mapping Java SoundEvent directly because it conflicts with Cloudburst's SoundEvent
-    public static final Transformer.MaybeCreator<Set<String>, String, SoundMapping> SOUND_EVENTS = SoundMappings.INSTANCE;
+    public static final Transformer.MaybeCreator<Set<String>, String, String> SOUND_EVENTS = SoundMappings.INSTANCE;
 
     private Transformers() {}
 
