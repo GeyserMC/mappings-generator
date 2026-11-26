@@ -34,7 +34,7 @@ public record BedrockSamples(ResourceManager resources, DownloadedSamples data, 
         CompletableFuture<DownloadedSamples> data = DownloadedSamples.githubZipball("bedrock-data", root.resolve(DATA), "CloudburstMC/Data", bedrockSha);
         CompletableFuture<DownloadedSamples> samples = DownloadedSamples.githubRelease("bedrock-samples", root.resolve(SAMPLES), "Mojang/bedrock-samples", "v" + bedrockVersion,
                 asset -> asset.endsWith("-min.zip")); // Get the minified assets
-        CompletableFuture<DownloadedSamples> protocol = DownloadedSamples.githubRelease("bedrock-protocol", root.resolve(PROTOCOL), "Mojang/bedrock-protocol-docs", "v" + bedrockProtocolVersion,
+        CompletableFuture<DownloadedSamples> protocol = DownloadedSamples.githubRelease("bedrock-protocol", root.resolve(PROTOCOL), "Mojang/bedrock-protocol-docs", "v1.26.60",
                 asset -> asset.equals("metadata.zip")); // Get the metadata
         return CompletableFuture.allOf(resources, data, samples, protocol)
                 .thenApply(_ -> new BedrockSamples(resources.join(), data.join(), samples.join(), protocol.join()));

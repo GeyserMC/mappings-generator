@@ -24,7 +24,7 @@ import org.geysermc.mappings.transformer.instance.BlockNames;
 import org.geysermc.mappings.transformer.instance.ItemClassNames;
 import org.geysermc.mappings.transformer.instance.ItemNames;
 import org.geysermc.mappings.transformer.instance.ParticleMappings;
-import org.geysermc.mappings.transformer.instance.sound.SoundMappings;
+import org.geysermc.mappings.transformer.instance.SoundMappings;
 import org.geysermc.mappings.util.MappingsUtil;
 
 import java.util.List;

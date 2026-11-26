@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
 import org.geysermc.mappings.definitions.interactions.BlockInteractionData;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.mixin.accessor.EntityAccessor;
-import org.geysermc.mappings.names.InstanceRenamer;
+import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.util.MappingsUtil;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -40,21 +40,22 @@ import java.util.stream.StreamSupport;
 
 public final class InteractionsGenerator extends MappingsGenerator<BlockInteractionData> {
     private static final Logger LOGGER = LogUtils.getLogger();
-    // Abusing the renamer stuff because it makes things easier
-    private static final InstanceRenamer<Block, BlockState, BlockInteractionData.Requirement> REQUIREMENT_GETTER = InstanceRenamer.of(InteractionsGenerator::getInteractionRequirement, builder -> builder
+    private static final Transformer<BlockState, BlockInteractionData.Requirement> REQUIREMENT_GETTER = Transformer.of(builder -> builder
+            .mapInput(BlockState::getBlock)
             // Interactions with Redstone wire depend on the wires around it
-            .rename(Blocks.REDSTONE_WIRE, BlockInteractionData.Requirement.UNKNOWN)
+            .transform(Blocks.REDSTONE_WIRE, BlockInteractionData.Requirement.UNKNOWN)
             // Interactions with Bells depend on the HitResult
-            .rename(Blocks.BELL, BlockInteractionData.Requirement.UNKNOWN)
+            .transform(Blocks.BELL, BlockInteractionData.Requirement.UNKNOWN)
             // Can't interact with light blocks without holding a light item
-            .rename(Blocks.LIGHT, BlockInteractionData.Requirement.UNKNOWN)
+            .transform(Blocks.LIGHT, BlockInteractionData.Requirement.UNKNOWN)
             // Interactions with campfires depends on campfire recipes
-            .rename(Blocks.CAMPFIRE, BlockInteractionData.Requirement.UNKNOWN)
-            .rename(Blocks.SOUL_CAMPFIRE, BlockInteractionData.Requirement.UNKNOWN)
+            .transform(Blocks.CAMPFIRE, BlockInteractionData.Requirement.UNKNOWN)
+            .transform(Blocks.SOUL_CAMPFIRE, BlockInteractionData.Requirement.UNKNOWN)
             // Teleports and will always consume the action
-            .rename(Blocks.DRAGON_EGG, BlockInteractionData.Requirement.ALWAYS)
+            .transform(Blocks.DRAGON_EGG, BlockInteractionData.Requirement.ALWAYS)
             // Depends on the player's hunger level
-            .rename(Blocks.CAKE, BlockInteractionData.Requirement.UNKNOWN));
+            .transform(Blocks.CAKE, BlockInteractionData.Requirement.UNKNOWN)
+            .finish(InteractionsGenerator::getInteractionRequirement));
     private static final BlockHitResult EMPTY_HIT_RESULT = new BlockHitResult(Vec3.ZERO, Direction.DOWN, BlockPos.ZERO, true);
 
     public InteractionsGenerator(PackOutput output) {
@@ -70,13 +71,13 @@ public final class InteractionsGenerator extends MappingsGenerator<BlockInteract
                 return (CompletableFuture) saveFile(cache, data.get());
             }
             Stream<BlockInteractionData.BlockStateRequirement> requirements = StreamSupport.stream(Block.BLOCK_STATE_REGISTRY.spliterator(), true)
-                    .map(state -> new BlockInteractionData.BlockStateRequirement(state, REQUIREMENT_GETTER.forType(state.getBlock()).apply(state)));
+                    .map(state -> new BlockInteractionData.BlockStateRequirement(state, REQUIREMENT_GETTER.apply(state)));
             return saveFile(cache, BlockInteractionData.of(requirements));
         });
     }
 
-    private static BlockInteractionData.Requirement getInteractionRequirement(Block block, BlockState state) {
-        return switch (block) {
+    private static BlockInteractionData.Requirement getInteractionRequirement(BlockState state) {
+        return switch (state.getBlock()) {
             case FlowerPotBlock _, SignBlock _ -> BlockInteractionData.Requirement.ALWAYS; // Contains checks for item, but will always consume the action
             case RespawnAnchorBlock _ -> BlockInteractionData.Requirement.UNKNOWN; // depends on the dimension (only works in the nether)
             default -> tryCalculateInteractionRequirement(state);

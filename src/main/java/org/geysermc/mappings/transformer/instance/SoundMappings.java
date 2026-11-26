@@ -1,4 +1,4 @@
-package org.geysermc.mappings.transformer.instance.sound;
+package org.geysermc.mappings.transformer.instance;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
