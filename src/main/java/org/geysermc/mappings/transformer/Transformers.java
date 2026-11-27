@@ -29,6 +29,11 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/// This class holds various utility methods for creating {@link Transformer}s, as well as
+/// all instances of transformers used across the generator (to transform e.g. biomes, blocks, etc.)
+///
+/// The actual code for building those transformer instances are kept in separate classes,
+/// in the {@link org.geysermc.mappings.transformer.instance} package, to keep this class small.
 public final class Transformers {
     public static final Transformer<Identifier, Identifier> BIOMES = BiomeMappings.INSTANCE;
     public static final Transformer<BlockState, String> BLOCKS = BlockNames.INSTANCE;

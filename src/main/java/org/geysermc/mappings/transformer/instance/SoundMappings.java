@@ -53,7 +53,7 @@ public final class SoundMappings {
             .transform("wet_grass", "coral")
             .transform("wool", "cloth")
             // Neat little trick to map all the other ones using the block names transformer we already have
-            .maybeTransform(Transformers.registryElement(BuiltInRegistries.BLOCK)
+            .maybeTryAll(Transformers.registryElement(BuiltInRegistries.BLOCK)
                     .maybeMap(Block::defaultBlockState).maybeMap(Transformers.BLOCKS))
             .finish(Transformer.identity()));
 
@@ -83,7 +83,7 @@ public final class SoundMappings {
             .transform("wandering_trader", "wanderingtrader")
             .transform("zombie_horse", "horse.zombie")
             // Wolves are a special case: wolf_angry turns into wolf.mad, wolf_big into wolf.big, etc.
-            .maybeTransform(Transformers.findAndReplace("wolf_(angry|big|cute|grumpy|puglin|sad)", match -> {
+            .maybeTryAll(Transformers.findAndReplace("wolf_(angry|big|cute|grumpy|puglin|sad)", match -> {
                 String variant = match.group(1);
                 if (variant.equals("angry")) {
                     variant = "mad";
@@ -122,7 +122,7 @@ public final class SoundMappings {
             .root().flatMapInput(filterForName(name, "happy_ghast"))
             .transform("equip", "harness_equip")
             .transform("unequip", "harness_unequip")
-            .maybeTransform(Transformers.findAndReplace("harness_", ""))
+            .maybeTryAll(Transformers.findAndReplace("harness_", ""))
             // Horse (just horse, not any variants)
             .root().flatMapInput(filterForName(name, "horse"))
             .transform("saddle", "leather")
@@ -231,7 +231,7 @@ public final class SoundMappings {
 
     // Not mapping Java SoundEvent directly because we directly perform regex operations on the string identifier
     public static final Transformer.MaybeCreator<Set<String>, String, String> INSTANCE = validIds -> Transformer.maybe(builder -> builder
-            .check(validIds::contains)
+            .checkOutput(validIds::contains)
 
             // Explicit mappings have priority over any other and go first
 
@@ -445,15 +445,15 @@ public final class SoundMappings {
             // Some explicit transformers
 
             // The drip: block.pointed_dripstone.drip_water_into_cauldron -> cauldron_drip.water.pointed_dripstone
-            .maybeTransform(Transformers.findAndReplace("block\\.([\\w_]+)\\.drip_(water|lava)_into_cauldron", "cauldron_drip.$2.$1"))
-            .maybeTransform(Transformers.findAndReplace("block\\.([\\w_]+)\\.drip_(water|lava)$", "drip.$2.$1"))
+            .maybeTryAll(Transformers.findAndReplace("block\\.([\\w_]+)\\.drip_(water|lava)_into_cauldron", "cauldron_drip.$2.$1"))
+            .maybeTryAll(Transformers.findAndReplace("block\\.([\\w_]+)\\.drip_(water|lava)$", "drip.$2.$1"))
             // Button clicks, simple enough
             .transform(Transformers.contains("stone_button\\.click_(off|on)"), "random.click")
             .transform(Transformers.contains("wooden_button\\.click_(off|on)"), "random.wood_click")
             // Tripwire clicks, pretty much the same
             .transform(Transformers.contains("trip_wire"), "random.click")
             // Doors/trapdoors: copper_trapdoor.open -> open_trapdoor.copper
-            .maybeTransform(Transformers.findAndReplace("block\\.([\\w_]+)_((trap)?door)\\.(close|open)", "$4_$2.$1"))
+            .maybeTryAll(Transformers.findAndReplace("block\\.([\\w_]+)_((trap)?door)\\.(close|open)", "$4_$2.$1"))
 
             // Try various other things combined if not matched yet
             .tryAllPermutations(Transformer.Maybe::maybeChain,
@@ -493,18 +493,18 @@ public final class SoundMappings {
             // Some explicit transformers
 
             // Item frames/paintings turn into blocks
-            .maybeTransform(Transformers.findAndReplace("mob\\.(?:glow_)?item_frame\\.([\\w_]+)", "block.itemframe.$1"))
-            .maybeTransform(Transformers.findAndReplace("mob\\.painting\\.([\\w_]+)", "block.painting.$1"))
+            .maybeTryAll(Transformers.findAndReplace("mob\\.(?:glow_)?item_frame\\.([\\w_]+)", "block.itemframe.$1"))
+            .maybeTryAll(Transformers.findAndReplace("mob\\.painting\\.([\\w_]+)", "block.painting.$1"))
             // Parrot imitate noises
-            .maybeTransform(Transformers.findAndReplace("mob\\.parrot\\.imitate\\.([\\w_]+)", "mob.imitate.$1"))
+            .maybeTryAll(Transformers.findAndReplace("mob\\.parrot\\.imitate\\.([\\w_]+)", "mob.imitate.$1"))
             // firework has no prefix at all, and no _far sounds on bedrock
-            .maybeTransform(Transformers.findAndReplace("mob\\.firework_rocket\\.([\\w_]+)", match -> "firework." + match.group(1).replace("_far", "")))
+            .maybeTryAll(Transformers.findAndReplace("mob\\.firework_rocket\\.([\\w_]+)", match -> "firework." + match.group(1).replace("_far", "")))
             // squids
-            .maybeTransform(Transformers.findAndReplace("squirt", "ink_squirt"))
+            .maybeTryAll(Transformers.findAndReplace("squirt", "ink_squirt"))
             // turtle eggs turn into blocks
-            .maybeTransform(Transformers.findAndReplace("mob\\.turtle\\.egg_([\\w_]+)", "block.turtle_egg.$1"))
+            .maybeTryAll(Transformers.findAndReplace("mob\\.turtle\\.egg_([\\w_]+)", "block.turtle_egg.$1"))
             // zombified_piglin.angry > zombiepig.zpigangry (yeah idk)
-            .maybeTransform(Transformers.findAndReplace("mob\\.zombified_piglin\\.([\\w_]+)", match -> {
+            .maybeTryAll(Transformers.findAndReplace("mob\\.zombified_piglin\\.([\\w_]+)", match -> {
                 String action = match.group(1);
                 if (action.equals("ambient")) {
                     action = ""; // Ambient is just "zpig"
@@ -512,7 +512,7 @@ public final class SoundMappings {
                 return "mob.zombiepig.zpig" + action;
             }))
             // _nautilus.ambient -> _nautilus.ambient.in.water
-            .maybeTransform(Transformers.findAndReplace("mob\\.([\\w_]+_)?nautilus\\.([\\w_]+)", match -> {
+            .maybeTryAll(Transformers.findAndReplace("mob\\.([\\w_]+_)?nautilus\\.([\\w_]+)", match -> {
                 String type = match.group(1);
                 String action = match.group(2);
                 boolean land = action.endsWith("_land");
@@ -522,9 +522,9 @@ public final class SoundMappings {
                 return "mob." + (type == null ? "" : type) + "nautilus." + action + (land ? "" : ".in.water");
             }))
             // turtle.death_baby -> turtle_baby.death
-            .maybeTransform(Transformers.findAndReplace("turtle\\.([\\w_]+)_baby", "turtle_baby.$1"))
+            .maybeTryAll(Transformers.findAndReplace("turtle\\.([\\w_]+)_baby", "turtle_baby.$1"))
             // goat.screaming.ambient -> goat.ambient.screamer
-            .maybeTransform(Transformers.findAndReplace("goat\\.screaming\\.([\\w_]+)", "goat.$1.screamer"))
+            .maybeTryAll(Transformers.findAndReplace("goat\\.screaming\\.([\\w_]+)", "goat.$1.screamer"))
 
             // Find any exact matches
             .tryAll(Transformer.identity())
@@ -554,17 +554,17 @@ public final class SoundMappings {
             .flatMapInput(Transformers.findAndReplaceGroups("item\\.([\\w_]+)\\.([\\w_.]+)", ITEM_NAMES.maybe(), ITEM_TYPES.maybe()))
 
             // Try without suffix
-            .maybeTransform(Transformers.findAndReplace("^item\\.", ""))
+            .maybeTryAll(Transformers.findAndReplace("^item\\.", ""))
             // item.wolf_armor.break -> armor.break_wolf
-            .maybeTransform(Transformers.findAndReplace("item\\.wolf_armor\\.([\\w_]+)", "armor.$1_wolf"))
+            .maybeTryAll(Transformers.findAndReplace("item\\.wolf_armor\\.([\\w_]+)", "armor.$1_wolf"))
             // item.spear.lunge_1 -> item.enchant.lunge1
-            .maybeTransform(Transformers.findAndReplace("item\\.spear\\.lunge_(\\d+)", "item.enchant.lunge$1"))
+            .maybeTryAll(Transformers.findAndReplace("item\\.spear\\.lunge_(\\d+)", "item.enchant.lunge$1"))
             // item.goat_horn.sound.1 -> horn.call.1
-            .maybeTransform(Transformers.findAndReplace("item\\.goat_horn\\.sound\\.(\\d+)", "horn.call.$1"))
+            .maybeTryAll(Transformers.findAndReplace("item\\.goat_horn\\.sound\\.(\\d+)", "horn.call.$1"))
             // item.brush.brushing.generic -> brush.generic
-            .maybeTransform(Transformers.findAndReplace("item\\.brush\\.brushing\\.([\\w_]+)", "brush.$1"))
-            .maybeTransform(Transformers.findAndReplace("item\\.brush\\.brushing\\.(sand|gravel)", "brush.suspicious_$1"))
-            .maybeTransform(Transformers.findAndReplace("item\\.brush\\.brushing\\.(sand|gravel)\\.complete", "brush_completed.suspicious_$1"))
+            .maybeTryAll(Transformers.findAndReplace("item\\.brush\\.brushing\\.([\\w_]+)", "brush.$1"))
+            .maybeTryAll(Transformers.findAndReplace("item\\.brush\\.brushing\\.(sand|gravel)", "brush.suspicious_$1"))
+            .maybeTryAll(Transformers.findAndReplace("item\\.brush\\.brushing\\.(sand|gravel)\\.complete", "brush_completed.suspicious_$1"))
 
             // Find any exact matches otherwise
             .tryAll(Transformer.identity())
@@ -573,11 +573,11 @@ public final class SoundMappings {
 
             // Random other sound transformers
 
-            .maybeTransform(Transformers.findAndReplace("ambient\\.soul_sand_valley", "ambient.soulsand_valley"))
-            .maybeTransform(Transformers.findAndReplace("ambient\\.underwater\\.loop\\.additions[\\w_.]*", "ambient.underwater.additions"))
-            .maybeTransform(Transformers.findAndReplace("event\\.mob_effect", "apply_effect"))
-            .maybeTransform(Transformers.findAndReplace("music\\.[a-z_]+\\.", "music.game."))
-            .maybeTransform(Transformers.findAndReplace("music_disc\\.", "record.")));
+            .maybeTryAll(Transformers.findAndReplace("ambient\\.soul_sand_valley", "ambient.soulsand_valley"))
+            .maybeTryAll(Transformers.findAndReplace("ambient\\.underwater\\.loop\\.additions[\\w_.]*", "ambient.underwater.additions"))
+            .maybeTryAll(Transformers.findAndReplace("event\\.mob_effect", "apply_effect"))
+            .maybeTryAll(Transformers.findAndReplace("music\\.[a-z_]+\\.", "music.game."))
+            .maybeTryAll(Transformers.findAndReplace("music_disc\\.", "record.")));
 
     // You've reached the end. Yay!
 

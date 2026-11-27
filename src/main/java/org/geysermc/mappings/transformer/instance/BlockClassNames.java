@@ -33,7 +33,7 @@ public final class BlockClassNames {
             .instanceOf(SkullBlock.class, "SkullBlock")
             .instanceOf(AbstractCauldronBlock.class, "CauldronBlock")
 
-            .maybeTransform(BlockClassNames::getMirroredClassName)
+            .maybeTryAll(BlockClassNames::getMirroredClassName)
             .finish("Block"));
 
     private BlockClassNames() {}

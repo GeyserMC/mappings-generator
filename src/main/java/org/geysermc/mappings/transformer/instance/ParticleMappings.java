@@ -22,7 +22,7 @@ public final class ParticleMappings {
     // - Built-in handling in Geyser, for special particles, only a few
     // Also see Mojang's ParticleTypes class, we're following the same order
     public static final Transformer.MaybeCreator<List<Identifier>, ParticleType<?>, ParticleMapping> INSTANCE = validParticles -> Transformer.maybe(builder -> builder
-            .check(mapping -> mapping.validate(validParticles))
+            .checkOutput(mapping -> mapping.validate(validParticles))
             .mark()
 
             // Simple identifier particle mappings (the best kind)

@@ -44,7 +44,7 @@ public final class ItemClassNames {
             .transform(Items.OMINOUS_BOTTLE, "OminousBottleItem")
             .transform(Items.LIGHT, "LightItem")
 
-            .maybeTransform(ItemClassNames::getMirroredClassName)
+            .maybeTryAll(ItemClassNames::getMirroredClassName)
 
             .instanceOfBuilder(BlockItem.class, sub -> sub
                     .mapInput(BlockItem::getBlock)

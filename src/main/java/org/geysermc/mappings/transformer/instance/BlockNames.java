@@ -229,7 +229,7 @@ public final class BlockNames {
                     .mapInput(BlockState::getBlock)
                     .flatMapInput(Transformers.registryId(BuiltInRegistries.BLOCK))
                     .transform(Transformers.contains("cut_copper"), Transformers.replace("cut", "double_cut"))
-                    .maybeTransform(Transformers.findAndReplace("slab", "double_slab")))
+                    .maybeTryAll(Transformers.findAndReplace("slab", "double_slab")))
 
             .finish(Transformers.registryId(BuiltInRegistries.BLOCK).compose(BlockState::getBlock).orElseThrow()));
     
