@@ -13,14 +13,12 @@ licensed under the MIT license [^1].
 - Clone this repository locally: `git clone https://github.com/GeyserMC/mappings-generator`.
 - Navigate to the `mappings-generator` directory.
 - Ensure the `mappings/mappings` submodule is cloned: `git submodule update --init --recursive`.
-    - If you don't do this, the generator will try to do it for you upon running, if you have `git` installed properly.
 
 ## Running
 
 Run the `runDatagen` Gradle task. This will start the data generator, which will:
 
-- Try to clone the `mappings/mappings` submodule, if it was not cloned already.
-- Download [`bedrock-data.zip`](https://github.com/CloudburstMC/Data) and [`bedrock-samples.zip`](https://github.com/Mojang/bedrock-samples) locally, which contain data required to run some generators.
+- Download [`bedrock-data.zip`](https://github.com/CloudburstMC/Data), [`bedrock-samples.zip`](https://github.com/Mojang/bedrock-samples), and [`bedrock-protocol.zip`](https://github.com/Mojang/bedrock-protocol-docs/) locally, which contain data required to run some generators.
 - Run all generators. At the end of the generation process, a list of added, changed, and deleted files will be presented to you.
 
 Alternatively, you can run one of the following Gradle tasks to only run a subset of the generators:

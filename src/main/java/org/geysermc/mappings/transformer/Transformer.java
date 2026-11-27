@@ -13,65 +13,145 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+/// A transformer is a [pure function](https://en.wikipedia.org/wiki/Pure_function). Given an identical argument,
+/// a transformer must always return the same output. A transformer may never have side effects.
+///
+/// Transformers are used across the generator to convert Java data to its Bedrock counterpart. Transformers
+/// are listed in the {@link Transformers} class. They can be directly implemented through a lambda, however
+/// for larger transformers it is more common to make use of the {@link Factory} class, which has a broad API
+/// to construct transformers for many use cases.
+///
+/// Transformers can be chained using the {@link Transformer#compose(Transformer)} and {@link Transformer#chain(Transformer)}
+/// methods. The {@link Transformer.Maybe} interface is a transformer returning an {@link Optional}, and features
+/// helper methods for chaining those as well.
+///
+/// @param <I> the transformer's input
+/// @param <O> the transformer's output
+/// @see Transformer.Maybe
+/// @see Transformer.Factory
+/// @see Transformer#of(Builder)
+/// @see Transformer#maybe(Maybe.Builder)
+/// @see Factory
+/// @see Transformers
 @FunctionalInterface
 public interface Transformer<I, O> extends Function<I, O> {
 
+    /// Combines this transformer and the given transformer by applying the given transformer first, then this one.
+    ///
+    /// @param before the transformer to apply before this one
+    /// @param <MI> the new ("mapped") input
+    /// @return the combined transformer
     default <MI> Transformer<MI, O> compose(Transformer<? super MI, ? extends I> before) {
         return input -> apply(before.apply(input));
     }
 
+    /// Shorthand for {@link Transformer#compose(Transformer)}, taking a {@link Builder}.
+    ///
+    /// @param before the transformer to apply before this one
+    /// @param <MI> the new ("mapped") input
+    /// @return the combined transformer
+    /// @see Transformer#compose(Transformer)
     default <MI> Transformer<MI, O> composeBuilder(Builder<? super MI, ? extends I> before) {
         return compose(of(before));
     }
 
+    /// Combines this transformer and the given transformer by applying the given transformer after this one.
+    ///
+    /// @param after the transformer to apply after this one
+    /// @param <MO> the new ("mapped") output
+    /// @return the combined transformer
     default <MO> Transformer<I, MO> chain(Transformer<? super O, ? extends MO> after) {
         return input -> after.apply(apply(input));
     }
 
+    /// Shorthand for {@link Transformer#chain(Transformer)}, taking a {@link Builder}.
+    ///
+    /// @param after the transformer to apply after this one
+    /// @param <MO> the new ("mapped") output
+    /// @return the combined transformer
+    /// @see Transformer#chain(Transformer)
     default <MO> Transformer<I, MO> chainBuilder(Builder<? super O, ? extends MO> after) {
         return chain(of(after));
     }
 
+    /// @return this transformer turned into a {@link Maybe} instance, by wrapping the output of the transformer in an {@link Optional}
     default Maybe<I, O> maybe() {
         return i -> Optional.of(apply(i));
     }
 
+    /// @param <T> the type of the transformer
+    /// @return a transformer that returns its input
     static <T> Transformer<T, T> identity() {
         return t -> t;
     }
 
+    /// Creates a {@link Transformer} using a {@link Factory}. Finish the {@link Factory} using {@link Factory#finish(Transformer)}.
+    ///
+    /// @param builder the function building the transformer using a {@link Factory}
+    /// @param <I> the transformer's input
+    /// @param <O> the transformer's output
+    /// @return the built transformer
+    static <I, O> Transformer<I, O> of(Builder<I, O> builder) {
+        return builder.create(new Factory<>());
+    }
+
+    /// Creates a {@link Transformer.Maybe} using a {@link Factory}
+    ///
+    /// @param builder the function building the transformer using a {@link Factory}
+    /// @param <I> the transformer's input
+    /// @param <O> the transformer's output
+    /// @return the built transformer
     static <I, O> Maybe<I, O> maybe(Maybe.Builder<I, O> builder) {
         Factory<I, O, ?, ?, I, O> baseBuilder = new Factory<>();
         builder.build(baseBuilder);
         return baseBuilder.build();
     }
 
-    static <I, O> Transformer<I, O> of(Builder<I, O> builder) {
-        return builder.build(new Factory<>());
-    }
-
+    /// A {@link Creator} is a function building a transformer based on a "builder input".
+    ///
+    /// @param <BI> the builder input
+    /// @param <I> the transformer's input
+    /// @param <O> the transformer's output
     @FunctionalInterface
     interface Creator<BI, I, O> {
 
+        /// Creates the transformer.
+        ///
+        /// @param builderInput the builder's input
+        /// @return the built transformer
         Transformer<I, O> create(BI builderInput);
 
+        /// @return this creator as a {@link MaybeCreator} by calling {@link Transformer#maybe()} on the built transformer
         default MaybeCreator<BI, I, O> maybe() {
             return builderInput -> create(builderInput).maybe();
         }
     }
 
-    @FunctionalInterface
-    interface Builder<I, O> {
-
-        Transformer<I, O> build(Factory<I, O, ?, ?, I, O> factory);
-    }
-
+    /// A {@link MaybeCreator} is a function building a {@link Transformer.Maybe} based on a "builder input".
+    ///
+    /// @param <BI> the builder input
+    /// @param <I> the transformer's input
+    /// @param <O> the transformer's output
     @FunctionalInterface
     interface MaybeCreator<BI, I, O> {
 
+        /// Creates the transformer.
+        ///
+        /// @param builderInput the builder's input
+        /// @return the built transformer
         Maybe<I, O> create(BI builderInput);
     }
 
+    /// A {@link Builder} is a function building a transformer using a {@link Factory}. A {@link Builder}
+    /// must always end with a {@link Factory#finish(Transformer)} call to turn the {@link Factory}
+    /// into a {@link Transformer}.
+    ///
+    /// @param <I> the transformer's input
+    /// @param <O> the transformer's output
+    @FunctionalInterface
+    interface Builder<I, O> extends Creator<Factory<I, O, ?, ?, I, O>, I, O> {}
+
+    /// A {@link Transformer.Maybe} is a transformer returning an {@link Optional}.
     interface Maybe<I, O> extends Transformer<I, Optional<? extends O>> {
 
         @Override
@@ -80,7 +160,7 @@ public interface Transformer<I, O> extends Function<I, O> {
         }
 
         @Override
-        default <MI> Transformer<MI, Optional<? extends O>> composeBuilder(Transformer.Builder<? super MI, ? extends I> before) {
+        default <MI> Maybe<MI, O> composeBuilder(Transformer.Builder<? super MI, ? extends I> before) {
             return compose(of(before));
         }
 
