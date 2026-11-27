@@ -28,24 +28,20 @@ public final class BlockMappings {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final Map<BlockState, BlockEntry> mappings = new Object2ObjectLinkedOpenHashMap<>();
-    private final BlockPalette blockPalette;
+    private final BedrockBlocks bedrockBlocks;
 
-    private BlockMappings(Map<BlockState, BlockEntry> mappings, BlockPalette blockPalette) {
-        this.blockPalette = blockPalette;
+    private BlockMappings(Map<BlockState, BlockEntry> mappings, BedrockBlocks bedrockBlocks) {
         this.mappings.putAll(mappings);
+        this.bedrockBlocks = bedrockBlocks;
     }
 
-    public static CompletableFuture<BlockMappings> readPalette(FileSystemAccess dataFiles) {
+    public static CompletableFuture<BlockMappings> readBlocks(FileSystemAccess samples) {
         // Not reading existing mappings as they're not used for anything (unlike e.g. item mappings)
-        return dataFiles.readFileOrThrow(FileType.BLOCK_PALETTE).thenApply(palette -> new BlockMappings(Map.of(), palette));
+        return samples.readFileOrThrow(FileType.BEDROCK_BLOCKS).thenApply(blocks -> new BlockMappings(Map.of(), blocks));
     }
 
     public Map<BlockState, BlockEntry> mappings() {
         return mappings;
-    }
-
-    public BlockPalette blockPalette() {
-        return blockPalette;
     }
 
     public void map(BlockState state, BlockEntry entry) {
@@ -56,7 +52,7 @@ public final class BlockMappings {
         boolean success = true;
         for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
             BlockEntry mapped = mapper.apply(state);
-            if (blockPalette.hasBlockWithState(mapped.getName(state.getBlock()), mapped.state())) {
+            if (bedrockBlocks.hasBlockWithState(mapped.getName(state.getBlock()), mapped.state())) {
                 map(state, mapped);
             } else {
                 success = false;

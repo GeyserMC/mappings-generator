@@ -149,7 +149,8 @@ public final class BlockMappers {
                 Blocks.COPPER_CHEST.waxed().oxidized()
         ).mapCardinalDirection(HorizontalDirectionalBlock.FACING);
         register(Blocks.REPEATER)
-                .transform(RepeaterBlock.DELAY, "repeater_delay", value -> value -1);
+                .transform(RepeaterBlock.DELAY, "repeater_delay", value -> value -1)
+                .directMap(RepeaterBlock.LOCKED);
         register(Blocks.COMPARATOR)
                 .map(ComparatorBlock.POWERED, "output_lit_bit")
                 .transform(ComparatorBlock.MODE, "output_subtract_bit", value -> switch (value) {
@@ -899,7 +900,10 @@ public final class BlockMappers {
             addToTag(tag, "facing_direction", facingDirection);
             addToTag(tag, "rotation", rotation);
         });
-        register(Blocks.SCAFFOLDING).map(ScaffoldingBlock.DISTANCE, "stability").addBedrockProperty("stability_check", true);
+        register(Blocks.SCAFFOLDING)
+                .map(ScaffoldingBlock.DISTANCE, "stability")
+                .directMap(ScaffoldingBlock.BOTTOM)
+                .addBedrockProperty("stability_check", true);
         register(Blocks.DRIED_GHAST).map(DriedGhastBlock.HYDRATION_LEVEL, "rehydration_level");
 
         // quirky fun bedrock things

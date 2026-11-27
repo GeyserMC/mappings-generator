@@ -116,7 +116,6 @@ tasks {
         inputs.property("loader_version", libs.versions.fabric.loader.get())
         inputs.property("bedrock_version", minecraftBedrockVersion.get())
         inputs.property("human_bedrock_version", minecraftBedrockHumanVersion.get())
-        inputs.property("bedrock_data_sha", libs.versions.minecraft.bedrock.data.get())
         filteringCharset = "UTF-8"
 
         filesMatching("fabric.mod.json") {
@@ -126,8 +125,7 @@ tasks {
                     "minecraft_version" to minecraftJavaVersion.get(),
                     "loader_version" to libs.versions.fabric.loader.get(),
                     "bedrock_version" to minecraftBedrockVersion.get(),
-                    "human_bedrock_version" to minecraftBedrockHumanVersion.get(),
-                    "bedrock_data_sha" to libs.versions.minecraft.bedrock.data.get()
+                    "human_bedrock_version" to minecraftBedrockHumanVersion.get()
                 )
             )
         }
