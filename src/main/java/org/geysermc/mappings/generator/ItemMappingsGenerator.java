@@ -15,8 +15,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.geysermc.mappings.definitions.item.ItemEntry;
 import org.geysermc.mappings.definitions.item.ItemMappings;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
+import org.geysermc.mappings.transformer.Transformers;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -47,7 +47,7 @@ public final class ItemMappingsGenerator extends MappingsGenerator<Map<Item, Ite
         }
 
         ItemEntry base = mappings.computeIfAbsent(item, () -> new ItemEntry(javaIdentifier, 0));
-        Identifier bedrockIdentifier = Renamers.ITEMS.forType(item).apply(base.bedrockIdentifier());
+        Identifier bedrockIdentifier = Transformers.ITEMS.apply(item);
         boolean isBlock = block != Blocks.AIR;
         int bedrockData = isBlock ? base.bedrockData() : 0;
         int firstStateId = -1;

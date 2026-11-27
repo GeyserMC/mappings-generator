@@ -9,6 +9,7 @@ import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.util.MappingsUtil;
 
+import java.util.Optional;
 import java.util.Set;
 
 public record BedrockMapDecoration(String name, int argb) {
@@ -22,8 +23,12 @@ public record BedrockMapDecoration(String name, int argb) {
         this(name, DEFAULT_COLOR);
     }
 
-    public Serialized serialize(Set<EnumConstant> bedrockDecorations) {
-        return new Serialized(EnumConstant.findId(bedrockDecorations, name), argb);
+    public Optional<Serialized> serialize(Set<EnumConstant> bedrockDecorations) {
+        try {
+            return Optional.of(new Serialized(EnumConstant.findId(bedrockDecorations, name), argb));
+        } catch (IllegalArgumentException exception) {
+            return Optional.empty();
+        }
     }
 
     public record Serialized(int id, int argb) {

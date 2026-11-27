@@ -13,13 +13,11 @@ licensed under the MIT license [^1].
 - Clone this repository locally: `git clone https://github.com/GeyserMC/mappings-generator`.
 - Navigate to the `mappings-generator` directory.
 - Ensure the `mappings/mappings` submodule is cloned: `git submodule update --init --recursive`.
-    - If you don't do this, the generator will try to do it for you upon running, if you have `git` installed properly.
 
 ## Running
 
 Run the `runDatagen` Gradle task. This will start the data generator, which will:
 
-- Try to clone the `mappings/mappings` submodule, if it was not cloned already.
 - Download [`bedrock-samples.zip`](https://github.com/Mojang/bedrock-samples) and [`bedrock-protocol.zip`](https://github.com/Mojang/bedrock-protocol-docs/) locally, which contain data required to run some generators.
 - Run all generators. At the end of the generation process, a list of added, changed, and deleted files will be presented to you.
 
@@ -79,7 +77,7 @@ If you do need to write a new generator, you need to take the following steps:
 2. Create one or more [`FileType`](src/main/java/org/geysermc/mappings/FileType.java)s for the data you want to read- and write. You'll need to add at least one type for the new file you're generating. You also need to add new types for each file you want to read, if they don't exist already. This includes files in [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples) or [Mojang/bedrock-protocol-docs](https://github.com/Mojang/bedrock-protocol-docs).
 3. Create a generator in the [`org.geysermc.mappings.generator`](src/main/java/org/geysermc/mappings/generator) package. The generator class must be `final` and must extend [`MappingsGenerator`](src/main/java/org/geysermc/mappings/generator/MappingsGenerator.java).
     - Consider sharing the generation code with the definitions you made earlier, so that the generator class doesn't grow too big.
-    - If you need to write a map of renames, consider creating a "renamer" in the [`org.geysermc.mappings.names`](src/main/java/org/geysermc/mappings/names) package. See [`Renamers`](src/main/java/org/geysermc/mappings/names/Renamers.java).
+    - If you need to write a map of renames or similar transforming operators, consider creating a "transformer" in the [`org.geysermc.mappings.transformer.instance`](src/main/java/org/geysermc/mappings/transformer/instance) package. See [`Transformers`](src/main/java/org/geysermc/mappings/transformer/Transformers.java).
     - You may need a `RegistryAccess` instance, and you may need to read data from [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples) or [Mojang/bedrock-protocol-docs](https://github.com/Mojang/bedrock-protocol-docs). The Javadocs in [`MappingsGenerator`](src/main/java/org/geysermc/mappings/generator/MappingsGenerator.java) describe how to accomplish this.
 4. Finally, add your generator to a generator subset in [`MappingsGenerators`](src/main/java/org/geysermc/mappings/MappingsGenerators.java), and run it!
 

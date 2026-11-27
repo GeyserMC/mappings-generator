@@ -10,7 +10,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.DecoratedPotPattern;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.names.Renamers;
+import org.geysermc.mappings.transformer.Transformers;
 
 import java.util.Map;
 import java.util.Objects;
@@ -33,7 +33,7 @@ public class PotPatternMappingsGenerator extends MappingsGenerator<Map<Identifie
                     if (pattern == null) {
                         return null;
                     }
-                    return Pair.of(pattern.value().assetId(), Renamers.ITEMS.forType(item).apply(BuiltInRegistries.ITEM.getKey(item)));
+                    return Pair.of(pattern.value().assetId(), Transformers.ITEMS.apply(item));
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond))));

@@ -17,7 +17,7 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.block.Block;
 import org.geysermc.mappings.generator.MappingsGenerator;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.names.Renamers;
+import org.geysermc.mappings.transformer.Transformers;
 import org.geysermc.mappings.util.FieldConstructor;
 import org.geysermc.mappings.util.MappingsUtil;
 
@@ -41,7 +41,7 @@ public final class ItemsGenerator extends MappingsGenerator<String> {
 
             BuiltInRegistries.ITEM.forEach(item -> {
                 FieldConstructor constructor = new FieldConstructor("Item");
-                String itemClass = Renamers.ITEM_CLASSES.get(item);
+                String itemClass = Transformers.ITEM_CLASSES.apply(item);
 
                 Identifier key = BuiltInRegistries.ITEM.getKey(item);
                 String path = key.getPath();
