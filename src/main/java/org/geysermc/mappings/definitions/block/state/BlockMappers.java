@@ -12,7 +12,7 @@ import static org.geysermc.mappings.definitions.block.state.BlockMapper.register
 
 public final class BlockMappers {
     public static void registerMappers() {
-        register(AmethystClusterBlock.class).map(AmethystClusterBlock.FACING, "minecraft:block_face");
+        register(AbstractCrystalClusterBlock.class).map(AbstractCrystalClusterBlock.FACING, "minecraft:block_face");
         register(RotatedPillarBlock.class).map(RotatedPillarBlock.AXIS, "pillar_axis");
         register(Blocks.BEEHIVE, Blocks.BEE_NEST, Blocks.LOOM)
                 .transform(HorizontalDirectionalBlock.FACING, "direction",
@@ -802,7 +802,7 @@ public final class BlockMappers {
         register(Blocks.STRUCTURE_BLOCK).map(StructureBlock.MODE, "structure_block_type");
         register(Blocks.LECTERN).map(LecternBlock.POWERED, "powered_bit");
         register(SpeleothemBlock.class)
-                .transform(PointedDripstoneBlock.THICKNESS, "dripstone_thickness", value -> switch (value) {
+                .transform(SpeleothemBlock.THICKNESS, "dripstone_thickness", value -> switch (value) {
                     case TIP -> "tip";
                     case TIP_MERGE -> "merge";
                     case FRUSTUM -> "frustum";
@@ -814,6 +814,9 @@ public final class BlockMappers {
                     case DOWN -> true;
                     default -> throw new IllegalStateException("Unexpected value: " + value);
                 });
+        register(Blocks.ICICLE)
+                // It's private in IcicleBlock.java
+                .map(BlockStateProperties.ATTACHED, "attached_bit");
         register(Blocks.BELL)
                 .transform(BellBlock.ATTACHMENT, "attachment", value -> switch (value) {
                     case FLOOR -> "standing";
@@ -958,5 +961,7 @@ public final class BlockMappers {
                 .map(ChorusPlantBlock.EAST, "minecraft:connection_east")
                 .map(ChorusPlantBlock.UP, "minecraft:connection_up")
                 .map(ChorusPlantBlock.DOWN, "minecraft:connection_down");
+        register(Blocks.BRITTLE_ICE)
+                .directMap(BrittleIceBlock.AGE);
     }
 }

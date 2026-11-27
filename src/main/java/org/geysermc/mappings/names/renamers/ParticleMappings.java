@@ -149,7 +149,6 @@ public final class ParticleMappings {
             .withIdenticalNamer(type -> org.cloudburstmc.protocol.bedrock.data.ParticleType.valueOf(Objects.requireNonNull(BuiltInRegistries.PARTICLE_TYPE.getKey(type)).getPath().toUpperCase(Locale.ROOT)))
 
             .rename(ParticleTypes.ITEM_SLIME, org.cloudburstmc.protocol.bedrock.data.ParticleType.SLIME)
-            .rename(ParticleTypes.ITEM_SNOWBALL, org.cloudburstmc.protocol.bedrock.data.ParticleType.SNOWBALL_POOF)
 
             // Cloudburst LevelEvent enum mappings (booo)
             .mapResult(ParticleMapping::ofEvent)
