@@ -15,9 +15,15 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public final class ItemMappings {
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    // These are missing from mojang-items in bedrock-samples, but are valid in protocol
+    private static final List<Identifier> MISSING_FROM_SAMPLES = Stream.of("air", "light_block", "unknown", "written_book")
+            .map(Identifier::withDefaultNamespace).toList();
+
     private final Map<Item, ItemEntry> mappings = new Object2ObjectOpenHashMap<>();
     private final List<Identifier> bedrockItems;
 
@@ -43,7 +49,7 @@ public final class ItemMappings {
         for (Item item : BuiltInRegistries.ITEM) {
             Identifier key = BuiltInRegistries.ITEM.getKey(item);
             ItemEntry entry = mapper.apply(key, item);
-            if (bedrockItems.contains(entry.bedrockIdentifier())) {
+            if (bedrockItems.contains(entry.bedrockIdentifier()) || MISSING_FROM_SAMPLES.contains(entry.bedrockIdentifier())) {
                 map(item, entry);
             } else {
                 success = false;

@@ -7,6 +7,7 @@ import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapEncoder;
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -22,7 +23,10 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
+import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -101,6 +105,20 @@ public final class MappingsCodecs {
         } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /// Creates a codec encoding/decoding a list into a {@link SortedMap} by extracting a key from each value in the list.
+    ///
+    /// @param listCodec the list codec
+    /// @param keyExtractor the function extracting a {@link K} from a {@link V}
+    /// @param <K> the key of the map
+    /// @param <V> the value of the map
+    public static <K, V> Codec<SortedMap<K, V>> mapListCodec(Codec<List<V>> listCodec, Function<V, K> keyExtractor) {
+        return listCodec.xmap(list -> {
+            SortedMap<K, V> map = new Object2ObjectRBTreeMap<>();
+            list.forEach(value -> map.put(keyExtractor.apply(value), value));
+            return Collections.unmodifiableSortedMap(map);
+        }, map -> map.sequencedValues().stream().toList());
     }
 
     private MappingsCodecs() {}

@@ -26,7 +26,7 @@ public final class BlockMappingsGenerator extends MappingsGenerator<Map<BlockSta
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
         BlockMappers.registerMappers();
-        return bedrockSamples.thenCompose(samples -> samples.data().open(BlockMappings::readPalette)).thenCompose(mappings -> {
+        return bedrockSamples.thenCompose(samples -> samples.samples().open(BlockMappings::readBlocks)).thenCompose(mappings -> {
             mappings.mapAllStates(javaState -> {
                 String bedrockName = Renamers.BLOCKS.forType(javaState.getBlock()).apply(javaState);
                 CompoundTag bedrockState = new CompoundTag();

@@ -14,9 +14,9 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import org.geysermc.mappings.definitions.biome.BedrockBiome;
+import org.geysermc.mappings.definitions.block.BedrockBlocks;
 import org.geysermc.mappings.definitions.block.BlockEntry;
 import org.geysermc.mappings.definitions.block.BlockMappings;
-import org.geysermc.mappings.definitions.block.BlockPalette;
 import org.geysermc.mappings.definitions.item.BedrockItem;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
@@ -112,11 +112,9 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<Map<SoundEvent, SoundMapping>> SOUND_MAPPINGS = jsonMappings("sounds", Codec.unboundedMap(MappingsCodecs.TRIMMED_SOUND_EVENT_CODEC, SoundMapping.CODEC));
     public static final FileType<UtilMappings> UTIL_MAPPINGS = jsonMappings("util", UtilMappings.CODEC);
 
-    // bedrock-data files
-    public static final FileType<BlockPalette> BLOCK_PALETTE = bedrockDataNbt("block_palette", BlockPalette.CODEC);
-
     // bedrock-samples files
     public static final FileType<List<BedrockBiome>> BEDROCK_BIOMES = bedrockSamplesMetadata("mojang-biomes", BedrockBiome.CODEC.listOf().fieldOf("data_items").codec());
+    public static final FileType<BedrockBlocks> BEDROCK_BLOCKS = bedrockSamplesMetadata("mojang-blocks", BedrockBlocks.CODEC);
     public static final FileType<List<BedrockItem>> BEDROCK_ITEMS = bedrockSamplesMetadata("mojang-items", BedrockItem.CODEC.listOf().fieldOf("data_items").codec());
     public static final FileType<Properties> BEDROCK_LANG_EN_US = bedrockSamplesLanguage("en_US");
 
@@ -170,14 +168,6 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     private static <T> FileType<T> nbtMappings(String name, Codec<T> codec) {
         return nbt("mappings/" + name, codec, true);
-    }
-
-    private static <T> FileType<T> bedrockDataJson(String name, Codec<T> codec) {
-        return json(name, codec, false);
-    }
-
-    private static <T> FileType<T> bedrockDataNbt(String name, Codec<T> codec) {
-        return nbt(name, codec, false);
     }
 
     private static <T> FileType<T> bedrockSamplesMetadata(String name, Codec<T> codec) {
