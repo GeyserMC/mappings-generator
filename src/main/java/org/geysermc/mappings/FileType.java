@@ -17,15 +17,14 @@ import org.geysermc.mappings.definitions.biome.BedrockBiome;
 import org.geysermc.mappings.definitions.block.BlockEntry;
 import org.geysermc.mappings.definitions.block.BlockMappings;
 import org.geysermc.mappings.definitions.block.BlockPalette;
+import org.geysermc.mappings.definitions.item.BedrockItem;
 import org.geysermc.mappings.definitions.item.BedrockMapDecoration;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.definitions.shape.BlockShapeMappings;
 import org.geysermc.mappings.definitions.component.ItemDataComponents;
 import org.geysermc.mappings.definitions.component.TypedResolvableDataComponent;
 import org.geysermc.mappings.definitions.interactions.BlockInteractionData;
-import org.geysermc.mappings.definitions.item.ItemComponents;
 import org.geysermc.mappings.definitions.item.ItemEntry;
-import org.geysermc.mappings.definitions.item.RuntimeItemStates;
 import org.geysermc.mappings.definitions.mcpl.NetworkCodec;
 import org.geysermc.mappings.definitions.mcpl.NetworkTags;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
@@ -98,14 +97,12 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
     public static final FileType<Map<BlockState, BlockEntry>> BLOCK_MAPPINGS_DEBUG = jsonData("blocks_debug", BlockMappings.DEBUG_CODEC);
 
     // Mappings
-    public static final FileType<List<Identifier>> ADDITIONAL_OFFHAND_ITEMS = jsonMappings("additional_offhand_items", Identifier.CODEC.listOf());
     public static final FileType<Map<Holder<Biome>, Integer>> BIOME_MAPPINGS = jsonMappings("biomes", Codec.unboundedMap(Biome.CODEC, Codec.INT.fieldOf("bedrock_id").codec()));
     public static final FileType<Map<BlockState, BlockEntry>> BLOCK_MAPPINGS = nbtMappings("blocks", BlockMappings.CODEC);
     public static final FileType<BlockShapeMappings> BLOCK_SHAPE_MAPPINGS = nbtMappings("block_shapes", BlockShapeMappings.CODEC);
     public static final FileType<BlockShapeMappings> COLLISION_MAPPINGS = nbtMappings("collisions", BlockShapeMappings.CODEC);
     public static final FileType<Map<Identifier, Identifier>> DECORATED_POT_PATTERNS = jsonMappings("decorated_pot_patterns", Codec.unboundedMap(Identifier.CODEC, Identifier.CODEC));
     public static final FileType<BlockInteractionData> INTERACTION_MAPPINGS = jsonMappings("interactions", BlockInteractionData.CODEC);
-    public static final FileType<Map<Identifier, CompoundTag>> ITEM_COMPONENTS = nbtMappings("item_components", ItemComponents.COMPONENTS_CODEC);
     public static final FileType<List<ItemDataComponents>> ITEM_DATA_COMPONENTS = jsonMappings("item_data_components", ItemDataComponents.CODEC.listOf());
     public static final FileType<Map<Item, ItemEntry>> ITEM_MAPPINGS = jsonMappings("items", Codec.unboundedMap(BuiltInRegistries.ITEM.byNameCodec(), ItemEntry.CODEC));
     public static final FileType<Map<Holder<MapDecorationType>, BedrockMapDecoration.Serialized>> MAP_DECORATIONS = jsonMappings("map_decorations", Codec.unboundedMap(MapDecorationType.CODEC, BedrockMapDecoration.Serialized.CODEC));
@@ -117,11 +114,10 @@ public record FileType<T>(String path, Codec<T> codec, Type type, boolean manage
 
     // bedrock-data files
     public static final FileType<BlockPalette> BLOCK_PALETTE = bedrockDataNbt("block_palette", BlockPalette.CODEC);
-    public static final FileType<Map<Identifier, CompoundTag>> ITEM_COMPONENTS_PALETTE = bedrockDataNbt("item_components", ItemComponents.COMPONENTS_CODEC);
-    public static final FileType<RuntimeItemStates> RUNTIME_ITEM_STATES = bedrockDataJson("runtime_item_states", RuntimeItemStates.CODEC);
 
     // bedrock-samples files
     public static final FileType<List<BedrockBiome>> BEDROCK_BIOMES = bedrockSamplesMetadata("mojang-biomes", BedrockBiome.CODEC.listOf().fieldOf("data_items").codec());
+    public static final FileType<List<BedrockItem>> BEDROCK_ITEMS = bedrockSamplesMetadata("mojang-items", BedrockItem.CODEC.listOf().fieldOf("data_items").codec());
     public static final FileType<Properties> BEDROCK_LANG_EN_US = bedrockSamplesLanguage("en_US");
 
     // bedrock-protocol files

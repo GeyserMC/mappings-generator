@@ -15,7 +15,6 @@ import org.geysermc.mappings.generator.shape.BlockShapeMappingsGenerator;
 import org.geysermc.mappings.generator.shape.CollisionShapeMappingsGenerator;
 import org.geysermc.mappings.generator.ItemDataComponentGenerator;
 import org.geysermc.mappings.generator.InteractionsGenerator;
-import org.geysermc.mappings.generator.ItemComponentsGenerator;
 import org.geysermc.mappings.generator.ItemMappingsGenerator;
 import org.geysermc.mappings.generator.MappingsGenerator;
 import org.geysermc.mappings.generator.ParticleMappingsGenerator;
@@ -84,7 +83,6 @@ public final class MappingsGenerators implements DataGeneratorEntrypoint {
                 .withFactory(CollisionShapeMappingsGenerator::new)
                 .withRegistryFactory(PotPatternMappingsGenerator::new)
                 .withFactory(InteractionsGenerator::new)
-                .withSamplesFactory(ItemComponentsGenerator::new)
                 .withRegistryFactory(ItemDataComponentGenerator::new)
                 .withSamplesFactory(ItemMappingsGenerator::new)
                 .withSamplesFactory(MapDecorationMappingsGenerator::new)
