@@ -29,7 +29,6 @@
   },
   "custom": {
     "geyser:bedrock_version": "${bedrock_version}",
-    "geyser:human_bedrock_version": "${human_bedrock_version}",
-    "geyser:bedrock_data_sha": "${bedrock_data_sha}"
+    "geyser:human_bedrock_version": "${human_bedrock_version}"
   }
 }

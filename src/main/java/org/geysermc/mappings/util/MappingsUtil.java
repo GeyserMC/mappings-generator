@@ -145,11 +145,6 @@ public final class MappingsUtil {
         return getModContainer().getMetadata().getCustomValue("geyser:human_bedrock_version").getAsString();
     }
 
-    /// Gets the `geyser:bedrock_data_sha` field from the FMJ
-    public static String getBedrockDataSha() {
-        return getModContainer().getMetadata().getCustomValue("geyser:bedrock_data_sha").getAsString();
-    }
-
     // thank you rainbow
     private static String blockStatePropertiesToString(BlockState state) {
         return PropertyValueList.of(state.getProperties().stream().map(property -> property.value(state)).toArray(Property.Value[]::new)).getKey();
