@@ -1,4 +1,4 @@
 @NullMarked
-package org.geysermc.mappings.names.renamers;
+package org.geysermc.mappings.transformer;
 
 import org.jspecify.annotations.NullMarked;

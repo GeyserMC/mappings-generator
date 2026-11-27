@@ -13,8 +13,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.definitions.biome.BedrockBiome;
-import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
+import org.geysermc.mappings.transformer.Transformers;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -45,7 +45,7 @@ public final class BiomeMappingsGenerator extends MappingsGenerator<Map<Holder<B
             Map<Holder<Biome>, Integer> mappings = new Object2ObjectOpenHashMap<>();
 
             for (Identifier javaBiome : biomes.keySet()) {
-                Identifier bedrockName = Renamers.BIOMES.get(javaBiome);
+                Identifier bedrockName = Transformers.BIOMES.apply(javaBiome);
                 OptionalInt bedrockId = bedrockBiomes.stream()
                         .filter(biome -> biome.name().equals(bedrockName))
                         .mapToInt(BedrockBiome::id)

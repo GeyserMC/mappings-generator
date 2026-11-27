@@ -9,8 +9,8 @@ import org.geysermc.mappings.definitions.block.BlockMappings;
 import org.geysermc.mappings.definitions.block.state.BlockMapper;
 import org.geysermc.mappings.definitions.block.state.BlockMappers;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
+import org.geysermc.mappings.transformer.Transformers;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -26,9 +26,9 @@ public final class BlockMappingsGenerator extends MappingsGenerator<Map<BlockSta
     @Override
     public CompletableFuture<?> run(CachedOutput cache) {
         BlockMappers.registerMappers();
-        return bedrockSamples.thenCompose(samples -> samples.data().open(BlockMappings::readPalette)).thenCompose(mappings -> {
+        return bedrockSamples.thenCompose(samples -> samples.samples().open(BlockMappings::readBlocks)).thenCompose(mappings -> {
             mappings.mapAllStates(javaState -> {
-                String bedrockName = Renamers.BLOCKS.forType(javaState.getBlock()).apply(javaState);
+                String bedrockName = Transformers.BLOCKS.apply(javaState);
                 CompoundTag bedrockState = new CompoundTag();
 
                 for (BlockMapper mapper : BlockMapper.ALL_MAPPERS) {

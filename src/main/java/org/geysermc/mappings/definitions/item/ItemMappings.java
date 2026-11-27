@@ -9,32 +9,35 @@ import org.geysermc.mappings.FileType;
 import org.geysermc.mappings.FileSystemAccess;
 import org.slf4j.Logger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public final class ItemMappings {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private final Map<Item, ItemEntry> mappings = new Object2ObjectOpenHashMap<>();
-    private final RuntimeItemStates runtimeItemStates;
 
-    private ItemMappings(Optional<Map<Item, ItemEntry>> existing, RuntimeItemStates runtimeItemStates) {
+    // These are missing from mojang-items in bedrock-samples, but are valid in protocol
+    private static final List<Identifier> MISSING_FROM_SAMPLES = Stream.of("air", "light_block", "unknown", "written_book")
+            .map(Identifier::withDefaultNamespace).toList();
+
+    private final Map<Item, ItemEntry> mappings = new Object2ObjectOpenHashMap<>();
+    private final List<Identifier> bedrockItems;
+
+    private ItemMappings(Optional<Map<Item, ItemEntry>> existing, List<BedrockItem> bedrockItems) {
         existing.ifPresent(mappings::putAll);
-        this.runtimeItemStates = runtimeItemStates;
+        this.bedrockItems = bedrockItems.stream().map(BedrockItem::name).toList();
     }
 
-    public static CompletableFuture<ItemMappings> read(FileSystemAccess mappingFiles, FileSystemAccess dataFiles) {
-        return mappingFiles.readFile(FileType.ITEM_MAPPINGS).thenCombine(dataFiles.readFileOrThrow(FileType.RUNTIME_ITEM_STATES), ItemMappings::new);
+    public static CompletableFuture<ItemMappings> read(FileSystemAccess mappings, FileSystemAccess samples) {
+        return mappings.readFile(FileType.ITEM_MAPPINGS).thenCombine(samples.readFileOrThrow(FileType.BEDROCK_ITEMS), ItemMappings::new);
     }
 
     public Map<Item, ItemEntry> mappings() {
         return mappings;
-    }
-
-    public RuntimeItemStates runtimeItemStates() {
-        return runtimeItemStates;
     }
 
     public void map(Item item, ItemEntry entry) {
@@ -46,11 +49,11 @@ public final class ItemMappings {
         for (Item item : BuiltInRegistries.ITEM) {
             Identifier key = BuiltInRegistries.ITEM.getKey(item);
             ItemEntry entry = mapper.apply(key, item);
-            if (runtimeItemStates.states().containsKey(entry.bedrockIdentifier())) {
+            if (bedrockItems.contains(entry.bedrockIdentifier()) || MISSING_FROM_SAMPLES.contains(entry.bedrockIdentifier())) {
                 map(item, entry);
             } else {
                 success = false;
-                LOGGER.error("Java item {} was mapped to bedrock item {}, which does not exist in runtime_item_states!", key, entry.bedrockIdentifier());
+                LOGGER.error("Java item {} was mapped to bedrock item {}, which does not exist in mojang-items.json!", key, entry.bedrockIdentifier());
             }
         }
         if (!success) {

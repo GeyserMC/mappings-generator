@@ -28,7 +28,7 @@ import net.minecraft.world.level.material.PushReaction;
 import org.geysermc.mappings.definitions.block.BlockProperties;
 import org.geysermc.mappings.generator.MappingsGenerator;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.names.Renamers;
+import org.geysermc.mappings.transformer.Transformers;
 import org.geysermc.mappings.util.FieldConstructor;
 import org.geysermc.mappings.util.MappingsUtil;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ public final class BlocksGenerator extends MappingsGenerator<String> {
 
             BuiltInRegistries.BLOCK.forEach(block -> {
                 FieldConstructor constructor = new FieldConstructor("Block");
-                String blockClass = Renamers.BLOCK_CLASSES.get(block);
+                String blockClass = Transformers.BLOCK_CLASSES.apply(block);
 
                 Identifier key = BuiltInRegistries.BLOCK.getKey(block);
                 String path = key.getPath();

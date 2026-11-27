@@ -1,4 +1,4 @@
-package org.geysermc.mappings.names.renamers;
+package org.geysermc.mappings.transformer.instance;
 
 import net.minecraft.world.level.block.AbstractBannerBlock;
 import net.minecraft.world.level.block.AbstractCauldronBlock;
@@ -6,7 +6,6 @@ import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ButtonBlock;
-import net.minecraft.world.level.block.CauldronBlock;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FlowerPotBlock;
@@ -17,29 +16,27 @@ import net.minecraft.world.level.block.SkullBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WallSkullBlock;
 import net.minecraft.world.level.block.piston.MovingPistonBlock;
-import org.geysermc.mappings.names.TypeRenamer;
+import org.geysermc.mappings.transformer.Transformer;
 
 import java.util.List;
 import java.util.Optional;
 
 public final class BlockClassNames {
-    private static final List<Class<? extends Block>> MIRRORED_CLASSES = List.of(BedBlock.class, CauldronBlock.class, ChestBlock.class, DoorBlock.class,
+    private static final List<Class<? extends Block>> MIRRORED_CLASSES = List.of(BedBlock.class, ChestBlock.class, DoorBlock.class,
             FlowerPotBlock.class, FurnaceBlock.class, LecternBlock.class, MovingPistonBlock.class,
-            ShulkerBoxBlock.class, TrapDoorBlock.class, WallSkullBlock.class, ButtonBlock.class);
-    public static final TypeRenamer<Block, String> INSTANCE = TypeRenamer.of(BlockClassNames::getClassName, builder -> builder
-            .rename(Blocks.PISTON, "PistonBlock")
-            .rename(Blocks.STICKY_PISTON, "PistonBlock"));
+            ShulkerBoxBlock.class, TrapDoorBlock.class, SkullBlock.class, WallSkullBlock.class, ButtonBlock.class);
+
+    public static final Transformer<Block, String> INSTANCE = Transformer.of(builder -> builder
+            .transform(Blocks.PISTON, "PistonBlock")
+            .transform(Blocks.STICKY_PISTON, "PistonBlock")
+            .instanceOf(AbstractBannerBlock.class, "BannerBlock")
+            .instanceOf(SkullBlock.class, "SkullBlock")
+            .instanceOf(AbstractCauldronBlock.class, "CauldronBlock")
+
+            .maybeTryAll(BlockClassNames::getMirroredClassName)
+            .finish("Block"));
 
     private BlockClassNames() {}
-
-    private static String getClassName(Block block) {
-        return switch (block) {
-            case AbstractBannerBlock _ -> "BannerBlock";
-            case SkullBlock _ -> "SkullBlock";
-            case AbstractCauldronBlock _ -> "CauldronBlock";
-            default -> getMirroredClassName(block).orElse("Block");
-        };
-    }
 
     private static Optional<String> getMirroredClassName(Block block) {
         for (Class<? extends Block> mirroredClass : MIRRORED_CLASSES) {

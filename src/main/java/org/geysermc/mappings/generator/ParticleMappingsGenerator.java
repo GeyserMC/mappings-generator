@@ -12,8 +12,9 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
 import org.geysermc.mappings.definitions.particle.ParticleMapping;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.names.Renamers;
 import org.geysermc.mappings.resources.BedrockSamples;
+import org.geysermc.mappings.transformer.Transformer;
+import org.geysermc.mappings.transformer.Transformers;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -67,6 +68,7 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Parti
             return validParticleIds;
         }).thenCompose(validParticleIds -> {
             Map<ParticleType<?>, ParticleMapping> mappings = new Object2ObjectOpenHashMap<>();
+            Transformer.Maybe<ParticleType<?>, ParticleMapping> transformer = Transformers.PARTICLES.create(validParticleIds);
 
             // Then, loop over all particles, mapping them to their bedrock counterpart
             for (ParticleType<?> particle : BuiltInRegistries.PARTICLE_TYPE) {
@@ -75,21 +77,8 @@ public final class ParticleMappingsGenerator extends MappingsGenerator<Map<Parti
                 }
 
                 Identifier javaId = BuiltInRegistries.PARTICLE_TYPE.getKey(particle);
-                Renamers.PARTICLES.get(particle).ifPresentOrElse(mapping -> {
-                    if (mapping.identifier().isPresent() && mapping.identifier().get().getNamespace().equals(Identifier.DEFAULT_NAMESPACE)
-                            && !validParticleIds.contains(mapping.identifier().get())) {
-                        LOGGER.error("Bedrock particle ID {} for Java particle {} not found in resource pack, ignoring!", mapping.identifier().get(), javaId);
-                        return;
-                    }
-
-                    mappings.put(particle, mapping);
-                }, () -> {
-                    if (validParticleIds.contains(BuiltInRegistries.PARTICLE_TYPE.getKey(particle))) {
-                        LOGGER.error("No Bedrock particle mapped for {}, but the Bedrock resource pack contains a particle with the same ID", javaId);
-                    } else {
-                        LOGGER.error("No Bedrock particle mapped for {}", javaId);
-                    }
-                });
+                transformer.apply(particle).ifPresentOrElse(mapping -> mappings.put(particle, mapping),
+                        () -> LOGGER.error("No Bedrock particle mapped for {}", javaId));
             }
 
             return saveFile(cache, mappings);

@@ -13,14 +13,12 @@ licensed under the MIT license [^1].
 - Clone this repository locally: `git clone https://github.com/GeyserMC/mappings-generator`.
 - Navigate to the `mappings-generator` directory.
 - Ensure the `mappings/mappings` submodule is cloned: `git submodule update --init --recursive`.
-    - If you don't do this, the generator will try to do it for you upon running, if you have `git` installed properly.
 
 ## Running
 
 Run the `runDatagen` Gradle task. This will start the data generator, which will:
 
-- Try to clone the `mappings/mappings` submodule, if it was not cloned already.
-- Download [`bedrock-data.zip`](https://github.com/CloudburstMC/Data) and [`bedrock-samples.zip`](https://github.com/Mojang/bedrock-samples) locally, which contain data required to run some generators.
+- Download [`bedrock-samples.zip`](https://github.com/Mojang/bedrock-samples) and [`bedrock-protocol.zip`](https://github.com/Mojang/bedrock-protocol-docs/) locally, which contain data required to run some generators.
 - Run all generators. At the end of the generation process, a list of added, changed, and deleted files will be presented to you.
 
 Alternatively, you can run one of the following Gradle tasks to only run a subset of the generators:
@@ -57,8 +55,8 @@ Then, attempt to run the generator. Resolve all compilation errors (if there are
 
 ### Updating the Minecraft Bedrock version
 
-Update the `minecraft-bedrock-tag` and `minecraft-bedrock-data` fields in the version catalogue. The former should be set to the appropriate tag at [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples/releases),
-and the latter should be set to the respective commit hash for that version at [CloudburtsMC/Data](https://github.com/CloudburstMC/Data). Make sure that the `cloudburst-protocol` version is up-to-date as well, and supports
+Update the `minecraft-bedrock-tag` field in the version catalogue. This should be set to the appropriate tag at [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples/releases),
+without the `v` prefix. Make sure that the `cloudburst-protocol` version is up-to-date as well, and supports
 the Bedrock version you're targeting.
 
 Then, run the generator. If all goes well, the mappings should now reflect the Bedrock version you targeted.
@@ -76,11 +74,11 @@ and extract it in the `UtilMappings#create` method.
 If you do need to write a new generator, you need to take the following steps:
 
 1. Write one or multiple definitions for the kind of data you want to read- and write in the [`org.geysermc.mappings.definitions`](src/main/java/org/geysermc/mappings/definitions) package. Generally, these are `record`s with codecs.
-2. Create one or more [`FileType`](src/main/java/org/geysermc/mappings/FileType.java)s for the data you want to read- and write. You'll need to add at least one type for the new file you're generating. You also need to add new types for each file you want to read, if they don't exist already. This includes files in [CloudburstMC/data](https://github.com/CloudburstMC/Data) or [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples).
+2. Create one or more [`FileType`](src/main/java/org/geysermc/mappings/FileType.java)s for the data you want to read- and write. You'll need to add at least one type for the new file you're generating. You also need to add new types for each file you want to read, if they don't exist already. This includes files in [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples) or [Mojang/bedrock-protocol-docs](https://github.com/Mojang/bedrock-protocol-docs).
 3. Create a generator in the [`org.geysermc.mappings.generator`](src/main/java/org/geysermc/mappings/generator) package. The generator class must be `final` and must extend [`MappingsGenerator`](src/main/java/org/geysermc/mappings/generator/MappingsGenerator.java).
     - Consider sharing the generation code with the definitions you made earlier, so that the generator class doesn't grow too big.
-    - If you need to write a map of renames, consider creating a "renamer" in the [`org.geysermc.mappings.names`](src/main/java/org/geysermc/mappings/names) package. See [`Renamers`](src/main/java/org/geysermc/mappings/names/Renamers.java).
-    - You may need a `RegistryAccess` instance, and you may need to read data from [CloudburstMC/data](https://github.com/CloudburstMC/Data) or [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples). The Javadocs in [`MappingsGenerator`](src/main/java/org/geysermc/mappings/generator/MappingsGenerator.java) describe how to accomplish this.
+    - If you need to write a map of renames or similar transforming operators, consider creating a "transformer" in the [`org.geysermc.mappings.transformer.instance`](src/main/java/org/geysermc/mappings/transformer/instance) package. See [`Transformers`](src/main/java/org/geysermc/mappings/transformer/Transformers.java).
+    - You may need a `RegistryAccess` instance, and you may need to read data from [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples) or [Mojang/bedrock-protocol-docs](https://github.com/Mojang/bedrock-protocol-docs). The Javadocs in [`MappingsGenerator`](src/main/java/org/geysermc/mappings/generator/MappingsGenerator.java) describe how to accomplish this.
 4. Finally, add your generator to a generator subset in [`MappingsGenerators`](src/main/java/org/geysermc/mappings/MappingsGenerators.java), and run it!
 
 A few notes:
@@ -135,8 +133,6 @@ The generator generates the following data:
     - `collisions.nbt`: describing the shapes of all of Minecraft Java's block state collision boxes.
     - `decorated_pot_patterns.json`: a map from (vanilla) Minecraft Java decorated pot pattern (asset ID) to its respective Bedrock item ID.
     - `interactions.json`: describing how interactions with a Minecraft Java block state may be processed.
-    - `item_components.nbt`: Minecraft Bedrock item components, patched by the generator to possibly allow extra items to be put in the off-hand.
-    - `additional_offhand_items.json`: an array of all Bedrock items that were patched by the generator to allow putting into the off-hand.
     - `item_data_components.json`: listing default data components for all of Minecraft Java's items, encoded to base 64 using Mojang's stream codecs.
     - `items.json`: a map from Minecraft Java item to its respective Bedrock item (with some additional data).
     - `map_decorations.json`: a map from Minecraft Java map decoration type to its respective Bedrock type (optionally with an ARGB colour to apply).

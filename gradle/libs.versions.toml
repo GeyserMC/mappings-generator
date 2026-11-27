@@ -5,9 +5,7 @@ minecraft-java = "26.3"
 # When updating bedrock version, make sure to check cloudburst-protocol as well
 # Set this to the release tag at https://github.com/Mojang/bedrock-samples/releases
 # Do not prefix the tag with "v", the generator does that at runtime
-minecraft-bedrock-tag = "1.26.60.29-preview"
-# Set this to the respective commit at https://github.com/CloudburstMC/Data/
-minecraft-bedrock-data = "293c848098cc636a2758937fb6610b8bed1f12c5"
+minecraft-bedrock-tag = "1.26.70.26-preview"
 
 # Check this at https://maven.fabricmc.net/net/fabricmc/fabric-loom
 fabric-loom = "1.18.4"
@@ -17,7 +15,7 @@ fabric-api = "0.162.0+26.3"
 
 commons-text = "1.15.0"
 mockito = "5.23.0"
-cloudburst-protocol = "3.0.0.Beta13-SNAPSHOT"
+cloudburst-protocol = "3.0.0.Beta15-20261116.161745-6"
 
 [libraries]
 minecraft = {group = "com.mojang", name = "minecraft", version.ref = "minecraft-java" }

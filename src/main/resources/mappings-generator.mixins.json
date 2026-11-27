@@ -9,6 +9,7 @@
     "DataGeneratorMixin$Cached",
     "DataGeneratorMixin$Uncached",
     "HashCacheFileVisitorMixin",
+    "SoundTypeBuilderImplEntryMixin",
     "accessor.BlockEntityTypesAccessor",
     "accessor.EntityAccessor",
     "accessor.EntityTypesAccessor",

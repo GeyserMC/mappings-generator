@@ -11,11 +11,11 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.StringRepresentable;
 import org.geysermc.mappings.EnumDataGenerators;
 import org.geysermc.mappings.FileType;
-import org.geysermc.mappings.ProviderGroupBuilder;
+import org.geysermc.mappings.ProviderGroup;
 import org.geysermc.mappings.definitions.protocol.EnumConstant;
 import org.geysermc.mappings.generator.MappingsGenerator;
-import org.geysermc.mappings.names.TypeRenamer;
 import org.geysermc.mappings.resources.BedrockSamples;
+import org.geysermc.mappings.transformer.Transformer;
 import org.geysermc.mappings.util.MappingsUtil;
 import org.slf4j.Logger;
 
@@ -149,13 +149,13 @@ public final class EnumDataGenerator extends MappingsGenerator<String> {
     /// @param fileType the file the generator writes to
     /// @param registryKey the registry to write
     /// @param bedrockSource the file in `bedrock-protocol-docs` containing the Bedrock enum
-    /// @param renamer a {@link TypeRenamer} renaming the Java {@link Identifier} to an entry in the Bedrock enum
+    /// @param transformer a {@link Transformer} renaming the Java {@link Identifier} to an entry in the Bedrock enum
     /// @param <T> the type of the registry
     /// @return the factory
-    public static <T> ProviderGroupBuilder.ProviderFactory<EnumDataGenerator> protocolBasedRegistry(String name, FileType<String> fileType,
-                                                                                                    ResourceKey<? extends Registry<T>> registryKey,
-                                                                                                    FileType<Set<EnumConstant>> bedrockSource,
-                                                                                                    TypeRenamer<Identifier, String> renamer) {
+    public static <T> ProviderGroup.ProviderFactory<EnumDataGenerator> protocolBasedRegistry(String name, FileType<String> fileType,
+                                                                                             ResourceKey<? extends Registry<T>> registryKey,
+                                                                                             FileType<Set<EnumConstant>> bedrockSource,
+                                                                                             Transformer<Identifier, String> transformer) {
         return (output, registryFuture, samplesFuture) -> new EnumDataGenerator(output, fileType, name,
                 () -> CompletableFuture.allOf(registryFuture, samplesFuture).thenCompose(_ -> {
                     Registry<T> registry = registryFuture.join().lookupOrThrow(registryKey);
@@ -164,7 +164,7 @@ public final class EnumDataGenerator extends MappingsGenerator<String> {
                             .thenApply(bedrockEnum -> registry.listElementIds()
                                     .map(key -> {
                                         try {
-                                            return Optional.of(Pair.of(keyToConstant(key), EnumConstant.findId(bedrockEnum, renamer.get(key.identifier()))));
+                                            return Optional.of(Pair.of(keyToConstant(key), EnumConstant.findId(bedrockEnum, transformer.apply(key.identifier()))));
                                         } catch (IllegalArgumentException exception) {
                                             LOGGER.error("Missed mapping for {} of registry {} in {}!", key.identifier(), registryKey.identifier(), name);
                                             return Optional.<Pair<String, Integer>>empty();
